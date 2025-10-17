@@ -17,6 +17,23 @@ If you are new to robotics or new to the *FIRST* Tech Challenge, then you should
 
 Even if you are an advanced Java programmer, it is helpful to start with the [FTC Blocks tutorial](https://ftc-docs.firstinspires.org/programming_resources/blocks/Blocks-Tutorial.html), and then migrate to the [OnBot Java Tool](https://ftc-docs.firstinspires.org/programming_resources/onbot_java/OnBot-Java-Tutorial.html) or to [Android Studio](https://ftc-docs.firstinspires.org/programming_resources/android_studio_java/Android-Studio-Tutorial.html) afterwards.
 
+## Kotlin Support
+This SDK now includes full support for Kotlin programming. Kotlin provides a more concise and expressive syntax compared to Java, while maintaining full interoperability with existing Java code.
+
+### Why Kotlin?
+* **Concise Syntax**: Write more readable code with less boilerplate
+* **Null Safety**: Avoid null pointer exceptions with compile-time null checking
+* **Property Delegates**: Simplify hardware initialization with custom delegates
+* **Interoperability**: Use Kotlin and Java code together seamlessly
+
+### Getting Started with Kotlin
+The [/TeamCode](TeamCode/src/main/java/org/firstinspires/ftc/teamcode) folder contains Kotlin examples demonstrating:
+* Hardware abstraction using property delegates
+* Iterative OpMode patterns for both TeleOp and Autonomous
+* Converted sample OpModes in the [external/samples](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/external/samples) subfolder
+
+See the [TeamCode readme.md](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/readme.md) for detailed information on the Kotlin hardware delegate pattern and code structure.
+
 ## Downloading the Project
 If you are an Android Studio programmer, there are several ways to download this repo.  Note that if you use the Blocks or OnBot Java Tool to program your robot, then you do not need to download this repository.
 
@@ -51,11 +68,13 @@ For technical questions regarding the Control System or the FTC SDK, please visi
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[FIRST Tech Challenge Community](https://ftc-community.firstinspires.org/)
 
 ### Sample OpModes
-This project contains a large selection of Sample OpModes (robot code examples) which can be cut and pasted into your /teamcode folder to be used as-is, or modified to suit your team's needs.
+This project contains a large selection of Sample OpModes (robot code examples) in both Java and Kotlin which can be cut and pasted into your /teamcode folder to be used as-is, or modified to suit your team's needs.
 
-Samples Folder: &nbsp;&nbsp; [/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples](FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples)
+**Java Samples:** &nbsp;&nbsp; [/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples](FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples)
 
-The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc/teamcode](TeamCode/src/main/java/org/firstinspires/ftc/teamcode) folder contains an explanation of the sample naming convention, and instructions on how to copy them to your own project space.
+**Kotlin Samples:** &nbsp;&nbsp; [/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/external/samples](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/external/samples)
+
+The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc/teamcode](TeamCode/src/main/java/org/firstinspires/ftc/teamcode) folder contains detailed information on the Kotlin examples and the hardware delegate pattern.
 
 # Release Information
 
