@@ -5,7 +5,17 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 @Autonomous
 class Autonomous() : Robot() {
     override fun loop() {
-        mtr.power = (30 - elapsed.seconds()) / 30 // Start at full speed and slowly decrease
+        // As an example this will drive a robot along a circle for 10 seconds then stop
+        when {
+            elapsed.seconds() < 10 -> {
+                drive.drive(0.3, 0.0, 0.2)
+            }
+
+            else -> {
+                drive.stop()
+            }
+        }
+
         telemetry.addData("Elapsed", "$elapsed")
     }
 }
