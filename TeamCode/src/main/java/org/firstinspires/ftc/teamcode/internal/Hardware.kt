@@ -1,9 +1,14 @@
 package org.firstinspires.ftc.teamcode.internal
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import kotlin.reflect.KProperty
 
-abstract class Hardware(val hardwareMap: HardwareMap) {
+abstract class Hardware(val op: OpMode) {
+    val hardwareMap: HardwareMap get() = op.hardwareMap
+    val telemetry: Telemetry get() = op.telemetry
+
     class HardwareDelegate<T>(val name: String, val klass: Class<T>) {
 
         private var value: T? = null
