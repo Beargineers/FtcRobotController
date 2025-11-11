@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.internal.Hardware
 import kotlin.math.abs
 import kotlin.math.*
+import org.firstinspires.ftc.teamcode.internal.RobotOpModeBase
 
 
 class Drivebase(map: HardwareMap) : Hardware(map) {
@@ -45,7 +46,8 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
     }
     // function is taken and adapted from https://www.youtube.com/watch?v=gnSW2QpkGXQ with review of chatGPT
     //takes in the x and y coordinates in centimeters relative to the robot, and used mechanum wheels to go there at a certain motor power (requires encoders to work)
-    fun goto(y: Double, x: Double, power: Double) {
+    //can wait untill the motors will stop running, in which case it may take some time to execute
+    fun goto(y: Double, x: Double, power: Double = 0.6, wait: Boolean = false) {
         // initializes motors to run a certain distance
         listOf(lf, rf, lb, rb).forEach {
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -101,6 +103,8 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         rf.power = power * rfdNorm
         lb.power = power * lbdNorm
         rb.power = power * rbdNorm
+
+        while (wait == true && (lf.isBusy() || rf.isBusy() || lb.isBusy() || rb.isBusy())) {}
     }
 
 
