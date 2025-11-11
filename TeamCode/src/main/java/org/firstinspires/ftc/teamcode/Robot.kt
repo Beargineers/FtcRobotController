@@ -6,7 +6,7 @@ abstract class Robot() : RobotOpModeBase() {
     lateinit var drive: Drivebase
 
     override fun init() {
-        drive = Drivebase(hardwareMap)
+        drive = Drivebase(this)
 
         telemetry.addLine("Ready")
     }

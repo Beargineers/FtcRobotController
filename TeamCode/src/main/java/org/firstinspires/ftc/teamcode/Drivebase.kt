@@ -1,18 +1,26 @@
 package org.firstinspires.ftc.teamcode
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
-import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.internal.Hardware
+import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.*
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
-//test push
-class Drivebase(map: HardwareMap) : Hardware(map) {
+class Drivebase(op: OpMode) : Hardware(op) {
+
     // Match these names in  RC configuration
-    val lf: DcMotor by hardware ("leftFront")
+    val lf: DcMotor by hardware("leftFront")
     val rf: DcMotor by hardware("rightFront")
     val lb: DcMotor by hardware("leftBack")
     val rb: DcMotor by hardware("rightBack")
+
+    val allMotors = listOf(lf, rf, lb, rb)
 
     init {
         lf.direction = DcMotorSimple.Direction.REVERSE
@@ -25,6 +33,8 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
             it.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
     }
+
+    /** function to convert the distance the wheel needs to travel to ticks (the wheels can take in) */
     fun cm_to_ticks(cm: Double): Int {
         val TICKS_PER_REV = 537.7    // example; NEEDS THE ACTUAL VALUE
         val GEAR_REDUCTION = 1.0     // >1 if gear reduces speed (motor->wheel)
@@ -34,6 +44,7 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         val ticks = revs * TICKS_PER_REV * GEAR_REDUCTION
         return ticks.toInt()
     }
+
     /** mecanum: y=forward, x=strafe right, turn=clockwise */
     fun drive(y: Double, x: Double, turn: Double, slow: Boolean = false) {
         val lfP = y + x + turn
@@ -41,7 +52,7 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         val lbP = y - x + turn
         val rbP = y + x - turn
 
-        val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it)  }
+        val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
         val limit = if (slow) 0.4 else 1.0
         fun normalize(v: Double) = (v / maxMag) * limit
@@ -51,17 +62,17 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         lb.power = normalize(lbP)
         rb.power = normalize(rbP)
     }
-    // function is taken and adapted from https://www.youtube.com/watch?v=gnSW2QpkGXQ with review of chatGPT
-    //takes in the x and y coordinates in centimeters relative to the robot, and used mechanum wheels to go there at a certain motor power (requires encoders to work)
-    //can wait until the motors will stop running(if variable "wait" is true, by default false), in which case it may take some time to execute
-    fun goto(y: Double, x: Double, power: Double = 0.6, wait: Boolean = false) {
+
+    /**
+    function is taken and adapted from https://www.youtube.com/watch?v=gnSW2QpkGXQ with review of chatGPT
+    takes in the x and y coordinates in centimeters relative to the robot, and used mechanum wheels to go there at a certain motor power (requires encoders to work)
+     */
+    fun goto(y: Double, x: Double, power: Double = 0.6) {
         // initializes motors to run a certain distance
-        listOf(lf, rf, lb, rb).forEach {
+        allMotors.forEach {
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+            it.mode = DcMotor.RunMode.RUN_TO_POSITION
         }
-
-        // function to convert the distance the wheel needs to travel to ticks (the wheels can take in)
-
 
         // converts the x and y to angle and the distance
         val distance = sqrt(x.pow(2) + y.pow(2))  // pythagorean theorem
@@ -74,7 +85,7 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         val rbdRatio = cos(angle - PI / 4)
 
         // normalize so max ratio = 1
-        val maxRatio = max(max(abs(lfdRatio), abs(rfdRatio)), max(abs(lbdRatio), abs(rbdRatio)))
+        val maxRatio = listOf(lfdRatio, rfdRatio, lbdRatio, rbdRatio).maxOf { abs(it) }
         val lfdNorm = lfdRatio / maxRatio
         val rfdNorm = rfdRatio / maxRatio
         val lbdNorm = lbdRatio / maxRatio
@@ -92,21 +103,20 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         lb.targetPosition = lb.currentPosition + cm_to_ticks(lbd)
         rb.targetPosition = rb.currentPosition + cm_to_ticks(rbd)
 
-        // set motors to RUN_TO_POSITION mode
-        listOf(lf, rf, lb, rb).forEach {
-            it.mode = DcMotor.RunMode.RUN_TO_POSITION
-        }
 
         // sets powers to the motors so that the robot moves uniformly without turning
         lf.power = power * lfdNorm
         rf.power = power * rfdNorm
         lb.power = power * lbdNorm
         rb.power = power * rbdNorm
-
-        while (wait && (lf.isBusy || rf.isBusy || lb.isBusy || rb.isBusy)) {}
     }
 
-    fun turn(degrees: Int, power: Double){
+    fun turn(degrees: Int, power: Double) {
+        // set motors to RUN_TO_POSITION mode
+        allMotors.forEach {
+            it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+            it.mode = DcMotor.RunMode.RUN_TO_POSITION
+        }
 
         val ratio = 10  // needs testing to get the right ration of cm/˚ (NOT THE ACTUAL VALUE)
 
@@ -124,19 +134,12 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         lb.targetPosition = lb.currentPosition + cm_to_ticks(lbd)
         rb.targetPosition = rb.currentPosition + cm_to_ticks(rbd)
 
-        // set motors to RUN_TO_POSITION mode
-        listOf(lf, rf, lb, rb).forEach {
-            it.mode = DcMotor.RunMode.RUN_TO_POSITION
-        }
-
         // sets powers
         lf.power = power
-        rf.power = power
+        rf.power = -power
         lb.power = power
-        rb.power = power
-
+        rb.power = -power
     }
-
 
     fun stop() = drive(0.0, 0.0, 0.0)
 }
