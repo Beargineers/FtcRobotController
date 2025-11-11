@@ -45,7 +45,7 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
     }
     // function is taken and adapted from https://www.youtube.com/watch?v=gnSW2QpkGXQ with review of chatGPT
     //takes in the x and y coordinates in centimeters relative to the robot, and used mechanum wheels to go there at a certain motor power (requires encoders to work)
-    fun go_to(y: Double, x: Double, power: Double) {
+    fun goto(y: Double, x: Double, power: Double) {
         // initializes motors to run a certain distance
         listOf(lf, rf, lb, rb).forEach {
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
