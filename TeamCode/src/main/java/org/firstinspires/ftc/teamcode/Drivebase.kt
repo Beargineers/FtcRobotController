@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.internal.Hardware
 import kotlin.math.abs
 import kotlin.math.*
-import org.firstinspires.ftc.teamcode.internal.RobotOpModeBase
 
 
 class Drivebase(map: HardwareMap) : Hardware(map) {
@@ -26,7 +25,15 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
             it.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
     }
+    fun cm_to_ticks(cm: Double): Int {
+        val TICKS_PER_REV = 537.7    // example; NEEDS THE ACTUAL VALUE
+        val GEAR_REDUCTION = 1.0     // >1 if gear reduces speed (motor->wheel)
+        val WHEEL_DIAMETER_CM = 9.6  // example; NEEDS THE ACTUAL VALUE
 
+        val revs = cm / (PI * WHEEL_DIAMETER_CM)
+        val ticks = revs * TICKS_PER_REV * GEAR_REDUCTION
+        return ticks.toInt()
+    }
     /** mecanum: y=forward, x=strafe right, turn=clockwise */
     fun drive(y: Double, x: Double, turn: Double, slow: Boolean = false) {
         val lfP = y + x + turn
@@ -46,7 +53,7 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
     }
     // function is taken and adapted from https://www.youtube.com/watch?v=gnSW2QpkGXQ with review of chatGPT
     //takes in the x and y coordinates in centimeters relative to the robot, and used mechanum wheels to go there at a certain motor power (requires encoders to work)
-    //can wait untill the motors will stop running, in which case it may take some time to execute
+    //can wait until the motors will stop running(if variable "wait" is true, by default false), in which case it may take some time to execute
     fun goto(y: Double, x: Double, power: Double = 0.6, wait: Boolean = false) {
         // initializes motors to run a certain distance
         listOf(lf, rf, lb, rb).forEach {
@@ -54,15 +61,7 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         }
 
         // function to convert the distance the wheel needs to travel to ticks (the wheels can take in)
-        fun cm_to_ticks(cm: Double): Int {
-            val TICKS_PER_REV = 537.7    // example; NEEDS THE ACTUAL VALUE
-            val GEAR_REDUCTION = 1.0     // >1 if gear reduces speed (motor->wheel)
-            val WHEEL_DIAMETER_CM = 9.6  // example; NEEDS THE ACTUAL VALUE
 
-            val revs = cm / (PI * WHEEL_DIAMETER_CM)
-            val ticks = revs * TICKS_PER_REV * GEAR_REDUCTION
-            return ticks.toInt()
-        }
 
         // converts the x and y to angle and the distance
         val distance = sqrt(x.pow(2) + y.pow(2))  // pythagorean theorem
@@ -104,7 +103,38 @@ class Drivebase(map: HardwareMap) : Hardware(map) {
         lb.power = power * lbdNorm
         rb.power = power * rbdNorm
 
-        while (wait == true && (lf.isBusy() || rf.isBusy() || lb.isBusy() || rb.isBusy())) {}
+        while (wait && (lf.isBusy || rf.isBusy || lb.isBusy || rb.isBusy)) {}
+    }
+
+    fun turn(degrees: Int, power: Double){
+
+        val ratio = 10  // needs testing to get the right ration of cm/˚ (NOT THE ACTUAL VALUE)
+
+        val turncm = degrees * ratio
+
+        // multiply by distance to get actual travel in cm for each wheel
+        val lfd = turncm.toDouble()
+        val rfd = -turncm.toDouble()
+        val lbd = turncm.toDouble()
+        val rbd = -turncm.toDouble()
+
+        // tells the motor how many revs to move
+        lf.targetPosition = lf.currentPosition + cm_to_ticks(lfd)
+        rf.targetPosition = rf.currentPosition + cm_to_ticks(rfd)
+        lb.targetPosition = lb.currentPosition + cm_to_ticks(lbd)
+        rb.targetPosition = rb.currentPosition + cm_to_ticks(rbd)
+
+        // set motors to RUN_TO_POSITION mode
+        listOf(lf, rf, lb, rb).forEach {
+            it.mode = DcMotor.RunMode.RUN_TO_POSITION
+        }
+
+        // sets powers
+        lf.power = power
+        rf.power = power
+        lb.power = power
+        rb.power = power
+
     }
 
 
