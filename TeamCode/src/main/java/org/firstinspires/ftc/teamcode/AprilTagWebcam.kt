@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.teamcode.internal.Hardware
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
@@ -31,6 +32,46 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
     init {
         // Adjust Image Decimation to trade-off detection-range for detection-rate
         aprilTag.setDecimation(2.0f)
+    }
+
+    fun findRedTarget() : AprilTagDetection? {
+        return getAprilReadings(24)
+    }
+
+    fun findBlueTarget() : AprilTagDetection? {
+        return getAprilReadings(20)
+    }
+
+    fun robotPosition(): Position? {
+        val r = findRedTarget()?.robotPose
+        val b = findBlueTarget()?.robotPose
+
+        return when {
+            r != null && b != null -> Position(
+                r.position.unit,
+                (r.position.x + b.position.x) / 2,
+                (r.position.y + b.position.y) / 2,
+                (r.position.z + b.position.z) / 2,
+                r.position.acquisitionTime
+            )
+
+            b != null -> b.position
+            r != null -> r.position
+            else -> null
+        }
+    }
+
+    // TODO: Compensate for camera yaw
+    fun robotYaw(): Double? {
+        val r = findRedTarget()?.robotPose
+        val b = findBlueTarget()?.robotPose
+
+        return when {
+            r != null && b != null -> (r.orientation.yaw + b.orientation.yaw) / 2
+            b != null -> b.orientation.yaw
+            r != null -> r.orientation.yaw
+            else -> null
+        }
     }
 
     /**
