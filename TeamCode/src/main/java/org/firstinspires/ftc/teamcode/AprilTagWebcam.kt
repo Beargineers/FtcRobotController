@@ -3,8 +3,6 @@ package org.firstinspires.ftc.teamcode
 import android.util.Size
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.Position
 import org.firstinspires.ftc.teamcode.internal.Hardware
 import org.firstinspires.ftc.vision.VisionPortal
@@ -19,7 +17,7 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
         .setDrawTagOutline(true)
         .setDrawAxes(true)
         .setDrawCubeProjection(true)
-        .setOutputUnits(DistanceUnit.CM, AngleUnit.DEGREES)
+        .setOutputUnits(DISTANCE_UNIT, ANGLE_UNIT)
         .build()
 
     private val visionPortal: VisionPortal = VisionPortal.Builder()
