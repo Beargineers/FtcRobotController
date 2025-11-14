@@ -60,6 +60,7 @@ abstract class Robot() : RobotOpModeBase() {
      */
     fun driveToPose(
         pose: Pose2D,
+        maxSpeed: Double = 0.5,
         positionTolerance: Double = 2.0,
         headingTolerance: Double = 5.0
     ): Boolean {
@@ -108,9 +109,8 @@ abstract class Robot() : RobotOpModeBase() {
         val strafePower = robotFrameX * kP_position
         val turnPower = headingError * kP_heading
 
-        // Clamp powers to [-1.0, 1.0]
-        fun clamp(value: Double, min: Double = -1.0, max: Double = 1.0): Double {
-            return value.coerceIn(min, max)
+        fun clamp(value: Double): Double {
+            return value.coerceIn(-maxSpeed, maxSpeed)
         }
 
         // Apply drive power
