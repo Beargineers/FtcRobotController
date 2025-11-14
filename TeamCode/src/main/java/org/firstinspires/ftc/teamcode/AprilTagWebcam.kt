@@ -40,34 +40,24 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
         return getAprilReadings(20)
     }
 
-    fun robotPosition(): Position? {
+    /*
+    TODO Compensate for camera rotation!
+     */
+    fun robotPose() : Pose2D? {
         val r = findRedTarget()?.robotPose
         val b = findBlueTarget()?.robotPose
 
         return when {
-            r != null && b != null -> Position(
-                r.position.unit,
+            r != null && b != null -> Pose2D(
                 (r.position.x + b.position.x) / 2,
                 (r.position.y + b.position.y) / 2,
-                (r.position.z + b.position.z) / 2,
-                r.position.acquisitionTime
+                (r.orientation.yaw + b.orientation.yaw) / 2,
+                r.position.unit,
+                ANGLE_UNIT
             )
 
-            b != null -> b.position
-            r != null -> r.position
-            else -> null
-        }
-    }
-
-    // TODO: Compensate for camera yaw
-    fun robotYaw(): Double? {
-        val r = findRedTarget()?.robotPose
-        val b = findBlueTarget()?.robotPose
-
-        return when {
-            r != null && b != null -> (r.orientation.yaw + b.orientation.yaw) / 2
-            b != null -> b.orientation.yaw
-            r != null -> r.orientation.yaw
+            b != null -> Pose2D(b.position.x, b.position.y, b.orientation.yaw, b.position.unit, ANGLE_UNIT)
+            r != null -> Pose2D(r.position.x, r.position.y, r.orientation.yaw, r.position.unit, ANGLE_UNIT)
             else -> null
         }
     }
