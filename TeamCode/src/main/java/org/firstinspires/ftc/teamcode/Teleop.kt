@@ -7,6 +7,8 @@ import kotlin.math.sign
 @TeleOp(name = "Mecanum Drive Kotlin", group = "Drive")
 class MecanumTeleOp : Robot() {
     override fun loop() {
+        super.loop()
+
         val y = -gamepad1.left_stick_y.normalize()   // forward/back
         val x =  gamepad1.left_stick_x.normalize()   // strafe
         val r =  gamepad1.right_stick_x.normalize()  // rotate
