@@ -135,6 +135,8 @@ abstract class PhasedAutonomous(vararg phases: AutonomousPhase) : Robot() {
     val phaseTime = ElapsedTime()
 
     override fun loop() {
+        super.loop()
+
         if (currentPhaseIdx >= phases.size) return
 
         if (currentPhase == null) {
