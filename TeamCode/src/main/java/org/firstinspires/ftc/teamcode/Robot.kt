@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.teamcode.internal.Hardware
 import org.firstinspires.ftc.teamcode.internal.RobotOpModeBase
 import kotlin.math.PI
 import kotlin.math.abs
@@ -13,15 +14,33 @@ import kotlin.math.sqrt
 abstract class Robot() : RobotOpModeBase() {
     lateinit var drive: Drivebase
     lateinit var aprilTags: AprilTagWebcam
+    lateinit var shooter: Shooter
+    lateinit var intake: Intake
+
+    val allHardware = mutableListOf<Hardware>()
+
     var currentPose: Pose2D? = null
 
     override fun init() {
         drive = Drivebase(this)
         aprilTags = AprilTagWebcam(this)
+        shooter = Shooter(this)
+        intake = Intake(this)
+
+        allHardware += drive
+        allHardware += aprilTags
+        allHardware += shooter
+        allHardware += intake
+
+        allHardware.forEach {
+            it.init()
+        }
 
         telemetry.addLine("Ready")
     }
+
     override fun loop() {
+        allHardware.forEach { it.loop() }
         currentPose = aprilTags.robotPose()
         telemetry.addData("Pose", currentPose)
     }
@@ -131,7 +150,6 @@ abstract class Robot() : RobotOpModeBase() {
     }
 
     override fun stop() {
-        drive.stop()
-        aprilTags.stop()
+        allHardware.forEach { it.stop() }
     }
 }

@@ -1,0 +1,63 @@
+package org.firstinspires.ftc.teamcode
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorSimple
+import org.firstinspires.ftc.teamcode.internal.Hardware
+
+private const val FEEDER_RUN_TIME: Long = 2400L
+
+class Shooter(op: OpMode): Hardware(op) {
+    val fly1 by hardware<DcMotor>()
+    val fly2 by hardware<DcMotor>()
+
+    val feeder by hardware<DcMotor>()
+
+    var feederStartedAt: Long = 0
+
+    val launchMotors = listOf(fly1, fly2)
+
+    init {
+        launchMotors.forEach {
+            it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
+            it.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        }
+
+        feeder.direction = DcMotorSimple.Direction.REVERSE
+        feeder.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+    }
+
+    fun enableFlywheel(on: Boolean) {
+        if (on) {
+            powerFlywheel(1.0)
+        }
+        else {
+            powerFlywheel(0.0)
+        }
+    }
+
+    private fun powerFlywheel(p: Double) {
+        fly1.direction = DcMotorSimple.Direction.REVERSE
+        fly2.direction = DcMotorSimple.Direction.REVERSE
+        fly1.power = p
+        fly2.power = p
+    }
+
+    fun launch() {
+        feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        feeder.power = 1.0
+        feederStartedAt = System.currentTimeMillis()
+    }
+
+    override fun loop() {
+        if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > FEEDER_RUN_TIME) {
+            feeder.power = 0.0
+            feederStartedAt = 0L
+        }
+    }
+
+    override fun stop() {
+        enableFlywheel(false)
+        feeder.power = 0.0
+    }
+}

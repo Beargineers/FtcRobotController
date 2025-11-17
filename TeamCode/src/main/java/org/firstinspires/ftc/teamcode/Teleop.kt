@@ -6,14 +6,37 @@ import kotlin.math.sign
 
 @TeleOp(name = "Mecanum Drive Kotlin", group = "Drive")
 class MecanumTeleOp : Robot() {
+    val intakeButton by lazy {
+        ToggleButton(gamepad1::x) { on ->
+            telemetry.addLine("Intake running: $on")
+            intake.enable(on)
+        }
+    }
+
+    val launcherButton by lazy {
+        ToggleButton(gamepad1::a) { on ->
+            telemetry.addLine("Launcher flywheel running: $on")
+            shooter.enableFlywheel(on)
+        }
+    }
+
+    val feederButton by lazy {
+        Button(gamepad1::right_bumper).onRelease {
+            shooter.launch()
+        }
+    }
+
     override fun loop() {
         super.loop()
+        launcherButton.update()
+        intakeButton.update()
+        feederButton.update()
 
         val y = -gamepad1.left_stick_y.normalize()   // forward/back
-        val x =  gamepad1.left_stick_x.normalize()   // strafe
-        val r =  gamepad1.right_stick_x.normalize()  // rotate
+        val x =  gamepad1.left_stick_x.normalize()  // strafe
+        val r =  gamepad1.right_stick_x.normalize() / 3 // rotate
 
-        val slow = gamepad1.right_bumper
+        val slow = !gamepad1.left_bumper
         drive.drive(y, x, r, slow)
 
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
@@ -23,5 +46,5 @@ class MecanumTeleOp : Robot() {
     fun Float.normalize(): Double = shape(deadband(this.toDouble()))
 
     private fun deadband(v: Double, th: Double = 0.05) = if (abs(v) < th) 0.0 else v
-    private fun shape(v: Double) = sign(v) * abs(v).pow(3.0)
+    private fun shape(v: Double) = sign(v) * abs(v).pow(3.0) / 4
 }
