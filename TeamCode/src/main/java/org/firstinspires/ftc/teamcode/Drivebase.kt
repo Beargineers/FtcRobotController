@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.IMU
 import org.firstinspires.ftc.teamcode.internal.Hardware
 import kotlin.math.PI
 import kotlin.math.abs
@@ -19,6 +21,7 @@ class Drivebase(op: OpMode) : Hardware(op) {
     val rf: DcMotor by hardware("rightFront")
     val lb: DcMotor by hardware("leftBack")
     val rb: DcMotor by hardware("rightBack")
+    val imu: IMU by hardware("imu")
 
     val allMotors = listOf(lf, rf, lb, rb)
 
@@ -32,6 +35,14 @@ class Drivebase(op: OpMode) : Hardware(op) {
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
             it.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
+
+        // Define Hub orientation TODO check with actual robot
+        val logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP
+        val usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+        val orientationOnRobot = RevHubOrientationOnRobot(logoDirection, usbDirection)
+
+        // Initialize the IMU
+        imu.initialize(IMU.Parameters(orientationOnRobot))
     }
 
     /** function to convert the distance the wheel needs to travel to ticks (the wheels can take in) */
