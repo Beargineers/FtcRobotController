@@ -5,7 +5,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 /*
 Tiles are marked vertically 1 (lowest row) through 6 (highest row)
 and A (leftmost column) through F (rightmost column) horizontally, where A6 holds blue goal and F6 holds red goal.
-Each tile is 26x26 inches
+Each tile is 24x24 inches
  */
 
 enum class TileOffset(val yoffset: Int, val xoffset: Int) {
@@ -27,8 +27,8 @@ enum class TileOffset(val yoffset: Int, val xoffset: Int) {
 fun tilePosition(tileCode: String, tileOffset: TileOffset = TileOffset.CENTER): Position2D {
     val (rowCode, columnCode) = tileCode.partition { it.isDigit() }
 
-    val xIn = ('6' - rowCode[0] - 3) * 26 + (tileOffset.xoffset + 1) * 13
-    val yIn = (columnCode[0] - 'A' - 3) * 26 + (tileOffset.yoffset + 1) * 13
+    val xIn = ('6' - rowCode[0] - 3) * 24 + (tileOffset.xoffset + 1) * 12
+    val yIn = (columnCode[0] - 'A' - 3) * 24 + (tileOffset.yoffset + 1) * 12
 
     return Position2D(xIn.toDouble(), yIn.toDouble(), DistanceUnit.INCH).toUnit(DISTANCE_UNIT)
 }
