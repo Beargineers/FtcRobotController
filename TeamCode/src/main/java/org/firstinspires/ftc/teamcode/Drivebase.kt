@@ -57,10 +57,16 @@ class Drivebase(op: OpMode) : Hardware(op) {
 
     /** mecanum: y=forward, x=strafe right, turn=clockwise */
     fun drive(y: Double, x: Double, turn: Double, slow: Boolean = false) {
-        val lfP = y + x + turn
-        val rfP = y - x - turn
-        val lbP = y - x + turn
-        val rbP = y + x - turn
+        // TODO For some reason (motor configuration) the strafe and turn come twisted.
+        // TODO We're handling the situation programmatically for now
+
+        val _x = turn
+        val _turn = x
+
+        val lfP = y + _x + _turn
+        val rfP = y - _x - _turn
+        val lbP = y - _x + _turn
+        val rbP = y + _x - _turn
 
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
@@ -151,5 +157,5 @@ class Drivebase(op: OpMode) : Hardware(op) {
         rb.power = -power
     }
 
-    fun stop() = drive(0.0, 0.0, 0.0)
+    override fun stop() = drive(0.0, 0.0, 0.0)
 }

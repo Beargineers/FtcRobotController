@@ -21,4 +21,8 @@ abstract class Hardware(val op: OpMode) {
     }
 
     inline fun <reified T> hardware(name: String = "") = HardwareDelegate(name, T::class.java)
+
+    open fun init() {}
+    open fun loop() {}
+    open fun stop() {}
 }
