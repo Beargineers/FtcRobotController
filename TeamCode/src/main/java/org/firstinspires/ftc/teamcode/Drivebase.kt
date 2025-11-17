@@ -36,8 +36,7 @@ class Drivebase(op: OpMode) : Hardware(op) {
             it.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
 
-        // Define Hub orientation TODO check with actual robot
-        val logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP
+        val logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT
         val usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         val orientationOnRobot = RevHubOrientationOnRobot(logoDirection, usbDirection)
 
