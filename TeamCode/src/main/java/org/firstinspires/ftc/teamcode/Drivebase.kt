@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
@@ -13,6 +14,14 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
+
+@Configurable
+object WheelCorrections {
+    var LF: Double = 1.0
+    var RF: Double = 1.0
+    var LB: Double = 1.0
+    var RB: Double = 1.0
+}
 
 class Drivebase(op: OpMode) : Hardware(op) {
 
@@ -73,10 +82,10 @@ class Drivebase(op: OpMode) : Hardware(op) {
         val limit = if (slow) 0.4 else 1.0
         fun normalize(v: Double) = (v / maxMag) * limit
 
-        lf.power = normalize(lfP)
-        rf.power = normalize(rfP)
-        lb.power = normalize(lbP)
-        rb.power = normalize(rbP)
+        lf.power = normalize(lfP * WheelCorrections.LF)
+        rf.power = normalize(rfP * WheelCorrections.RF)
+        lb.power = normalize(lbP * WheelCorrections.LB)
+        rb.power = normalize(rbP * WheelCorrections.RB)
     }
 
     /**
