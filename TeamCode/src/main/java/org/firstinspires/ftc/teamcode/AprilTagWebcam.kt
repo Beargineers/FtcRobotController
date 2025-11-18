@@ -21,7 +21,9 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
 
     private val visionPortal: VisionPortal = VisionPortal.Builder()
         .setCamera(camera)
-        .setCameraResolution(Size(640, 480))
+        .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+        .setCameraResolution(Size(1920, 1080))
+        //.setCameraResolution(Size(640, 480))
         .enableLiveView(true)
         .addProcessor(aprilTag)
         .build()
