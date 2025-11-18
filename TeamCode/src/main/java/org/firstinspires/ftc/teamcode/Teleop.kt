@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sign
 
 @TeleOp(name = "Mecanum Drive Kotlin", group = "Drive")
 class MecanumTeleOp : Robot() {
@@ -34,7 +32,7 @@ class MecanumTeleOp : Robot() {
 
         val y = -gamepad1.left_stick_y.normalize()   // forward/back
         val x =  gamepad1.left_stick_x.normalize()  // strafe
-        val r =  gamepad1.right_stick_x.normalize() / 3 // rotate
+        val r =  (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) / 3).normalize() // rotate
 
         val slow = !gamepad1.left_bumper
         drive.drive(y, x, r, slow)
@@ -45,6 +43,6 @@ class MecanumTeleOp : Robot() {
 
     fun Float.normalize(): Double = shape(deadband(this.toDouble()))
 
-    private fun deadband(v: Double, th: Double = 0.05) = if (abs(v) < th) 0.0 else v
-    private fun shape(v: Double) = sign(v) * abs(v).pow(3.0) / 4
+    private fun deadband(v: Double, th: Double = 0.01) = if (abs(v) < th) 0.0 else v
+    private fun shape(v: Double) = v
 }

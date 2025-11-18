@@ -18,9 +18,9 @@ import kotlin.math.sqrt
 @Configurable
 object WheelCorrections {
     var LF: Double = 1.0
-    var RF: Double = 1.0
+    var RF: Double = 0.8
     var LB: Double = 1.0
-    var RB: Double = 1.0
+    var RB: Double = 0.95
 }
 
 class Drivebase(op: OpMode) : Hardware(op) {
@@ -40,9 +40,10 @@ class Drivebase(op: OpMode) : Hardware(op) {
         rf.direction = DcMotorSimple.Direction.FORWARD
         rb.direction = DcMotorSimple.Direction.FORWARD
 
-        listOf(lf, rf, lb, rb).forEach {
+        allMotors.forEach {
+            it.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-            it.mode = DcMotor.RunMode.RUN_USING_ENCODER
+            it.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         }
 
         val logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT
@@ -82,10 +83,23 @@ class Drivebase(op: OpMode) : Hardware(op) {
         val limit = if (slow) 0.4 else 1.0
         fun normalize(v: Double) = (v / maxMag) * limit
 
-        lf.power = normalize(lfP * WheelCorrections.LF)
-        rf.power = normalize(rfP * WheelCorrections.RF)
-        lb.power = normalize(lbP * WheelCorrections.LB)
-        rb.power = normalize(rbP * WheelCorrections.RB)
+        val lfpn = normalize(lfP * WheelCorrections.LF)
+        lf.power = lfpn
+        val rfpn = normalize(rfP * WheelCorrections.RF)
+        rf.power = rfpn
+        val lbpn = normalize(lbP * WheelCorrections.LB)
+        lb.power = lbpn
+        val rbpn = normalize(rbP * WheelCorrections.RB)
+        rb.power = rbpn
+
+        telemetry.addData("Motor power", "lf=%.2f, rf=%.2f, lb=%.2f, rb=%.2f", lfpn, rfpn, lbpn, rbpn)
+
+        telemetry.addData("Encoders", "lf=%d, rf=%d, lb=%d, rb=%d",
+            lf.currentPosition,
+            rf.currentPosition,
+            lb.currentPosition,
+            rb.currentPosition
+            )
     }
 
     /**
