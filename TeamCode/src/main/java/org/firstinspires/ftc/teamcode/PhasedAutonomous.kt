@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.firstinspires.ftc.robotcore.external.Telemetry
+import kotlin.time.Duration
 
 /**
  * # Phased Autonomous Framework
@@ -105,6 +105,24 @@ interface AutonomousPhase {
     fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean
 }
 
+class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase {
+    private val startTime = ElapsedTime()
+
+    override fun Robot.initPhase() {
+        drive.stop()
+    }
+
+    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+        resetCoords()
+        return phaseTime.seconds() < durationInSeconds
+    }
+}
+
+@PhaseDsl
+fun PhaseBuilder.wait(duration: Duration) {
+    phase(WaitPhase(duration.inWholeSeconds.toDouble()))
+}
+
 /**
  * A composite phase that executes a sequence of child phases.
  *
@@ -125,24 +143,17 @@ class CompositePhase(
     /** Timer for the current child phase */
     private val childPhaseTime = ElapsedTime()
 
-    private var telemetryLine: Telemetry.Line? = null
-
     override fun name(): String = _name
 
     override fun Robot.initPhase() {
         // Reset state when the composite phase starts
         currentPhaseIdx = 0
         currentPhaseInitialized = false
-        telemetryLine = telemetry.addLine("Phase ${name()}")
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
         // If all child phases are complete, signal completion
         if (currentPhaseIdx >= childPhases.size) {
-            if (telemetryLine != null) {
-                telemetry.removeLine(telemetryLine)
-                telemetryLine = null
-            }
             return false
         }
 
@@ -151,6 +162,7 @@ class CompositePhase(
         // Initialize the current child phase if needed
         if (!currentPhaseInitialized) {
             with(currentPhase) {
+                telemetry.addLine("Current phase: ${currentPhase.name()}")
                 initPhase()
             }
             currentPhaseInitialized = true
@@ -168,7 +180,7 @@ class CompositePhase(
             currentPhaseInitialized = false
         }
 
-        telemetryLine!!.addData("  Progress", "${currentPhaseIdx + 1} / ${childPhases.size} %.2f s", phaseTime.seconds())
+        telemetry.addData("Progress ${currentPhase.name()}", "${currentPhaseIdx + 1} / ${childPhases.size} %.2f s", phaseTime.seconds())
 
         // Continue composite phase as long as there are more child phases
         return true

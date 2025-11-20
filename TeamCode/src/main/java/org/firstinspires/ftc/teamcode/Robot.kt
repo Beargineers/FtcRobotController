@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode
 
+import com.bylazar.configurables.annotations.Configurable
+import com.bylazar.field.PanelsField
+import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.internal.Hardware
@@ -7,9 +10,19 @@ import org.firstinspires.ftc.teamcode.internal.RobotOpModeBase
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
+
+@Configurable
+object AutonomousConfig {
+    var MAX_SPEED = 0.35
+
+    // Proportional control gains (tune these values for your robot)
+    var kP_position = 0.05  // Position gain (power per distance unit)
+    var kP_heading = 0.01   // Heading gain (power per angle unit)
+}
 
 abstract class Robot() : RobotOpModeBase() {
     lateinit var drive: Drivebase
@@ -19,7 +32,13 @@ abstract class Robot() : RobotOpModeBase() {
 
     val allHardware = mutableListOf<Hardware>()
 
-    var currentPose: Pose2D? = null
+    val panelsTelemetry = PanelsTelemetry.telemetry
+    val panelsField = PanelsField.field
+
+    var currentPose: Pose2D = FIELD_CENTER.withHeading(0.0, AngleUnit.DEGREES)
+
+    var atChange: Pose2D = Pose2D(0.0, 0.0, 0.0)
+    var dbChange: Pose2D = Pose2D(0.0, 0.0, 0.0)
 
     override fun init() {
         drive = Drivebase(this)
@@ -41,8 +60,33 @@ abstract class Robot() : RobotOpModeBase() {
 
     override fun loop() {
         allHardware.forEach { it.loop() }
-        currentPose = aprilTags.robotPose()
+        val aprilTagPose = aprilTags.robotPose()
+        val driveChange = drive.poseChange(currentPose.toAngleUnit(AngleUnit.RADIANS).heading)
+
+        if (aprilTagPose != null) {
+            atChange += (aprilTagPose - currentPose)
+            dbChange += driveChange
+
+            panelsTelemetry.debug("AT pose change: $atChange")
+            panelsTelemetry.debug("Drive pose change: $dbChange")
+
+            currentPose = aprilTagPose
+        }
+        else {
+            currentPose += driveChange
+        }
+
         telemetry.addData("Pose", currentPose)
+        telemetry.addData("IMU Heading:", Math.toDegrees(drive.getYawFromQuaternionInRadians()))
+
+        val cp = currentPose.toDistanceUnit(DistanceUnit.INCH).toAngleUnit(AngleUnit.RADIANS)
+
+        panelsField.moveCursor(cp.x, cp.y)
+        panelsField.circle(2.0)
+
+        panelsField.moveCursor(cp.x + 3 * cos(cp.heading), cp.y + 3 * sin(cp.heading))
+        panelsField.circle(1.0)
+        panelsField.update()
     }
 
     /**
@@ -79,18 +123,14 @@ abstract class Robot() : RobotOpModeBase() {
      */
     fun driveToPose(
         pose: Pose2D,
-        maxSpeed: Double = 0.5,
+        maxSpeed: Double,
         positionTolerance: Double = 2.0,
         headingTolerance: Double = 5.0
     ): Boolean {
-        if (currentPose == null) {
-            telemetry.addLine("Current position is unknown, cannot drive to position")
-            return false
-        }
-
-        // Make sure current and target positions are in the same units. Also, angle units have to be in radians for calling sin/cos etc.
-        val cp = currentPose!!.toDistanceUnit(DistanceUnit.INCH).toAngleUnit(AngleUnit.RADIANS)
-        val tp = pose.toDistanceUnit(DistanceUnit.INCH).toAngleUnit(AngleUnit.RADIANS)
+        val maxSpeed = min(maxSpeed, AutonomousConfig.MAX_SPEED)
+        // Make sure current and target positions are in the same units.
+        val cp = currentPose.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
+        val tp = pose.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
 
         // Calculate position error (field frame)
         val deltaX = tp.x - cp.x
@@ -107,35 +147,42 @@ abstract class Robot() : RobotOpModeBase() {
         while (headingError > halfCircle) headingError -= fullCircle
         while (headingError < -halfCircle) headingError += fullCircle
 
+        telemetry.addData("Distance to target", "%.2f %s".format(distanceToTarget, tp.distanceUnit))
+        telemetry.addData("Heading Error", headingError)
+
+
         // Check if we've reached the target
-        if (distanceToTarget < positionTolerance && abs(headingError) < headingTolerance) {
+        if (distanceToTarget < positionTolerance && Math.toDegrees(abs(headingError)) < headingTolerance) {
             drive.stop()
-            return true
+            return false
         }
 
         // Convert field-frame error to robot-frame error
         // We need to rotate the field-frame delta by the negative of the robot's heading
         val robotHeadingRad = cp.heading
-        val robotFrameX = deltaX * cos(robotHeadingRad) + deltaY * sin(robotHeadingRad)
-        val robotFrameY = -deltaX * sin(robotHeadingRad) + deltaY * cos(robotHeadingRad)
-
-        // Proportional control gains (tune these values for your robot)
-        val kP_position = 0.02  // Position gain (power per distance unit)
-        val kP_heading = 0.01   // Heading gain (power per angle unit)
+        val robotForward = deltaX * cos(robotHeadingRad) + deltaY * sin(robotHeadingRad)
+        val robotRight = deltaX * sin(robotHeadingRad) - deltaY * cos(robotHeadingRad)
 
         // Calculate drive powers using proportional control
-        val forwardPower = robotFrameY * kP_position
-        val strafePower = robotFrameX * kP_position
-        val turnPower = headingError * kP_heading
+        val forwardPower = robotForward * AutonomousConfig.kP_position
+        val strafePower = robotRight * AutonomousConfig.kP_position
+        val turnPower = -Math.toDegrees(headingError) * AutonomousConfig.kP_heading // Positive power to turn CW, but positive delta heating is CCW
+
+        val maxPower = listOf(forwardPower, strafePower, turnPower).maxOf { abs(it) }
+        val maxV = when {
+            maxPower > maxSpeed -> maxPower / maxSpeed
+            maxPower < 0.08 -> maxPower / 0.08
+            else -> 1.0
+        }
 
         fun clamp(value: Double): Double {
-            return value.coerceIn(-maxSpeed, maxSpeed)
+            return value / maxV
         }
 
         // Apply drive power
         drive.drive(
-            y = clamp(forwardPower),
-            x = clamp(strafePower),
+            forward = clamp(forwardPower),
+            right = clamp(strafePower),
             turn = clamp(turnPower)
         )
 
@@ -146,10 +193,15 @@ abstract class Robot() : RobotOpModeBase() {
             clamp(forwardPower), clamp(strafePower), clamp(turnPower)
         ))
 
-        return false
+        return true
     }
 
     override fun stop() {
         allHardware.forEach { it.stop() }
+    }
+
+    fun resetCoords() {
+        atChange = Pose2D(0.0, 0.0, 0.0)
+        dbChange = Pose2D(0.0, 0.0, 0.0)
     }
 }
