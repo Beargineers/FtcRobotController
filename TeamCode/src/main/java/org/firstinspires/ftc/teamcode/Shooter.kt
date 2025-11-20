@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.teamcode.internal.Hardware
 
-private const val FEEDER_RUN_TIME: Long = 2400L
+private const val FEEDER_RUN_TIME: Long = 3500L
 
 @Configurable
 object ShooterConfig {
@@ -45,25 +45,25 @@ class Shooter(op: OpMode): Hardware(op) {
     private fun powerFlywheel(p: Double) {
         fly1.direction = DcMotorSimple.Direction.REVERSE
         fly2.direction = DcMotorSimple.Direction.REVERSE
-        fly1.power = p
-        fly2.power = p
+        setMotorPower(fly1, p)
+        setMotorPower(fly2, p)
     }
 
     fun launch() {
         feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        feeder.power = 1.0
+        setMotorPower(feeder, 1.0)
         feederStartedAt = System.currentTimeMillis()
     }
 
     override fun loop() {
         if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > FEEDER_RUN_TIME) {
-            feeder.power = 0.0
+            setMotorPower(feeder, 0.0)
             feederStartedAt = 0L
         }
     }
 
     override fun stop() {
         enableFlywheel(false)
-        feeder.power = 0.0
+        setMotorPower(feeder, 0.0)
     }
 }

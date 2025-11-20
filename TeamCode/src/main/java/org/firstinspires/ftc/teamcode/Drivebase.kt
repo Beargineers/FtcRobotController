@@ -94,13 +94,13 @@ class Drivebase(op: OpMode) : Hardware(op) {
         fun normalize(v: Double) = (v / maxMag) * limit
 
         val lfpn = normalize(lfP * WheelCorrections.LF)
-        lf.power = lfpn
+        setMotorPower(lf, lfpn)
         val rfpn = normalize(rfP * WheelCorrections.RF)
-        rf.power = rfpn
+        setMotorPower(rf, rfpn)
         val lbpn = normalize(lbP * WheelCorrections.LB)
-        lb.power = lbpn
+        setMotorPower(lb, lbpn)
         val rbpn = normalize(rbP * WheelCorrections.RB)
-        rb.power = rbpn
+        setMotorPower(rb, rbpn)
 
         telemetry.addData("Motor power", "lf=%.2f, rf=%.2f, lb=%.2f, rb=%.2f", lfpn, rfpn, lbpn, rbpn)
 

@@ -14,10 +14,10 @@ class Intake(op: OpMode): Hardware(op) {
 
     fun enable(on: Boolean) {
         if (on) {
-            intake.power = 1.0
+            setMotorPower(intake, 1.0)
         }
         else {
-            intake.power = 0.0
+            setMotorPower(intake, 0.0)
         }
     }
 
