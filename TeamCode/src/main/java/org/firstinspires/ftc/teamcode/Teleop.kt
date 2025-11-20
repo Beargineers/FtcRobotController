@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 import com.bylazar.configurables.annotations.Configurable
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import kotlin.math.abs
 
 @Configurable
@@ -60,5 +61,5 @@ open class Driving(alliance: Alliance) : Robot(alliance) {
     private fun shape(v: Double) = v
 }
 
-class RedDriving() : Driving(Alliance.RED)
-class BlueDriving() : Driving(Alliance.BLUE)
+@TeleOp class RedDriving() : Driving(Alliance.RED)
+@TeleOp class BlueDriving() : Driving(Alliance.BLUE)
