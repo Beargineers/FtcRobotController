@@ -17,10 +17,10 @@ import kotlin.math.sqrt
 
 @Configurable
 object AutonomousConfig {
-    var MAX_SPEED = 0.35
+    var MAX_SPEED = 0.6
 
     // Proportional control gains (tune these values for your robot)
-    var kP_position = 0.05  // Position gain (power per distance unit)
+    var kP_position = 0.035  // Position gain (power per distance unit)
     var kP_heading = 0.01   // Heading gain (power per angle unit)
 }
 
