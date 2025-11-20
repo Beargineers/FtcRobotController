@@ -97,7 +97,15 @@ class BlueSouth : PhasedAutonomous(phases("Autonomous") {
 })
 
 @Autonomous
-class HalfTileLoop : PhasedAutonomous(phases {
+class BlueNorth : PhasedAutonomous(phases("Autonomous") {
+    assumePosition(NORTH_BLUE_LAUNCH_POINT)
+    scoopAndShoot(Spike.LEFT3, NORTH_BLUE_LAUNCH_POINT)
+    scoopAndShoot(Spike.LEFT2, NORTH_BLUE_LAUNCH_POINT)
+    scoopAndShoot(Spike.LEFT1, NORTH_BLUE_LAUNCH_POINT)
+})
+
+@Autonomous
+class Tune_HalfTileLoop : PhasedAutonomous(phases {
     wait(3.seconds)
     driveRelative(12.0, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
     driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
@@ -110,25 +118,25 @@ class HalfTileLoop : PhasedAutonomous(phases {
 })
 
 @Autonomous
-class OneTileLeft : PhasedAutonomous(phases {
+class Tune_OneTileLeft : PhasedAutonomous(phases {
     wait(3.seconds)
     driveRelative(0.0, -24.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
 })
 
 @Autonomous
-class Turn90CCW : PhasedAutonomous(phases {
+class Tune_Turn90CCW : PhasedAutonomous(phases {
     wait(3.seconds)
     driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
 })
 
 @Autonomous
-class C1ToC6Forward : PhasedAutonomous(phases {
+class Tune_C1ToC6Forward : PhasedAutonomous(phases {
     assumePosition(tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES))
     driveTo(tilePosition("C6").withHeading(180.0, AngleUnit.DEGREES))
 })
 
 @Autonomous
-class B1ToB6Left : PhasedAutonomous(phases {
+class Tune_B1ToB6Left : PhasedAutonomous(phases {
     assumePosition(tilePosition("B1").withHeading(90.0, AngleUnit.DEGREES))
     driveTo(tilePosition("B6").withHeading(90.0, AngleUnit.DEGREES))
 })
