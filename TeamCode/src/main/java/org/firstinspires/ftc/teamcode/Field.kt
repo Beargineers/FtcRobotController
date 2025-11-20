@@ -19,7 +19,8 @@ enum class Spike(start: String, end: String) {
     RIGHT2("E3", "F3"),
     RIGHT3("E4", "F4");
 
-    val heading = if (name.startsWith("LEFT")) 90.0 else -90.0
-    val startPose = tilePosition(start).withHeading(heading, AngleUnit.DEGREES)
-    val endPose = tilePosition(end).withHeading(heading, AngleUnit.DEGREES)
+    val left = name.startsWith("LEFT")
+    val heading = if (left) -90.0 else 90.0
+    val startPose = tilePosition(start, if (left) TileOffset.RIGHT_CENTER else TileOffset.LEFT_CENTER).withHeading(heading, AngleUnit.DEGREES)
+    val endPose = tilePosition(end, if (left) TileOffset.RIGHT_CENTER else TileOffset.LEFT_CENTER).withHeading(heading, AngleUnit.DEGREES)
 }

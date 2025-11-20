@@ -56,7 +56,7 @@ fun PhaseBuilder.scoopSpike(spike: Spike) {
         //TODO switch intake on
         driveTo(spike.endPose, maxSpeed = 0.2) // Drive in slowly, so we can carefully scoop the artifacts
         //TODO switch intake off
-        driveTo(spike.startPose, maxSpeed = 0.5) // Drive out carefully, so we don't disturb nearby artifacts
+        driveTo(spike.startPose)
     }
 }
 
@@ -69,16 +69,20 @@ fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
     }
 }
 
+@Autonomous
 class RedSouth : PhasedAutonomous(phases("Autonomous") {
+    assumePosition(tilePosition("D1").withHeading(180.0, AngleUnit.DEGREES))
     scoopAndShoot(Spike.RIGHT1, SOUTH_RED_LAUNCH_POINT)
     scoopAndShoot(Spike.RIGHT2, SOUTH_RED_LAUNCH_POINT)
     scoopAndShoot(Spike.RIGHT3, SOUTH_RED_LAUNCH_POINT)
 })
 
+@Autonomous
 class BlueSouth : PhasedAutonomous(phases("Autonomous") {
+    assumePosition(tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES))
     scoopAndShoot(Spike.LEFT1, SOUTH_BLUE_LAUNCH_POINT)
     scoopAndShoot(Spike.LEFT2, SOUTH_BLUE_LAUNCH_POINT)
-    scoopAndShoot(Spike.LEFT2, SOUTH_BLUE_LAUNCH_POINT)
+    scoopAndShoot(Spike.LEFT3, SOUTH_BLUE_LAUNCH_POINT)
 })
 
 @Autonomous
@@ -104,4 +108,16 @@ class OneTileLeft : PhasedAutonomous(phases {
 class Turn90CCW : PhasedAutonomous(phases {
     wait(3.seconds)
     driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
+})
+
+@Autonomous
+class C1ToC6Forward : PhasedAutonomous(phases {
+    assumePosition(tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES))
+    driveTo(tilePosition("C6").withHeading(180.0, AngleUnit.DEGREES))
+})
+
+@Autonomous
+class B1ToB6Left : PhasedAutonomous(phases {
+    assumePosition(tilePosition("B1").withHeading(90.0, AngleUnit.DEGREES))
+    driveTo(tilePosition("B6").withHeading(90.0, AngleUnit.DEGREES))
 })
