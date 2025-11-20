@@ -6,12 +6,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.IMU
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.internal.Hardware
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
-import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -21,6 +22,8 @@ object WheelCorrections {
     var RF: Double = 0.8
     var LB: Double = 1.0
     var RB: Double = 0.95
+
+    var CM_PER_TICK: Double = 0.0743
 }
 
 class Drivebase(op: OpMode) : Hardware(op) {
@@ -31,6 +34,12 @@ class Drivebase(op: OpMode) : Hardware(op) {
     val lb: DcMotor by hardware("leftBack")
     val rb: DcMotor by hardware("rightBack")
     val imu: IMU by hardware("imu")
+
+    var lastLf:Int = 0
+    var lastRf:Int = 0
+    var lastLb:Int = 0
+    var lastRb:Int = 0
+    var lastYaw: Double? = null
 
     val allMotors = listOf(lf, rf, lb, rb)
 
@@ -66,17 +75,17 @@ class Drivebase(op: OpMode) : Hardware(op) {
     }
 
     /** mecanum: y=forward, x=strafe right, turn=clockwise */
-    fun drive(y: Double, x: Double, turn: Double, slow: Boolean = false) {
+    fun drive(forward: Double, right: Double, turn: Double, slow: Boolean = false) {
         // TODO For some reason (motor configuration) the strafe and turn come twisted.
         // TODO We're handling the situation programmatically for now
 
-        val _x = turn
-        val _turn = x
+        val strafe = turn * sqrt(2.0) // strafe is less effective than forward movement with same power applied
+        val cw_turn = right
 
-        val lfP = y + _x + _turn
-        val rfP = y - _x - _turn
-        val lbP = y - _x + _turn
-        val rbP = y + _x - _turn
+        val lfP = forward + strafe + cw_turn
+        val rfP = forward - strafe - cw_turn
+        val lbP = forward - strafe + cw_turn
+        val rbP = forward + strafe - cw_turn
 
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
@@ -102,83 +111,64 @@ class Drivebase(op: OpMode) : Hardware(op) {
             )
     }
 
-    /**
-    function is taken and adapted from https://www.youtube.com/watch?v=gnSW2QpkGXQ with review of chatGPT
-    takes in the x and y coordinates in centimeters relative to the robot, and used mechanum wheels to go there at a certain motor power (requires encoders to work)
-     */
-    fun goto(y: Double, x: Double, power: Double = 0.6) {
-        // initializes motors to run a certain distance
-        allMotors.forEach {
-            it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-            it.mode = DcMotor.RunMode.RUN_TO_POSITION
-        }
-
-        // converts the x and y to angle and the distance
-        val distance = sqrt(x.pow(2) + y.pow(2))  // pythagorean theorem
-        val angle = atan2(y, x)                   // calculates the angle of travel relative to x
-
-        // determine how much each motor needs to turn, PI/4 = 45˚, the angle of the mechanum wheels
-        val lfdRatio = cos(angle - PI / 4)
-        val rfdRatio = sin(angle - PI / 4)
-        val lbdRatio = sin(angle - PI / 4)
-        val rbdRatio = cos(angle - PI / 4)
-
-        // normalize so max ratio = 1
-        val maxRatio = listOf(lfdRatio, rfdRatio, lbdRatio, rbdRatio).maxOf { abs(it) }
-        val lfdNorm = lfdRatio / maxRatio
-        val rfdNorm = rfdRatio / maxRatio
-        val lbdNorm = lbdRatio / maxRatio
-        val rbdNorm = rbdRatio / maxRatio
-
-        // multiply by distance to get actual travel in cm for each wheel
-        val lfd = distance * lfdNorm
-        val rfd = distance * rfdNorm
-        val lbd = distance * lbdNorm
-        val rbd = distance * rbdNorm
-
-        // tells the motor how many revs to move
-        lf.targetPosition = lf.currentPosition + cm_to_ticks(lfd)
-        rf.targetPosition = rf.currentPosition + cm_to_ticks(rfd)
-        lb.targetPosition = lb.currentPosition + cm_to_ticks(lbd)
-        rb.targetPosition = rb.currentPosition + cm_to_ticks(rbd)
-
-
-        // sets powers to the motors so that the robot moves uniformly without turning
-        lf.power = power * lfdNorm
-        rf.power = power * rfdNorm
-        lb.power = power * lbdNorm
-        rb.power = power * rbdNorm
-    }
-
-    fun turn(degrees: Int, power: Double) {
-        // set motors to RUN_TO_POSITION mode
-        allMotors.forEach {
-            it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-            it.mode = DcMotor.RunMode.RUN_TO_POSITION
-        }
-
-        val ratio = 10  // needs testing to get the right ration of cm/˚ (NOT THE ACTUAL VALUE)
-
-        val turncm = degrees * ratio
-
-        // multiply by distance to get actual travel in cm for each wheel
-        val lfd = turncm.toDouble()
-        val rfd = -turncm.toDouble()
-        val lbd = turncm.toDouble()
-        val rbd = -turncm.toDouble()
-
-        // tells the motor how many revs to move
-        lf.targetPosition = lf.currentPosition + cm_to_ticks(lfd)
-        rf.targetPosition = rf.currentPosition + cm_to_ticks(rfd)
-        lb.targetPosition = lb.currentPosition + cm_to_ticks(lbd)
-        rb.targetPosition = rb.currentPosition + cm_to_ticks(rbd)
-
-        // sets powers
-        lf.power = power
-        rf.power = -power
-        lb.power = power
-        rb.power = -power
-    }
-
     override fun stop() = drive(0.0, 0.0, 0.0)
+
+    fun getYawFromQuaternionInRadians(): Double {
+        val q = imu.robotOrientationAsQuaternion
+
+        // Calculate yaw from quaternion
+        val yawRadians = atan2(
+            (2 * (q.w * q.z + q.x * q.y)).toDouble(),
+            (1 - 2 * (q.y * q.y + q.z * q.z)).toDouble()
+        )
+
+        return yawRadians
+    }
+
+    /**
+     * Calculates the change in robot pose based on encoder readings.
+     *
+     * Uses mecanum wheel forward kinematics to determine the robot's movement
+     * in the robot frame since the last encoder reset.
+     *
+     * Forward kinematics for mecanum drive:
+     * - Forward/backward (y): All wheels contribute equally
+     * - Strafe left/right (x): Diagonal wheels oppose each other
+     * - Heading: From IMU yaw angle
+     *
+     * @return Pose2D representing the change in position and orientation
+     */
+    fun poseChange(heading: Double): Pose2D {
+        val yaw = getYawFromQuaternionInRadians()
+
+        val lf = lf.currentPosition
+        val lb = lb.currentPosition
+        val rf = rf.currentPosition
+        val rb = rb.currentPosition
+
+        // The robot is assembled in a way that encoder counters REDUCE when robot is moving forward. That's why we have negative deltas here
+        val deltaLF = -(lf - lastLf) / WheelCorrections.LF * WheelCorrections.CM_PER_TICK
+        val deltaLB = -(lb - lastLb) / WheelCorrections.LB * WheelCorrections.CM_PER_TICK
+        val deltaRF = -(rf - lastRf) / WheelCorrections.RF * WheelCorrections.CM_PER_TICK
+        val deltaRB = -(rb - lastRb) / WheelCorrections.RB * WheelCorrections.CM_PER_TICK
+
+        val forward = (deltaLF + deltaRF + deltaLB + deltaRB) / 4
+        val right = (deltaLF - deltaRF + deltaLB - deltaRB) / (4 * sqrt(2.0))
+        return Pose2D(
+            // Forward: all wheels contribute equally
+            x = forward * cos(heading) + right * sin(heading),
+            // Strafe: diagonal wheels oppose (LF and RB forward = strafe right)
+            y = forward * sin(heading) - right * cos(heading),
+            // Get yaw in radians to match the angleUnit specification
+            heading = yaw - (lastYaw ?: yaw),
+            distanceUnit = DistanceUnit.CM,
+            angleUnit = AngleUnit.RADIANS
+        ).normalizeHeading().also {
+            lastLf = lf
+            lastLb = lb
+            lastRf = rf
+            lastRb = rb
+            lastYaw = yaw
+        }
+    }
 }
