@@ -121,9 +121,9 @@ fun PhaseBuilder.wait(duration: Duration) {
     phase(WaitPhase(duration.inWholeSeconds.toDouble()))
 }
 
-class SetPositionPhase(private val position: Pose2D) : AutonomousPhase {
+class SimpleActionPhase(private val action: Robot.() -> Unit) : AutonomousPhase {
     override fun Robot.initPhase() {
-        currentPose = position
+        action()
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
@@ -132,8 +132,15 @@ class SetPositionPhase(private val position: Pose2D) : AutonomousPhase {
 }
 
 @PhaseDsl
+fun PhaseBuilder.action(action: Robot.() -> Unit) {
+    phase(SimpleActionPhase(action))
+}
+
+@PhaseDsl
 fun PhaseBuilder.assumePosition(position: Pose2D) {
-    phase(SetPositionPhase(position))
+    action {
+        currentPose = position
+    }
 }
 
 /**
