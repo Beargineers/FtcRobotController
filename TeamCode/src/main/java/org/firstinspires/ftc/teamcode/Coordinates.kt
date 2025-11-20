@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import java.util.Locale
+import kotlin.math.PI
 
 val DISTANCE_UNIT = DistanceUnit.CM
 val ANGLE_UNIT = AngleUnit.DEGREES
@@ -75,6 +76,35 @@ class Pose2D(
     }
 
     fun position() : Position2D = Position2D(x, y, distanceUnit)
+
+    operator fun plus(other: Pose2D): Pose2D {
+        val other = other.toDistanceUnit(distanceUnit).toAngleUnit(angleUnit)
+        return Pose2D(x + other.x, y + other.y, heading + other.heading, distanceUnit, angleUnit).normalizeHeading()
+    }
+
+    operator fun minus(other: Pose2D): Pose2D {
+        val other = other.toDistanceUnit(distanceUnit).toAngleUnit(angleUnit)
+        return Pose2D(x - other.x, y - other.y, heading - other.heading, distanceUnit, angleUnit).normalizeHeading()
+    }
+
+    fun normalizeHeading() : Pose2D {
+        when (angleUnit) {
+            AngleUnit.DEGREES -> {
+                var h = heading
+                while (h < -180) h += 360
+                while (h > 180) h -= 360
+
+                return Pose2D(x, y, h, distanceUnit, angleUnit)
+            }
+
+            AngleUnit.RADIANS -> {
+                var h = heading
+                while (h < -PI) h += 2*PI
+                while (h > PI) h -= 2*PI
+                return Pose2D(x, y, h, distanceUnit, angleUnit)
+            }
+        }
+    }
 
     override fun toString(): String {
         return String.format(Locale.getDefault(), "(%.3f %.3f)%s  %.3f%s", x, y, distanceUnit, heading, angleUnit)
