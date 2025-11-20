@@ -1,11 +1,17 @@
 package org.firstinspires.ftc.teamcode
 
+import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.teamcode.internal.Hardware
 
 private const val FEEDER_RUN_TIME: Long = 2400L
+
+@Configurable
+object ShooterConfig {
+    var SHOOTER_P = 0.65
+}
 
 class Shooter(op: OpMode): Hardware(op) {
     val fly1 by hardware<DcMotor>()
@@ -29,7 +35,7 @@ class Shooter(op: OpMode): Hardware(op) {
 
     fun enableFlywheel(on: Boolean) {
         if (on) {
-            powerFlywheel(1.0)
+            powerFlywheel(ShooterConfig.SHOOTER_P)
         }
         else {
             powerFlywheel(0.0)
