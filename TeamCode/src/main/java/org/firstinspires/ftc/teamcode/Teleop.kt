@@ -1,6 +1,13 @@
 package org.firstinspires.ftc.teamcode
+import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import kotlin.math.abs
+
+@Configurable
+object TeleopConfigs {
+    @JvmField
+    var ROTATION_TRIGGER_REDUCTION: Float = 0.5f
+}
 
 @TeleOp(name = "Mecanum Drive Kotlin", group = "Drive")
 class MecanumTeleOp : Robot() {
@@ -24,15 +31,23 @@ class MecanumTeleOp : Robot() {
         }
     }
 
+    val resetCoordsButton by lazy {
+        Button(gamepad1::b).onRelease {
+            resetCoords()
+            currentPose = FIELD_CENTER.withHeading(0.0)
+        }
+    }
+
     override fun loop() {
         super.loop()
         launcherButton.update()
         intakeButton.update()
         feederButton.update()
+        resetCoordsButton.update()
 
         val y = -gamepad1.left_stick_y.normalize()   // forward/back
         val x =  gamepad1.left_stick_x.normalize()  // strafe
-        val r =  (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) / 3).normalize() // rotate
+        val r =  (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * TeleopConfigs.ROTATION_TRIGGER_REDUCTION).normalize() // rotate
 
         val slow = !gamepad1.left_bumper
         drive.drive(y, x, r, slow)
