@@ -61,10 +61,20 @@ abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
 
     override fun loop() {
         allHardware.forEach { it.loop() }
-        goalDistanceCM = aprilTags.findTarget(alliance)?.ftcPose?.range
         val driveChange = drive.poseChange(currentPose.toAngleUnit(AngleUnit.RADIANS).heading)
 
         currentPose += driveChange
+        if (abs(driveChange.x) > 0.1 ||
+            abs(driveChange.y) > 0.1 ||
+            abs(driveChange.heading) > 0.1) {
+            goalDistanceCM = null
+        }
+
+        val atRange = aprilTags.findTarget(alliance)?.ftcPose?.range
+        if (atRange != null) {
+            goalDistanceCM = atRange
+        }
+
         telemetry.addData("Pose", currentPose)
         telemetry.addData("Goal distance", goalDistanceCM ?: "goal not found")
         telemetry.update()
