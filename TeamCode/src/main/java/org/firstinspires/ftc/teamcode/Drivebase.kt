@@ -23,7 +23,8 @@ object WheelCorrections {
     var LB: Double = 1.0
     var RB: Double = 0.95
 
-    var CM_PER_TICK: Double = 0.0743
+    var FORWARD_CM_PER_TICK: Double = 0.05705
+    var STRAFE_CM_PER_TICK: Double = 0.075
 }
 
 class Drivebase(op: OpMode) : Hardware(op) {
@@ -147,13 +148,13 @@ class Drivebase(op: OpMode) : Hardware(op) {
         val rb = rb.currentPosition
 
         // The robot is assembled in a way that encoder counters REDUCE when robot is moving forward. That's why we have negative deltas here
-        val deltaLF = -(lf - lastLf) / WheelCorrections.LF * WheelCorrections.CM_PER_TICK
-        val deltaLB = -(lb - lastLb) / WheelCorrections.LB * WheelCorrections.CM_PER_TICK
-        val deltaRF = -(rf - lastRf) / WheelCorrections.RF * WheelCorrections.CM_PER_TICK
-        val deltaRB = -(rb - lastRb) / WheelCorrections.RB * WheelCorrections.CM_PER_TICK
+        val deltaLF = -(lf - lastLf) / WheelCorrections.LF
+        val deltaLB = -(lb - lastLb) / WheelCorrections.LB
+        val deltaRF = -(rf - lastRf) / WheelCorrections.RF
+        val deltaRB = -(rb - lastRb) / WheelCorrections.RB
 
-        val forward = (deltaLF + deltaRF + deltaLB + deltaRB) / 4
-        val right = (deltaLF - deltaRF + deltaLB - deltaRB) / (4 * sqrt(2.0))
+        val forward = WheelCorrections.FORWARD_CM_PER_TICK * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
+        val right = WheelCorrections.STRAFE_CM_PER_TICK* (deltaLF - deltaRF + deltaLB - deltaRB) / (4 * sqrt(2.0))
         return Pose2D(
             // Forward: all wheels contribute equally
             x = forward * cos(heading) + right * sin(heading),

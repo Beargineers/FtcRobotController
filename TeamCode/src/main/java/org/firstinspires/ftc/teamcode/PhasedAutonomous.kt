@@ -106,8 +106,6 @@ interface AutonomousPhase {
 }
 
 class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase {
-    private val startTime = ElapsedTime()
-
     override fun Robot.initPhase() {
         drive.stop()
     }
@@ -121,6 +119,21 @@ class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase {
 @PhaseDsl
 fun PhaseBuilder.wait(duration: Duration) {
     phase(WaitPhase(duration.inWholeSeconds.toDouble()))
+}
+
+class SetPositionPhase(private val position: Pose2D) : AutonomousPhase {
+    override fun Robot.initPhase() {
+        currentPose = position
+    }
+
+    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+        return false
+    }
+}
+
+@PhaseDsl
+fun PhaseBuilder.assumePosition(position: Pose2D) {
+    phase(SetPositionPhase(position))
 }
 
 /**
