@@ -27,7 +27,7 @@ abstract class Hardware(val op: OpMode) {
         val nominalVoltage = 12.0
         val voltage = if (compensate) hardwareMap.voltageSensor.iterator().next().voltage else nominalVoltage
         val compensation = voltage / nominalVoltage
-        motor.power = (power * compensation).coerceIn(-1.0, 1.0)
+        motor.power = (power / compensation).coerceIn(-1.0, 1.0)
     }
 
     open fun init() {}
