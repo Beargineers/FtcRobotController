@@ -44,15 +44,15 @@ open class Driving(alliance: Alliance) : Robot(alliance) {
         feederButton.update()
         resetCoordsButton.update()
 
-        val y = -gamepad1.left_stick_y.normalize()   // forward/back
-        val x =  gamepad1.left_stick_x.normalize()  // strafe
-        val r =  (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * TeleopConfigs.ROTATION_TRIGGER_REDUCTION).normalize() // rotate
+        val forward = -gamepad1.left_stick_y.normalize()
+        val strafe =  gamepad1.left_stick_x.normalize()
+        val rotation =  (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * TeleopConfigs.ROTATION_TRIGGER_REDUCTION).normalize()
 
         val slow = !gamepad1.left_bumper
-        drive.drive(y, x, r, slow)
+        drive.drive(forward, strafe, rotation, slow)
 
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
-        telemetry.addData("y/x/r", "%.2f / %.2f / %.2f", y, x, r)
+        telemetry.addData("f/s/r", "%.2f / %.2f / %.2f", forward, strafe, rotation)
     }
 
     fun Float.normalize(): Double = shape(deadband(this.toDouble()))
