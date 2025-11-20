@@ -69,11 +69,16 @@ fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
     }
 }
 
-@Autonomous(name = "Red Alliance South")
-class RedSouthAutonomous : PhasedAutonomous(phases("Autonomous") {
+class RedSouth : PhasedAutonomous(phases("Autonomous") {
     scoopAndShoot(Spike.RIGHT1, SOUTH_RED_LAUNCH_POINT)
     scoopAndShoot(Spike.RIGHT2, SOUTH_RED_LAUNCH_POINT)
     scoopAndShoot(Spike.RIGHT3, SOUTH_RED_LAUNCH_POINT)
+})
+
+class BlueSouth : PhasedAutonomous(phases("Autonomous") {
+    scoopAndShoot(Spike.LEFT1, SOUTH_BLUE_LAUNCH_POINT)
+    scoopAndShoot(Spike.LEFT2, SOUTH_BLUE_LAUNCH_POINT)
+    scoopAndShoot(Spike.LEFT2, SOUTH_BLUE_LAUNCH_POINT)
 })
 
 @Autonomous
