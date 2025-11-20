@@ -111,7 +111,6 @@ class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        resetCoords()
         return phaseTime.seconds() < durationInSeconds
     }
 }
