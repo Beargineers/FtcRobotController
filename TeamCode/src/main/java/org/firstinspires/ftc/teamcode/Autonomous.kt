@@ -81,7 +81,7 @@ fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
 }
 
 @Autonomous
-class RedSouth : PhasedAutonomous(phases("Autonomous") {
+class RedSouth : PhasedAutonomous(Alliance.RED, phases("Autonomous") {
     assumePosition(tilePosition("D1").withHeading(180.0, AngleUnit.DEGREES))
     scoopAndShoot(Spike.RIGHT1, SOUTH_RED_LAUNCH_POINT)
     scoopAndShoot(Spike.RIGHT2, SOUTH_RED_LAUNCH_POINT)
@@ -89,7 +89,7 @@ class RedSouth : PhasedAutonomous(phases("Autonomous") {
 })
 
 @Autonomous
-class BlueSouth : PhasedAutonomous(phases("Autonomous") {
+class BlueSouth : PhasedAutonomous(Alliance.BLUE, phases("Autonomous") {
     assumePosition(tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES))
     scoopAndShoot(Spike.LEFT1, SOUTH_BLUE_LAUNCH_POINT)
     scoopAndShoot(Spike.LEFT2, SOUTH_BLUE_LAUNCH_POINT)
@@ -97,15 +97,17 @@ class BlueSouth : PhasedAutonomous(phases("Autonomous") {
 })
 
 @Autonomous
-class BlueNorth : PhasedAutonomous(phases("Autonomous") {
+class BlueNorth : PhasedAutonomous(Alliance.BLUE, phases("Autonomous") {
     assumePosition(NORTH_BLUE_LAUNCH_POINT)
     scoopAndShoot(Spike.LEFT3, NORTH_BLUE_LAUNCH_POINT)
     scoopAndShoot(Spike.LEFT2, NORTH_BLUE_LAUNCH_POINT)
     scoopAndShoot(Spike.LEFT1, NORTH_BLUE_LAUNCH_POINT)
 })
 
+open class TestOp(rootPhase: CompositePhase) : PhasedAutonomous(Alliance.BLUE, rootPhase)
+
 @Autonomous
-class Tune_HalfTileLoop : PhasedAutonomous(phases {
+class Tune_HalfTileLoop : TestOp(phases {
     wait(3.seconds)
     driveRelative(12.0, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
     driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
@@ -118,25 +120,25 @@ class Tune_HalfTileLoop : PhasedAutonomous(phases {
 })
 
 @Autonomous
-class Tune_OneTileLeft : PhasedAutonomous(phases {
+class Tune_OneTileLeft : TestOp(phases {
     wait(3.seconds)
     driveRelative(0.0, -24.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
 })
 
 @Autonomous
-class Tune_Turn90CCW : PhasedAutonomous(phases {
+class Tune_Turn90CCW : TestOp(phases {
     wait(3.seconds)
     driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
 })
 
 @Autonomous
-class Tune_C1ToC6Forward : PhasedAutonomous(phases {
+class Tune_C1ToC6Forward : TestOp(phases {
     assumePosition(tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES))
     driveTo(tilePosition("C6").withHeading(180.0, AngleUnit.DEGREES))
 })
 
 @Autonomous
-class Tune_B1ToB6Left : PhasedAutonomous(phases {
+class Tune_B1ToB6Left : TestOp(phases {
     assumePosition(tilePosition("B1").withHeading(90.0, AngleUnit.DEGREES))
     driveTo(tilePosition("B6").withHeading(90.0, AngleUnit.DEGREES))
 })

@@ -24,7 +24,7 @@ object AutonomousConfig {
     var kP_heading = 0.01   // Heading gain (power per angle unit)
 }
 
-abstract class Robot() : RobotOpModeBase() {
+abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
     lateinit var drive: Drivebase
     lateinit var aprilTags: AprilTagWebcam
     lateinit var shooter: Shooter
@@ -36,6 +36,7 @@ abstract class Robot() : RobotOpModeBase() {
     val panelsField = PanelsField.field
 
     var currentPose: Pose2D = FIELD_CENTER.withHeading(0.0, AngleUnit.DEGREES)
+    var goalDistanceCM: Double? = null
 
     var atChange: Pose2D = Pose2D(0.0, 0.0, 0.0)
     var dbChange: Pose2D = Pose2D(0.0, 0.0, 0.0)
@@ -60,25 +61,18 @@ abstract class Robot() : RobotOpModeBase() {
 
     override fun loop() {
         allHardware.forEach { it.loop() }
-        val aprilTagPose = aprilTags.robotPose()
+        goalDistanceCM = aprilTags.findTarget(alliance)?.ftcPose?.range
         val driveChange = drive.poseChange(currentPose.toAngleUnit(AngleUnit.RADIANS).heading)
 
-        if (aprilTagPose != null) {
-            atChange += (aprilTagPose - currentPose)
-            dbChange += driveChange
-
-            panelsTelemetry.debug("AT pose change: $atChange")
-            panelsTelemetry.debug("Drive pose change: $dbChange")
-
-            currentPose = aprilTagPose
-        }
-        else {
-            currentPose += driveChange
-        }
-
+        currentPose += driveChange
         telemetry.addData("Pose", currentPose)
-        telemetry.addData("IMU Heading:", Math.toDegrees(drive.getYawFromQuaternionInRadians()))
+        telemetry.addData("Goal distance", goalDistanceCM ?: "goal not found")
+        telemetry.update()
 
+        drawRobotOnPanelsField()
+    }
+
+    private fun drawRobotOnPanelsField() {
         val cp = currentPose.toDistanceUnit(DistanceUnit.INCH).toAngleUnit(AngleUnit.RADIANS)
 
         panelsField.moveCursor(cp.x, cp.y)

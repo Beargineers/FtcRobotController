@@ -286,7 +286,7 @@ fun phases(name: String = "Autonomous", block: PhaseBuilder.() -> Unit): Composi
     return CompositePhase(name, builder.build())
 }
 
-abstract class PhasedAutonomous(private val rootPhase: CompositePhase) : Robot() {
+abstract class PhasedAutonomous(alliance: Alliance, private val rootPhase: CompositePhase) : Robot(alliance) {
 
     /** Whether the root phase has been initialized */
     private var initialized = false

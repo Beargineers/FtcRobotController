@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode
 import com.bylazar.configurables.annotations.Configurable
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import kotlin.math.abs
 
 @Configurable
@@ -9,8 +8,7 @@ object TeleopConfigs {
     var ROTATION_TRIGGER_REDUCTION: Float = 0.5f
 }
 
-@TeleOp(name = "Mecanum Drive Kotlin", group = "Drive")
-class MecanumTeleOp : Robot() {
+open class Driving(alliance: Alliance) : Robot(alliance) {
     val intakeButton by lazy {
         ToggleButton(gamepad1::x) { on ->
             telemetry.addLine("Intake running: $on")
@@ -61,3 +59,6 @@ class MecanumTeleOp : Robot() {
     private fun deadband(v: Double, th: Double = 0.01) = if (abs(v) < th) 0.0 else v
     private fun shape(v: Double) = v
 }
+
+class RedDriving() : Driving(Alliance.RED)
+class BlueDriving() : Driving(Alliance.BLUE)

@@ -58,6 +58,13 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
         aprilTag.setDecimation(3.0f)
     }
 
+    fun findTarget(alliance: Alliance): AprilTagDetection? {
+        return when (alliance) {
+            Alliance.RED -> findRedTarget()
+            Alliance.BLUE -> findBlueTarget()
+        }
+    }
+
     fun findRedTarget() : AprilTagDetection? {
         return getAprilReadings(24)
     }
@@ -66,9 +73,6 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
         return getAprilReadings(20)
     }
 
-    /*
-    TODO Compensate for camera rotation!
-     */
     fun robotPose() : Pose2D? {
         val r = findRedTarget()?.robotPose
         val b = findBlueTarget()?.robotPose
