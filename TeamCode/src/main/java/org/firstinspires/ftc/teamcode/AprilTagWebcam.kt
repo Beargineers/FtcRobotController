@@ -1,14 +1,38 @@
 package org.firstinspires.ftc.teamcode
 
 import android.util.Size
+import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Position
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import org.firstinspires.ftc.teamcode.internal.Hardware
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 
+@Configurable
+object CameraPosition {
+    var forward = 20.0
+    var up = 36.0
+    var right = 0.0
+    var pitch = -90.0
+    var yaw = 0.0
+    var roll = 0.0
+}
+
 class AprilTagWebcam(op: OpMode): Hardware(op) {
+    private val cameraPosition = Position(
+        DistanceUnit.CM,
+        CameraPosition.right, CameraPosition.forward, CameraPosition.up, 0
+    )
+    private val cameraOrientation = YawPitchRollAngles(
+        AngleUnit.DEGREES,
+        CameraPosition.yaw, CameraPosition.pitch, CameraPosition.roll, 0
+    )
+
     private val camera: WebcamName by hardware("Webcam 1")
 
     private val aprilTag: AprilTagProcessor = AprilTagProcessor.Builder()
@@ -17,6 +41,7 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
         .setDrawAxes(true)
         .setDrawCubeProjection(true)
         .setOutputUnits(DISTANCE_UNIT, ANGLE_UNIT)
+        .setCameraPose(cameraPosition, cameraOrientation)
         .build()
 
     private val visionPortal: VisionPortal = VisionPortal.Builder()
@@ -30,7 +55,7 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
 
     init {
         // Adjust Image Decimation to trade-off detection-range for detection-rate
-        aprilTag.setDecimation(2.0f)
+        aprilTag.setDecimation(3.0f)
     }
 
     fun findRedTarget() : AprilTagDetection? {
@@ -47,18 +72,21 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
     fun robotPose() : Pose2D? {
         val r = findRedTarget()?.robotPose
         val b = findBlueTarget()?.robotPose
+        val offset = ANGLE_UNIT.fromDegrees(90.0)
 
         return when {
-            r != null && b != null -> Pose2D(
-                (r.position.x + b.position.x) / 2,
-                (r.position.y + b.position.y) / 2,
-                (r.orientation.yaw + b.orientation.yaw) / 2,
-                r.position.unit,
-                ANGLE_UNIT
-            )
+            r != null && b != null -> {
+                Pose2D(
+                    (r.position.x + b.position.x) / 2,
+                    (r.position.y + b.position.y) / 2,
+                    (r.orientation.getYaw(ANGLE_UNIT) + b.orientation.getYaw(ANGLE_UNIT)) / 2 + offset,
+                    r.position.unit,
+                    ANGLE_UNIT
+                )
+            }
 
-            b != null -> Pose2D(b.position.x, b.position.y, b.orientation.yaw, b.position.unit, ANGLE_UNIT)
-            r != null -> Pose2D(r.position.x, r.position.y, r.orientation.yaw, r.position.unit, ANGLE_UNIT)
+            b != null -> Pose2D(b.position.x, b.position.y, b.orientation.getYaw(ANGLE_UNIT) + offset, b.position.unit, ANGLE_UNIT)
+            r != null -> Pose2D(r.position.x, r.position.y, r.orientation.getYaw(ANGLE_UNIT) + offset, r.position.unit, ANGLE_UNIT)
             else -> null
         }
     }
