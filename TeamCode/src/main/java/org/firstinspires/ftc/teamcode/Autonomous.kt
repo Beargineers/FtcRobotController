@@ -53,19 +53,30 @@ fun PhaseBuilder.driveRelative(forward: Double, right: Double, turn: Double, dis
 fun PhaseBuilder.scoopSpike(spike: Spike) {
     composite("Scoop spike ${spike.name}") {
         driveTo(spike.startPose)
-        //TODO switch intake on
         driveTo(spike.endPose, maxSpeed = 0.2) // Drive in slowly, so we can carefully scoop the artifacts
-        //TODO switch intake off
-        driveTo(spike.startPose)
+        driveTo(spike.startPose) // Drive out carefully so we don't disturb other artifacts
     }
 }
 
 @PhaseDsl
 fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
     composite("Scoop and shoot ${spike.name}") {
+        action {
+            intake.enable(true)
+        }
         scoopSpike(spike)
+        action {
+            shooter.enableFlywheel(true)
+        }
         driveTo(launchPose)
-        //TODO shoot
+        action {
+            shooter.launch()
+        }
+        wait(4.seconds)
+        action {
+            shooter.enableFlywheel(false)
+            intake.enable(false)
+        }
     }
 }
 
