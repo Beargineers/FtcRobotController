@@ -77,34 +77,20 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
      *  Returns a detected tag data if found by tagID or first found tag if tagID == -1 or null if no such tag detected
      */
     fun getAprilReadings(tagID: Int): AprilTagDetection? {
-        var desiredTag: AprilTagDetection? = null
-
-        for (detection in aprilTag.detections) {
-            // Look to see if we have size info on this tag
-            if (detection.metadata != null) {
-                // Check to see if we want to track towards this tag
-                if ((tagID < 0) || (detection.id == tagID)) {
-                    desiredTag = detection
-                    break
-                } else {
-                    telemetry.addData("Skipping", "Tag ID %d is not desired", detection.id)
-                }
-            } else {
-                telemetry.addData("Unknown", "Tag ID %d is not in TagLibrary", detection.id)
-            }
+        return aprilTag.detections.find {
+            it.metadata != null && (tagID < 0 || it.id == tagID)
         }
+    }
 
-        if (desiredTag != null) {
-            telemetry.addData("Found", "ID %d (%s)", desiredTag.id, desiredTag.metadata.name)
-            telemetry.addData("Range", "%5.1f cm", desiredTag.ftcPose.range)
-            telemetry.addData("Bearing", "%3.0f degrees", desiredTag.ftcPose.bearing)
-            telemetry.addData("Yaw", "%3.0f degrees", desiredTag.ftcPose.yaw)
-            telemetry.addData("x,y,z", "%5.1f,%5.1f,%5.1f cm", desiredTag.ftcPose.x, desiredTag.ftcPose.y, desiredTag.ftcPose.z)
-
-            return desiredTag
+    fun addTelemetry(detection: AprilTagDetection?) {
+        if (detection != null) {
+            telemetry.addData("Found", "ID %d (%s)", detection.id, detection.metadata.name)
+            telemetry.addData("Range", "%5.1f cm", detection.ftcPose.range)
+            telemetry.addData("Bearing", "%3.0f degrees", detection.ftcPose.bearing)
+            telemetry.addData("Yaw", "%3.0f degrees", detection.ftcPose.yaw)
+            telemetry.addData("x,y,z", "%5.1f,%5.1f,%5.1f cm", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z)
         } else {
             telemetry.addData("Found","No april tag to be seen here ¯\\_(ツ)_/¯")
-            return null
         }
     }
 
