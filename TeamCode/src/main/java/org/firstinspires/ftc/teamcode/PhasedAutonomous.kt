@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * # Phased Autonomous Framework
@@ -118,6 +119,25 @@ class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase {
 @PhaseDsl
 fun PhaseBuilder.wait(duration: Duration) {
     phase(WaitPhase(duration.inWholeSeconds.toDouble()))
+}
+
+class WaitForDistance(val timeoutSec: Int) : AutonomousPhase {
+    override fun Robot.initPhase() {
+        drive.stop()
+    }
+
+    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+        goalDistanceCM?.let {
+            savedGoalDistanceCM = it
+            return false
+        }
+        return phaseTime.seconds() < timeoutSec
+    }
+}
+
+@PhaseDsl
+fun PhaseBuilder.waitForDistance(timeoutSec: Duration = 3.seconds) {
+    phase(WaitForDistance(timeoutSec.inWholeSeconds.toInt()))
 }
 
 class SimpleActionPhase(private val action: Robot.() -> Unit) : AutonomousPhase {

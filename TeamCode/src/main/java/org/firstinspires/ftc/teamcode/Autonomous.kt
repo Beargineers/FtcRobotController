@@ -64,10 +64,10 @@ fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
         action {
             shooter.enableFlywheel(true)
         }
+        driveTo(launchPose)
         action {
             shooter.launch()
         }
-        driveTo(launchPose)
         wait(ShooterConfig.SHOOTING_TIME_SECONDS.seconds)
     }
 }
@@ -102,8 +102,10 @@ private fun PhaseBuilder.shootInitialLoad(launchPose: Pose2D) {
     }
     driveTo(launchPose)
     wait(1.seconds)
+    waitForDistance()
     action {
         shooter.launch()
+        shooter.defaultGoalDistance = savedGoalDistanceCM
     }
     wait(ShooterConfig.SHOOTING_TIME_SECONDS.seconds)
 }

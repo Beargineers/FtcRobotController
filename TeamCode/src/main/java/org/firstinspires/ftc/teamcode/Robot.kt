@@ -30,6 +30,7 @@ abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
     var currentPose: Pose2D = FIELD_CENTER
     var aprilTagPose: Pose2D? = null
     var goalDistanceCM: Double? = null
+    var savedGoalDistanceCM: Double = 90.0
 
     override fun init() {
         drive = Drivebase(this)
@@ -165,7 +166,7 @@ abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
         val maxPower = listOf(forwardPower, strafePower, turnPower).maxOf { abs(it) }
         val maxV = when {
             maxPower > maxSpeed -> maxPower / maxSpeed
-            maxPower < 0.08 -> maxPower / 0.08
+            maxPower < WheelCorrections.MINIMAL_WHEEL_POWER -> maxPower / WheelCorrections.MINIMAL_WHEEL_POWER
             else -> 1.0
         }
 

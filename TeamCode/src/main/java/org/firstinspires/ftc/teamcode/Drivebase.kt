@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.IMU
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.internal.Hardware
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -19,12 +18,14 @@ import kotlin.math.sqrt
 @Configurable
 object WheelCorrections {
     var LF: Double = 1.0
-    var RF: Double = 0.8
+    var RF: Double = 0.775
     var LB: Double = 1.0
-    var RB: Double = 0.95
+    var RB: Double = 0.925
 
-    var FORWARD_CM_PER_TICK: Double = 0.05705
-    var STRAFE_CM_PER_TICK: Double = 0.075
+    var FORWARD_CM_PER_TICK: Double = 0.05752541667
+    var STRAFE_CM_PER_TICK: Double = 0.07096614583 // 0.049 //
+
+    var MINIMAL_WHEEL_POWER: Double = 0.10
 }
 
 class Drivebase(op: OpMode) : Hardware(op) {
@@ -64,18 +65,6 @@ class Drivebase(op: OpMode) : Hardware(op) {
         imu.initialize(IMU.Parameters(orientationOnRobot))
     }
 
-    /** function to convert the distance the wheel needs to travel to ticks (the wheels can take in) */
-    fun cm_to_ticks(cm: Double): Int {
-        val TICKS_PER_REV = 537.7    // example; NEEDS THE ACTUAL VALUE
-        val GEAR_REDUCTION = 1.0     // >1 if gear reduces speed (motor->wheel)
-        val WHEEL_DIAMETER_CM = 9.6  // example; NEEDS THE ACTUAL VALUE
-
-        val revs = cm / (PI * WHEEL_DIAMETER_CM)
-        val ticks = revs * TICKS_PER_REV * GEAR_REDUCTION
-        return ticks.toInt()
-    }
-
-    /** mecanum: y=forward, x=strafe right, turn=clockwise */
     fun drive(forward: Double, right: Double, turn: Double, slow: Boolean = false) {
         // TODO For some reason (motor configuration) the strafe and turn come twisted.
         // TODO We're handling the situation programmatically for now
@@ -139,8 +128,9 @@ class Drivebase(op: OpMode) : Hardware(op) {
      *
      * @return Pose2D representing the change in position and orientation
      */
-    fun poseChange(heading: Double): Pose2D {
+    fun poseChange(oldHeading: Double): Pose2D {
         val yaw = getYawFromQuaternionInRadians()
+        val deltaYaw = yaw - (lastYaw ?: yaw)
 
         val lf = lf.currentPosition
         val lb = lb.currentPosition
@@ -155,13 +145,30 @@ class Drivebase(op: OpMode) : Hardware(op) {
 
         val forward = WheelCorrections.FORWARD_CM_PER_TICK * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
         val right = WheelCorrections.STRAFE_CM_PER_TICK* (deltaLF - deltaRF + deltaLB - deltaRB) / (4 * sqrt(2.0))
+
+        val N = 10
+        val fn = forward / N
+        val rn = right / N
+
+        var deltaX = 0.0;
+        var deltaY = 0.0;
+
+        var heading = oldHeading
+
+        repeat(N) {
+            deltaX += fn * cos(heading) + rn * sin(heading)
+            deltaY += fn * sin(heading) - rn * cos(heading)
+
+            heading += deltaYaw / N
+        }
+
         return Pose2D(
             // Forward: all wheels contribute equally
-            x = forward * cos(heading) + right * sin(heading),
+            x = deltaX,
             // Strafe: diagonal wheels oppose (LF and RB forward = strafe right)
-            y = forward * sin(heading) - right * cos(heading),
+            y = deltaY,
             // Get yaw in radians to match the angleUnit specification
-            heading = yaw - (lastYaw ?: yaw),
+            heading = deltaYaw,
             distanceUnit = DistanceUnit.CM,
             angleUnit = AngleUnit.RADIANS
         ).normalizeHeading().also {
