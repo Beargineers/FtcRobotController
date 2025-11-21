@@ -53,7 +53,7 @@ fun PhaseBuilder.driveRelative(forward: Double, right: Double, turn: Double, dis
 fun PhaseBuilder.scoopSpike(spike: Spike) {
     composite("Scoop spike ${spike.name}") {
         driveTo(spike.startPose)
-        driveTo(spike.endPose, maxSpeed = 0.2) // Drive in slowly, so we can carefully scoop the artifacts
+        driveTo(spike.endPose, maxSpeed = 0.15) // Drive in slowly, so we can carefully scoop the artifacts
         driveTo(spike.startPose) // Drive out carefully so we don't disturb other artifacts
     }
 }
@@ -61,48 +61,75 @@ fun PhaseBuilder.scoopSpike(spike: Spike) {
 @PhaseDsl
 fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
     composite("Scoop and shoot ${spike.name}") {
-        action {
-            intake.enable(true)
-        }
         scoopSpike(spike)
         action {
             shooter.enableFlywheel(true)
         }
-        driveTo(launchPose)
         action {
             shooter.launch()
         }
-        wait(4.seconds)
-        action {
-            shooter.enableFlywheel(false)
-            intake.enable(false)
-        }
+        driveTo(launchPose)
+        wait(5.seconds)
     }
 }
 
 @Autonomous
 class RedSouth : PhasedAutonomous(Alliance.RED, phases("Autonomous") {
-    assumePosition(tilePosition("D1").withHeading(180.0, AngleUnit.DEGREES))
-    scoopAndShoot(Spike.RIGHT1, SOUTH_RED_LAUNCH_POINT)
-    scoopAndShoot(Spike.RIGHT2, SOUTH_RED_LAUNCH_POINT)
-    scoopAndShoot(Spike.RIGHT3, SOUTH_RED_LAUNCH_POINT)
+    autoStrategy(
+        SOUTH_RED_START_POINT,
+        SOUTH_RED_LAUNCH_POINT,
+        Spike.RIGHT1, Spike.RIGHT2, Spike.RIGHT3
+    )
+})
+
+
+@Autonomous
+class BlueSouth : PhasedAutonomous(Alliance.BLUE, phases {
+    autoStrategy(
+        SOUTH_BLUE_START_POINT,
+        SOUTH_BLUE_LAUNCH_POINT,
+        Spike.LEFT1, Spike.LEFT2, Spike.LEFT3
+    )
 })
 
 @Autonomous
-class BlueSouth : PhasedAutonomous(Alliance.BLUE, phases("Autonomous") {
-    assumePosition(tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES))
-    scoopAndShoot(Spike.LEFT1, SOUTH_BLUE_LAUNCH_POINT)
-    scoopAndShoot(Spike.LEFT2, SOUTH_BLUE_LAUNCH_POINT)
-    scoopAndShoot(Spike.LEFT3, SOUTH_BLUE_LAUNCH_POINT)
+class BlueNorth : PhasedAutonomous(Alliance.BLUE, phases {
+    autoStrategy(
+        NORTH_BLUE_START_POINT,
+        NORTH_BLUE_LAUNCH_POINT,
+        Spike.LEFT3, Spike.LEFT2, Spike.LEFT1)
 })
 
 @Autonomous
-class BlueNorth : PhasedAutonomous(Alliance.BLUE, phases("Autonomous") {
-    assumePosition(NORTH_BLUE_LAUNCH_POINT)
-    scoopAndShoot(Spike.LEFT3, NORTH_BLUE_LAUNCH_POINT)
-    scoopAndShoot(Spike.LEFT2, NORTH_BLUE_LAUNCH_POINT)
-    scoopAndShoot(Spike.LEFT1, NORTH_BLUE_LAUNCH_POINT)
+class RedNorth : PhasedAutonomous(Alliance.BLUE, phases {
+    autoStrategy(
+        NORTH_RED_START_POINT,
+        NORTH_RED_LAUNCH_POINT,
+        Spike.RIGHT3, Spike.RIGHT2, Spike.RIGHT1)
 })
+
+private fun PhaseBuilder.autoStrategy(startingPoint: Pose2D,
+                                      launchPoint: Pose2D,
+                                      vararg spikes: Spike) {
+    assumePosition(startingPoint)
+    shootInitialLoad(launchPoint)
+    for (spike in spikes) {
+        scoopAndShoot(spike, launchPoint)
+    }
+}
+
+private fun PhaseBuilder.shootInitialLoad(launchPose: Pose2D) {
+    action {
+        intake.enable(true)
+        shooter.enableFlywheel(true)
+    }
+    driveTo(launchPose)
+    wait(1.seconds)
+    action {
+        shooter.launch()
+    }
+    wait(5.seconds)
+}
 
 open class TestOp(rootPhase: CompositePhase) : PhasedAutonomous(Alliance.BLUE, rootPhase)
 
