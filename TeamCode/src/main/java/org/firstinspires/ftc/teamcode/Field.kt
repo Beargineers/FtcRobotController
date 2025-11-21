@@ -4,11 +4,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 
 val FIELD_CENTER = Position2D(0.0, 0.0)
 
-// TODO: Identify actual launch points
+val SOUTH_RED_START_POINT = tilePosition("D1").withHeading(180.0, AngleUnit.DEGREES)
 val SOUTH_RED_LAUNCH_POINT = tilePosition("D1").withHeading(160.0, AngleUnit.DEGREES)
-val NORTH_RED_LAUNCH_POINT = tilePosition("D4").withHeading(135.0, AngleUnit.DEGREES)
+val SOUTH_BLUE_START_POINT = tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES)
 val SOUTH_BLUE_LAUNCH_POINT = tilePosition("C1").withHeading(-160.0, AngleUnit.DEGREES)
-val NORTH_BLUE_LAUNCH_POINT = tilePosition("C4").withHeading(-135.0, AngleUnit.DEGREES)
+
+val NORTH_RED_START_POINT = tilePosition("D4").withHeading(90.0, AngleUnit.DEGREES)
+val NORTH_RED_LAUNCH_POINT = tilePosition("D4").withHeading(141.0, AngleUnit.DEGREES)
+val NORTH_BLUE_LAUNCH_POINT = tilePosition("C4").withHeading(-141.0, AngleUnit.DEGREES)
+val NORTH_BLUE_START_POINT = tilePosition("C4").withHeading(-90.0, AngleUnit.DEGREES)
 
 enum class Spike(start: String, end: String) {
     LEFT1("B2", "A2"),

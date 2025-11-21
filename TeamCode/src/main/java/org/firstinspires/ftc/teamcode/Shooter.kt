@@ -6,11 +6,11 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.teamcode.internal.Hardware
 
-private const val FEEDER_RUN_TIME: Long = 3500L
+private const val FEEDER_RUN_TIME: Long = 4500L
 
 @Configurable
 object ShooterConfig {
-    var SHOOTER_P = 0.65
+    var SHOOTER_P = 0.70
 }
 
 class Shooter(op: OpMode): Hardware(op) {
