@@ -68,7 +68,6 @@ abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
 
         telemetry.addData("Pose", currentPose)
         telemetry.addData("Goal distance", goalDistanceCM ?: "goal not found")
-        telemetry.update()
 
         drawRobotOnPanelsField()
     }
