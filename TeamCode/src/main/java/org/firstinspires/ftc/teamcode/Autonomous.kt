@@ -73,11 +73,17 @@ fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
 }
 
 
-open class DecodeAutoStrategy(alliance: Alliance, positions: String, vararg spikes: Spike) : PhasedAutonomous(alliance, phases {
+open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg spikes: Spike) : PhasedAutonomous(alliance, phases {
     val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }
 
     autoStrategy(tilePose(startingPoint), tilePose(shootingPoint), *spikes)
-})
+}) {
+    override fun init() {
+        super.init()
+
+        telemetry.addLine("Ensure robot is in position: ${positions.takeWhile { it != ',' }}")
+    }
+}
 
 private fun PhaseBuilder.autoStrategy(startingPoint: Pose2D,
                                       launchPoint: Pose2D,
