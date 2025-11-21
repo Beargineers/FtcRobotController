@@ -25,6 +25,8 @@ class Shooter(op: OpMode): Hardware(op) {
     var flywheelEnabled = false
     var frozenFlywheelPower: Double? = null
 
+    var defaultGoalDistance: Double = 90.0
+
     val launchMotors = listOf(fly1, fly2)
 
     init {
@@ -55,7 +57,7 @@ class Shooter(op: OpMode): Hardware(op) {
         feederStartedAt = System.currentTimeMillis()
     }
 
-    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((op as Robot).goalDistanceCM ?: 90.0)
+    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((op as Robot).goalDistanceCM ?: defaultGoalDistance)
 
     override fun loop() {
         if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > ShooterConfig.SHOOTING_TIME_SECONDS * 1000) {
