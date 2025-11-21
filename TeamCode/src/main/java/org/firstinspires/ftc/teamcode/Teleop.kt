@@ -32,8 +32,7 @@ open class Driving(alliance: Alliance) : Robot(alliance) {
 
     val resetCoordsButton by lazy {
         Button(gamepad1::b).onRelease {
-            resetCoords()
-            currentPose = FIELD_CENTER.withHeading(0.0)
+            currentPose = aprilTagPose ?: FIELD_CENTER
         }
     }
 

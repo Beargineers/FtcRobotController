@@ -73,28 +73,6 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
         return getAprilReadings(20)
     }
 
-    fun robotPose() : Pose2D? {
-        val r = findRedTarget()?.robotPose
-        val b = findBlueTarget()?.robotPose
-        val offset = ANGLE_UNIT.fromDegrees(90.0)
-
-        return when {
-            r != null && b != null -> {
-                Pose2D(
-                    (r.position.x + b.position.x) / 2,
-                    (r.position.y + b.position.y) / 2,
-                    (r.orientation.getYaw(ANGLE_UNIT) + b.orientation.getYaw(ANGLE_UNIT)) / 2 + offset,
-                    r.position.unit,
-                    ANGLE_UNIT
-                )
-            }
-
-            b != null -> Pose2D(b.position.x, b.position.y, b.orientation.getYaw(ANGLE_UNIT) + offset, b.position.unit, ANGLE_UNIT)
-            r != null -> Pose2D(r.position.x, r.position.y, r.orientation.getYaw(ANGLE_UNIT) + offset, r.position.unit, ANGLE_UNIT)
-            else -> null
-        }
-    }
-
     /**
      *  Returns a detected tag data if found by tagID or first found tag if tagID == -1 or null if no such tag detected
      */
@@ -133,4 +111,10 @@ class AprilTagWebcam(op: OpMode): Hardware(op) {
     override fun stop() {
         visionPortal.close()
     }
+}
+
+fun AprilTagDetection.robotPose() : Pose2D {
+    val rp = this.robotPose
+    val offset = ANGLE_UNIT.fromDegrees(90.0)
+    return Pose2D(rp.position.x, rp.position.y, rp.orientation.getYaw(ANGLE_UNIT) + offset, rp.position.unit, ANGLE_UNIT)
 }

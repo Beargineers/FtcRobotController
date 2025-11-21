@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
 /*
@@ -17,8 +18,8 @@ enum class TileOffset(val yoffset: Int, val xoffset: Int) {
     BOTTOM_LEFT(-1, +1),
     BOTTOM_RIGHT(+1, +1),
 
-    LEFT_CENTER(-1, 0),
-    RIGHT_CENTER(+1, 0),
+    CENTER_LEFT(-1, 0),
+    CENTER_RIGHT(+1, 0),
 
     TOP_CENTER(0, -1),
     BOTTOM_CENTER(0, +1)
@@ -31,4 +32,23 @@ fun tilePosition(tileCode: String, tileOffset: TileOffset = TileOffset.CENTER): 
     val yIn = (columnCode[0] - 'A' - 3) * 24 + (tileOffset.yoffset + 1) * 12
 
     return Position2D(xIn.toDouble(), yIn.toDouble(), DistanceUnit.INCH).toUnit(DISTANCE_UNIT)
+}
+
+fun tilePose(code:String): Pose2D {
+    val (tileCodeAndOffset, angle) = code.split(':').map { it.trim() }
+
+    val tileCode = tileCodeAndOffset.take(2)
+    val tileOffset = when(tileCodeAndOffset.drop(2)) {
+        "TL" -> TileOffset.TOP_LEFT
+        "TR" -> TileOffset.TOP_RIGHT
+        "BL" -> TileOffset.BOTTOM_LEFT
+        "BR" -> TileOffset.BOTTOM_RIGHT
+        "CL" -> TileOffset.CENTER_LEFT
+        "CR" -> TileOffset.CENTER_RIGHT
+        "TC" -> TileOffset.TOP_CENTER
+        "BC" -> TileOffset.BOTTOM_CENTER
+        else -> TileOffset.CENTER
+    }
+
+    return tilePosition(tileCode, tileOffset).withHeading(angle.toDouble(), AngleUnit.DEGREES)
 }

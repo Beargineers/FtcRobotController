@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -73,39 +72,11 @@ fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
     }
 }
 
-@Autonomous
-class RedSouth : PhasedAutonomous(Alliance.RED, phases("Autonomous") {
-    autoStrategy(
-        SOUTH_RED_START_POINT,
-        SOUTH_RED_LAUNCH_POINT,
-        Spike.RIGHT1, Spike.RIGHT2, Spike.RIGHT3
-    )
-})
 
+open class DecodeAutoStrategy(alliance: Alliance, positions: String, vararg spikes: Spike) : PhasedAutonomous(alliance, phases {
+    val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }
 
-@Autonomous
-class BlueSouth : PhasedAutonomous(Alliance.BLUE, phases {
-    autoStrategy(
-        SOUTH_BLUE_START_POINT,
-        SOUTH_BLUE_LAUNCH_POINT,
-        Spike.LEFT1, Spike.LEFT2, Spike.LEFT3
-    )
-})
-
-@Autonomous
-class BlueNorth : PhasedAutonomous(Alliance.BLUE, phases {
-    autoStrategy(
-        NORTH_BLUE_START_POINT,
-        NORTH_BLUE_LAUNCH_POINT,
-        Spike.LEFT3, Spike.LEFT2, Spike.LEFT1)
-})
-
-@Autonomous
-class RedNorth : PhasedAutonomous(Alliance.BLUE, phases {
-    autoStrategy(
-        NORTH_RED_START_POINT,
-        NORTH_RED_LAUNCH_POINT,
-        Spike.RIGHT3, Spike.RIGHT2, Spike.RIGHT1)
+    autoStrategy(tilePose(startingPoint), tilePose(shootingPoint), *spikes)
 })
 
 private fun PhaseBuilder.autoStrategy(startingPoint: Pose2D,
@@ -130,42 +101,3 @@ private fun PhaseBuilder.shootInitialLoad(launchPose: Pose2D) {
     }
     wait(5.seconds)
 }
-
-open class TestOp(rootPhase: CompositePhase) : PhasedAutonomous(Alliance.BLUE, rootPhase)
-
-@Autonomous
-class Tune_HalfTileLoop : TestOp(phases {
-    wait(3.seconds)
-    driveRelative(12.0, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
-    driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
-    driveRelative(12.0, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
-    driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
-    driveRelative(12.0, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
-    driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
-    driveRelative(12.0, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
-    driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
-})
-
-@Autonomous
-class Tune_OneTileLeft : TestOp(phases {
-    wait(3.seconds)
-    driveRelative(0.0, -24.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
-})
-
-@Autonomous
-class Tune_Turn90CCW : TestOp(phases {
-    wait(3.seconds)
-    driveRelative(0.0, 0.0, 90.0, DistanceUnit.INCH, AngleUnit.DEGREES)
-})
-
-@Autonomous
-class Tune_C1ToC6Forward : TestOp(phases {
-    assumePosition(tilePosition("C1").withHeading(180.0, AngleUnit.DEGREES))
-    driveTo(tilePosition("C6").withHeading(180.0, AngleUnit.DEGREES))
-})
-
-@Autonomous
-class Tune_B1ToB6Left : TestOp(phases {
-    assumePosition(tilePosition("B1").withHeading(90.0, AngleUnit.DEGREES))
-    driveTo(tilePosition("B6").withHeading(90.0, AngleUnit.DEGREES))
-})
