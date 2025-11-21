@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode
 
-import com.bylazar.configurables.annotations.Configurable
 import com.bylazar.field.PanelsField
 import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
@@ -15,14 +14,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-@Configurable
-object AutonomousConfig {
-    var MAX_SPEED = 0.7
-
-    // Proportional control gains (tune these values for your robot)
-    var kP_position = 0.035  // Position gain (power per distance unit)
-    var kP_heading = 0.01   // Heading gain (power per angle unit)
-}
+val FIELD_CENTER = Position2D(0.0, 0.0).withHeading(0.0, AngleUnit.DEGREES)
 
 abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
     lateinit var drive: Drivebase
@@ -35,11 +27,9 @@ abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
     val panelsTelemetry = PanelsTelemetry.telemetry
     val panelsField = PanelsField.field
 
-    var currentPose: Pose2D = FIELD_CENTER.withHeading(0.0, AngleUnit.DEGREES)
+    var currentPose: Pose2D = FIELD_CENTER
+    var aprilTagPose: Pose2D? = null
     var goalDistanceCM: Double? = null
-
-    var atChange: Pose2D = Pose2D(0.0, 0.0, 0.0)
-    var dbChange: Pose2D = Pose2D(0.0, 0.0, 0.0)
 
     override fun init() {
         drive = Drivebase(this)
@@ -70,9 +60,10 @@ abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
             goalDistanceCM = null
         }
 
-        val atRange = aprilTags.findTarget(alliance)?.ftcPose?.range
-        if (atRange != null) {
-            goalDistanceCM = atRange
+        val target = aprilTags.findTarget(alliance)
+        if (target != null) {
+            aprilTagPose = target.robotPose()
+            goalDistanceCM = target.ftcPose.range
         }
 
         telemetry.addData("Pose", currentPose)
@@ -202,10 +193,5 @@ abstract class Robot(val alliance: Alliance) : RobotOpModeBase() {
 
     override fun stop() {
         allHardware.forEach { it.stop() }
-    }
-
-    fun resetCoords() {
-        atChange = Pose2D(0.0, 0.0, 0.0)
-        dbChange = Pose2D(0.0, 0.0, 0.0)
     }
 }
