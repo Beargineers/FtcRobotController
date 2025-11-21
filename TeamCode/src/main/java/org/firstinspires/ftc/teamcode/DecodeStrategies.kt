@@ -11,8 +11,8 @@ object AutonomousConfig {
     // Starting,Shooting positions and angles
     var RedSouth  = "D1:+180,D1:+160"
     var BlueSouth = "C1:+180,C1:-160"
-    var RedNorth  = "D4:+90,D4:+141"
-    var BlueNorth = "C4:-90,C4:-141"
+    var RedNorth  = "D4:+90,D4:+135"
+    var BlueNorth = "C4:-90,C4:-135"
 
 
     // Proportional control gains (tune these values for your robot)
