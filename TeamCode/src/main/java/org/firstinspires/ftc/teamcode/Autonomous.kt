@@ -68,7 +68,7 @@ fun PhaseBuilder.scoopAndShoot(spike: Spike, launchPose: Pose2D) {
             shooter.launch()
         }
         driveTo(launchPose)
-        wait(5.seconds)
+        wait(ShooterConfig.SHOOTING_TIME_SECONDS.seconds)
     }
 }
 
@@ -105,5 +105,5 @@ private fun PhaseBuilder.shootInitialLoad(launchPose: Pose2D) {
     action {
         shooter.launch()
     }
-    wait(5.seconds)
+    wait(ShooterConfig.SHOOTING_TIME_SECONDS.seconds)
 }
