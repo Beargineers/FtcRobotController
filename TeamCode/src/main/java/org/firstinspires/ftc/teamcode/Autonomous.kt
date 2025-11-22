@@ -90,9 +90,9 @@ private fun PhaseBuilder.autoStrategy(startingPoint: Pose2D,
                                       vararg spikes: Spike) {
     assumePosition(startingPoint)
     shootInitialLoad(launchPoint)
-    for (spike in spikes) {
-        scoopAndShoot(spike, launchPoint)
-    }
+    scoopAndShoot(spikes[0], launchPoint)
+    scoopSpike(spikes[1])
+
 }
 
 private fun PhaseBuilder.shootInitialLoad(launchPose: Pose2D) {
