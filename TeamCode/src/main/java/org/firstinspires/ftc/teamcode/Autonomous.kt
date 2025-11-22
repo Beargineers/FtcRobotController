@@ -97,7 +97,7 @@ private fun PhaseBuilder.autoStrategy(startingPoint: Pose2D,
 
 private fun PhaseBuilder.shootInitialLoad(launchPose: Pose2D) {
     action {
-        intake.enable(true)
+        intake.enable(IntakeMode.ON)
         shooter.enableFlywheel(true)
     }
     driveTo(launchPose)

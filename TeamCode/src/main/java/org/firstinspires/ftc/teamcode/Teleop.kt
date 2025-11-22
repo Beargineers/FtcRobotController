@@ -13,7 +13,14 @@ open class Driving(alliance: Alliance) : Robot(alliance) {
     val intakeButton by lazy {
         ToggleButton(gamepad1::x) { on ->
             telemetry.addLine("Intake running: $on")
-            intake.enable(on)
+            intake.enable(if (on) IntakeMode.ON else IntakeMode.OFF)
+        }
+    }
+
+    val reverseIntakeButton by lazy {
+        ToggleButton(gamepad1::y) { on ->
+            telemetry.addLine("Intake reversing: $on")
+            intake.enable(if (on) IntakeMode.REVERSE else IntakeMode.OFF)
         }
     }
 
@@ -40,6 +47,7 @@ open class Driving(alliance: Alliance) : Robot(alliance) {
         super.loop()
         launcherButton.update()
         intakeButton.update()
+        reverseIntakeButton.update()
         feederButton.update()
         resetCoordsButton.update()
 
