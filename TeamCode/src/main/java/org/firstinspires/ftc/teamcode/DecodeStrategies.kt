@@ -27,7 +27,7 @@ class RedSouth : DecodeAutoStrategy(
     Spike.RIGHT1, Spike.RIGHT2, Spike.RIGHT3)
 
 @Autonomous
-class RedNorth : DecodeAutoStrategy(Alliance.BLUE,
+class RedNorth : DecodeAutoStrategy(Alliance.RED,
     AutonomousConfig.RedNorth,
     Spike.RIGHT3, Spike.RIGHT2, Spike.RIGHT1)
 
