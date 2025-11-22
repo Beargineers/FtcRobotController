@@ -23,7 +23,7 @@ object WheelCorrections {
     var RB: Double = 0.925
 
     var FORWARD_CM_PER_TICK: Double = 0.05752541667
-    var STRAFE_CM_PER_TICK: Double = 0.07096614583 // 0.049 //
+    var STRAFE_CM_PER_TICK: Double =  0.069 // 0.07096614583 // 0.049 //
 
     var MINIMAL_WHEEL_POWER: Double = 0.10
 }
