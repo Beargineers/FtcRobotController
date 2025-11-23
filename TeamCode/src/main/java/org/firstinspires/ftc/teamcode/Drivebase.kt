@@ -25,7 +25,7 @@ object WheelCorrections {
     var FORWARD_CM_PER_TICK: Double = 0.05752541667
     var STRAFE_CM_PER_TICK: Double =  0.069 // 0.07096614583 // 0.049 //
 
-    var MINIMAL_WHEEL_POWER: Double = 0.10
+    var MINIMAL_WHEEL_POWER: Double = 0.12
 }
 
 class Drivebase(op: OpMode) : Hardware(op) {

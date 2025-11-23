@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.internal.Hardware
 
 @Configurable
 object ShooterConfig {
-    var SHOOTER_POWER_ADJUST = 1.02
+    var SHOOTER_POWER_ADJUST = 1.0
     var SHOOTER_DISTANCE_QUOTIENT = 0.00101
     var SHOOTER_FREE_QUOTIENT = 0.556
     var SHOOTING_TIME_SECONDS: Double = 4.5
