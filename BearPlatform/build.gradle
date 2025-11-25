@@ -1,0 +1,39 @@
+// BearPlatform is a library module, not an application
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace = 'org.beargineers.platform'
+
+    compileSdkVersion 34
+
+    defaultConfig {
+        minSdkVersion 24
+        targetSdkVersion 28
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    packagingOptions {
+        jniLibs.useLegacyPackaging true
+    }
+}
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+// Apply common FTC dependencies
+apply from: '../build.dependencies.gradle'
+
+dependencies {
+    implementation project(':FtcRobotController')
+}
