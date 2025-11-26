@@ -316,6 +316,8 @@ class CompositePhase<Robot: BaseRobot>(
 @DslMarker
 annotation class PhaseDsl
 
+typealias Phases<Robot> = PhaseBuilder<Robot>.() -> Unit
+
 /**
  * Builder class for constructing phases using a Kotlin DSL.
  */
@@ -339,12 +341,12 @@ class PhaseBuilder<Robot: BaseRobot> {
      * All phases defined in the block become children of the composite.
      *
      * @param name The name for this composite phase (shown in telemetry)
-     * @param block A lambda that builds the child phases
+     * @param phases A lambda that builds the child phases
      */
-    fun composite(name: String, block: PhaseBuilder<Robot>.() -> Unit) {
+    fun composite(name: String, phases: Phases<Robot>) {
         val builder = PhaseBuilder<Robot>()
-        builder.block()
-        phases.add(CompositePhase(name, builder.build()))
+        builder.phases()
+        this@PhaseBuilder.phases.add(CompositePhase(name, builder.build()))
     }
 
     /**
@@ -355,48 +357,14 @@ class PhaseBuilder<Robot: BaseRobot> {
     internal fun build(): List<AutonomousPhase<Robot>> = phases.toList()
 }
 
-/**
- * Top-level DSL function for building a phase sequence.
- *
- * This is the entry point for using the phase builder DSL. It creates a
- * PhaseBuilder, executes the provided block, and returns a CompositePhase
- * suitable for passing to PhasedAutonomous.
- *
- * ## Usage
- *
- * ```kotlin
- * @Autonomous(name = "My Auto")
- * class MyAuto : PhasedAutonomous(phases("Autonomous") {
- *     phase(GoPhase(30.0, 0.0, 0.5))
- *     phase(TurnPhase(90, 0.5))
- *     composite("Score") {
- *         phase(DeployArmPhase())
- *         phase(WaitPhase(1.0))
- *         phase(RetractArmPhase())
- *     }
- * })
- * ```
- *
- * @param name The name for the root composite phase
- * @param block A lambda that builds the phases using PhaseBuilder DSL
- * @return A CompositePhase instance containing all the built phases
- */
-fun <Robot: BaseRobot> phases(name: String = "Autonomous", block: PhaseBuilder<Robot>.() -> Unit): CompositePhase<Robot> {
-    val builder = PhaseBuilder<Robot>()
-    builder.block()
-    return CompositePhase(name, builder.build())
-}
-
-abstract class PhasedAutonomous<Robot: BaseRobot>(alliance: Alliance) : RobotOpMode<Robot>(alliance) {
+abstract class PhasedAutonomous<Robot: BaseRobot>(alliance: Alliance, phases: Phases<Robot>) : RobotOpMode<Robot>(alliance) {
     val rootPhase by lazy {
         val builder = PhaseBuilder<Robot>()
         with(builder) {
-            createPhases()
+            phases()
         }
         CompositePhase("Plan", builder.build())
     }
-
-    abstract fun PhaseBuilder<Robot>.createPhases()
 
     /** Whether the root phase has been initialized */
     private var initialized = false
