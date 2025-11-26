@@ -35,12 +35,12 @@ fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Position) 
     }
 }
 
-open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg val spikes: Spike) : DecodeAutonomous(alliance) {
-    override fun PhaseBuilder<DecodeRobot>.createPhases() {
+open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg spikes: Spike) :
+    DecodeAutonomous(alliance, {
         val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }
 
         autoStrategy(tilePosition(startingPoint), tilePosition(shootingPoint), *spikes)
-    }
+    }) {
 
     override fun init() {
         super.init()
