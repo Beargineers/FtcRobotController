@@ -14,6 +14,11 @@ data class RobotMovement(val forward: Double, val right: Double, val turn: Doubl
             angleUnit)
     }
 
+    operator fun plus(other: RobotMovement): RobotMovement {
+        val other = other.toUnits(distanceUnit, angleUnit)
+        return RobotMovement(forward + other.forward, right + other.right, turn + other.turn, distanceUnit, angleUnit)
+    }
+
     override fun toString(): String {
         return String.format(Locale.getDefault(), "(%.3f %.3f)%s  %.3f%s", forward, right, distanceUnit, turn, angleUnit)
     }
