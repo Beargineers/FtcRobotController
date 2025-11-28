@@ -42,8 +42,8 @@ open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg 
         autoStrategy(tilePosition(startingPoint), tilePosition(shootingPoint), *spikes)
     }) {
 
-    override fun init() {
-        super.init()
+    override fun bearInit() {
+        super.bearInit()
 
         telemetry.addLine("Ensure robot is in position: ${positions.takeWhile { it != ',' }}")
     }
@@ -57,7 +57,6 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
     shootInitialLoad(launchPoint)
     scoopAndShoot(spikes[0], launchPoint)
     scoopSpike(spikes[1])
-
 }
 
 @PhaseDsl

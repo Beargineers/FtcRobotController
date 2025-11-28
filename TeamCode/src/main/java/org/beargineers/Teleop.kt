@@ -13,8 +13,8 @@ object TeleopConfigs {
 }
 
 open class Driving(alliance: Alliance) : DecodeOpMode(alliance) {
-    override fun init() {
-        super.init()
+    override fun bearInit() {
+        super.bearInit()
 
         toggleButton("Intake", gamepad1::x) { on ->
             intake.enable(if (on) IntakeMode.ON else IntakeMode.OFF)
@@ -37,8 +37,8 @@ open class Driving(alliance: Alliance) : DecodeOpMode(alliance) {
         }
     }
 
-    override fun loop() {
-        super.loop()
+    override fun bearLoop() {
+        super.bearLoop()
 
         val forward = -gamepad1.left_stick_y.normalize()
         val strafe = gamepad1.left_stick_x.normalize()

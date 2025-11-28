@@ -372,8 +372,8 @@ abstract class PhasedAutonomous<Robot: BaseRobot>(alliance: Alliance, phases: Ph
     /** Timer tracking elapsed time for the entire autonomous */
     private val totalTime = ElapsedTime()
 
-    override fun loop() {
-        super.loop()
+    override fun bearLoop() {
+        super.bearLoop()
 
         // Initialize the root phase on first loop
         if (!initialized) {
