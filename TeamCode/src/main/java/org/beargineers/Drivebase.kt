@@ -17,8 +17,8 @@ import kotlin.math.sqrt
 
 @Configurable
 object WheelCorrections {
-    var LF: Double = 1.0
-    var RF: Double = 0.775
+    var LF: Double = -1.0 // Negative value means this motor's encoder reports negative changes when positive power is applied
+    var RF: Double = -0.775
     var LB: Double = 1.0
     var RB: Double = 0.925
 
@@ -64,30 +64,25 @@ class Drivebase(op: BaseRobot) : Hardware(op), Drivetrain {
     }
 
     override fun drive(forwardPower: Double, rightPower: Double, turnPower: Double, slow: Boolean) {
-        // TODO For some reason (motor configuration) the strafe and turn come twisted.
-        // TODO We're handling the situation programmatically for now
+        val strafe = rightPower * sqrt(2.0) // strafe is less effective than forward movement with same power applied
 
-        val strafe =
-            turnPower * sqrt(2.0) // strafe is less effective than forward movement with same power applied
-        val cw_turn = rightPower
-
-        val lfP = forwardPower + strafe + cw_turn
-        val rfP = forwardPower - strafe - cw_turn
-        val lbP = forwardPower - strafe + cw_turn
-        val rbP = forwardPower + strafe - cw_turn
+        val lfP = forwardPower + strafe + turnPower
+        val rfP = forwardPower - strafe - turnPower
+        val lbP = forwardPower - strafe + turnPower
+        val rbP = forwardPower + strafe - turnPower
 
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
         val limit = if (slow) 0.4 else 1.0
         fun normalize(v: Double) = (v / maxMag) * limit
 
-        val lfpn = normalize(lfP * WheelCorrections.LF)
+        val lfpn = normalize(lfP * abs(WheelCorrections.LF))
         setMotorPower(lf, lfpn)
-        val rfpn = normalize(rfP * WheelCorrections.RF)
+        val rfpn = normalize(rfP * abs(WheelCorrections.RF))
         setMotorPower(rf, rfpn)
-        val lbpn = normalize(lbP * WheelCorrections.LB)
+        val lbpn = normalize(lbP * abs(WheelCorrections.LB))
         setMotorPower(lb, lbpn)
-        val rbpn = normalize(rbP * WheelCorrections.RB)
+        val rbpn = normalize(rbP * abs(WheelCorrections.RB))
         setMotorPower(rb, rbpn)
 
         telemetry.addData(
@@ -131,18 +126,13 @@ class Drivebase(op: BaseRobot) : Hardware(op), Drivetrain {
         val rf = rf.currentPosition
         val rb = rb.currentPosition
 
-        // The robot is assembled in a way that encoder counters REDUCE when robot is moving forward. That's why we have negative deltas here
-        val deltaLF = -(lf - lastLf) / WheelCorrections.LF
-        val deltaLB = -(lb - lastLb) / WheelCorrections.LB
-        val deltaRF = -(rf - lastRf) / WheelCorrections.RF
-        val deltaRB = -(rb - lastRb) / WheelCorrections.RB
+        val deltaLF = (lf - lastLf) / WheelCorrections.LF
+        val deltaLB = (lb - lastLb) / WheelCorrections.LB
+        val deltaRF = (rf - lastRf) / WheelCorrections.RF
+        val deltaRB = (rb - lastRb) / WheelCorrections.RB
 
-        val forward =
-            WheelCorrections.FORWARD_CM_PER_TICK * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
-        val right =
-            WheelCorrections.STRAFE_CM_PER_TICK * (deltaLF - deltaRF + deltaLB - deltaRB) / (4 * sqrt(
-                2.0
-            ))
+        val forward = WheelCorrections.FORWARD_CM_PER_TICK * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
+        val right = WheelCorrections.STRAFE_CM_PER_TICK * (deltaLF - deltaRF + deltaRB - deltaLB) / (4 * sqrt(2.0))
 
         return RobotMovement(
             forward = forward,
