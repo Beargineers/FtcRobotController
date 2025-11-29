@@ -1,6 +1,10 @@
 package org.beargineers
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.util.Size
+import androidx.core.graphics.createBitmap
+import com.bylazar.camerastream.PanelsCameraStream
 import com.bylazar.configurables.annotations.Configurable
 import org.beargineers.platform.ANGLE_UNIT
 import org.beargineers.platform.Alliance
@@ -8,13 +12,21 @@ import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.DISTANCE_UNIT
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.Position
+import org.firstinspires.ftc.robotcore.external.function.Consumer
+import org.firstinspires.ftc.robotcore.external.function.Continuation
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
+import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration
 import org.firstinspires.ftc.vision.VisionPortal
+import org.firstinspires.ftc.vision.VisionProcessor
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
+import org.opencv.android.Utils
+import org.opencv.core.Mat
+import java.util.concurrent.atomic.AtomicReference
 
 @Configurable
 object CameraPosition {
@@ -32,6 +44,40 @@ class AprilTagWebcam(op: BaseRobot): Hardware(op) {
     private lateinit var aprilTag: AprilTagProcessor
     private lateinit var visionPortal: VisionPortal
 
+    class Processor : VisionProcessor, CameraStreamSource {
+
+        private val lastFrame =
+            AtomicReference(createBitmap(1, 1, Bitmap.Config.RGB_565))
+
+        override fun init(width: Int, height: Int, calibration: CameraCalibration?) {
+            lastFrame.set(createBitmap(width, height, Bitmap.Config.RGB_565))
+        }
+
+        override fun processFrame(frame: Mat, captureTimeNanos: Long): Any? {
+            val b = createBitmap(frame.width(), frame.height(), Bitmap.Config.RGB_565)
+            Utils.matToBitmap(frame, b)
+
+            lastFrame.set(b)
+
+            return null
+        }
+
+        override fun onDrawFrame(
+            canvas: Canvas,
+            onscreenWidth: Int,
+            onscreenHeight: Int,
+            scaleBmpPxToCanvasPx: Float,
+            scaleCanvasDensity: Float,
+            userContext: Any?
+        ) {
+        }
+
+        override fun getFrameBitmap(continuation: Continuation<out Consumer<Bitmap>>) {
+            continuation.dispatch { bitmapConsumer ->
+                bitmapConsumer.accept(lastFrame.get())
+            }
+        }
+    }
     override fun init() {
         super.init()
 
@@ -45,6 +91,7 @@ class AprilTagWebcam(op: BaseRobot): Hardware(op) {
             CameraPosition.yaw, CameraPosition.pitch, CameraPosition.roll, 0
         )
 
+        val panelsProcessor = Processor()
 
         aprilTag = AprilTagProcessor.Builder()
             .setDrawTagID(true)
@@ -62,10 +109,12 @@ class AprilTagWebcam(op: BaseRobot): Hardware(op) {
             //.setCameraResolution(Size(640, 480))
             .enableLiveView(true)
             .addProcessor(aprilTag)
+            .addProcessor(panelsProcessor)
             .build()
 
         // Adjust Image Decimation to trade-off detection-range for detection-rate
         aprilTag.setDecimation(3.0f)
+        PanelsCameraStream.startStream(panelsProcessor)
     }
 
     fun findTarget(alliance: Alliance): AprilTagDetection? {
@@ -106,6 +155,7 @@ class AprilTagWebcam(op: BaseRobot): Hardware(op) {
 
     override fun stop() {
         visionPortal.close()
+        PanelsCameraStream.stopStream()
     }
 }
 
