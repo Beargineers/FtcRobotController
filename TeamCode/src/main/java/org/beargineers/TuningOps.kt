@@ -6,6 +6,7 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.Phases
 import org.beargineers.platform.RobotMovement
+import org.beargineers.platform.action
 import org.beargineers.platform.assumePosition
 import org.beargineers.platform.driveRelative
 import org.beargineers.platform.driveTo
@@ -157,3 +158,27 @@ class Tune_StoppingPowers() : TestOp({
         if (stopTestResults.size > 2) telemetry.addData("Stopped T at speed", "%.2f", stopTestResults[2])
     }
 }
+
+@Autonomous
+class Tune_TestWheelNames() : TestOp({
+    action {
+        drive.stop()
+        drive.lf.power = 0.3
+    }
+    wait(1.seconds)
+    action {
+        drive.stop()
+        drive.rf.power = 0.3
+    }
+    wait(1.seconds)
+    action {
+        drive.stop()
+        drive.lb.power = 0.3
+    }
+    wait(1.seconds)
+    action {
+        drive.stop()
+        drive.rb.power = 0.3
+    }
+    wait(1.seconds)
+})
