@@ -122,6 +122,12 @@ class RedSouth : PhasedAutonomous<MyRobot>(Alliance.RED) {
             wait(0.5.seconds)
         }
 
+        parallel("Deploy and intake") {
+            action { arm.lower() }
+            action { intake.start() }
+            driveTo(PICKUP_POSITION)
+        }
+
         driveTo(OBSERVATION_ZONE)
     }
 }
@@ -129,8 +135,9 @@ class RedSouth : PhasedAutonomous<MyRobot>(Alliance.RED) {
 
 Key concepts:
 - **AutonomousPhase** - Interface for custom phases with `initPhase()` and `loopPhase()`
-- **CompositePhase** - Sequential container for organizing phases hierarchically
-- **DSL functions** - `driveTo()`, `wait()`, `action()`, `composite()`, `driveRelative()`
+- **SequentialPhase** - Container for executing phases one after another
+- **ParallelPhase** - Container for executing phases concurrently
+- **DSL functions** - `driveTo()`, `wait()`, `action()`, `composite()`, `parallel()`, `driveRelative()`
 - Built-in phases: WaitPhase, SimpleActionPhase, GotoPosePhase, DriveRelative
 
 ## Coordinate System
