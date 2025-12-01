@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.scoopSpike(spike: Spike) {
-    composite("Scoop spike ${spike.name}") {
+    seq("Scoop spike ${spike.name}") {
         driveTo(spike.startPose)
         driveTo(spike.endPose, maxSpeed = 0.15) // Drive in slowly, so we can carefully scoop the artifacts
         driveTo(spike.startPose) // Drive out carefully so we don't disturb other artifacts
@@ -22,7 +22,7 @@ fun PhaseBuilder<DecodeRobot>.scoopSpike(spike: Spike) {
 
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Position) {
-    composite("Scoop and shoot ${spike.name}") {
+    seq("Scoop and shoot ${spike.name}") {
         scoopSpike(spike)
         action {
             shooter.enableFlywheel(true)

@@ -216,10 +216,16 @@ class RedSouth : PhasedAutonomous<MyRobot>(Alliance.RED) {
         action { robot.intake.setPower(1.0) }
         wait(1.seconds)
 
-        composite("Score") {
+        seq("Score") {
             driveTo(CHAMBER)
             action { robot.arm.deploy() }
             wait(0.5.seconds)
+        }
+
+        par("Deploy and intake") {
+            action { robot.arm.lower() }
+            action { robot.intake.start() }
+            driveTo(PICKUP_POSITION)
         }
     }
 }
@@ -230,7 +236,8 @@ class RedSouth : PhasedAutonomous<MyRobot>(Alliance.RED) {
 Available in `PhaseBuilder<Robot>.createPhases()`:
 
 - `phase(AutonomousPhase<Robot>)` - Add a phase
-- `composite(name) { ... }` - Group phases
+- `seq(name) { ... }` - Group phases to execute sequentially
+- `par(name) { ... }` - Group phases to execute concurrently
 - `driveTo(position, maxSpeed = 1.0)` - Drive to field position
 - `driveRelative(movement, maxSpeed = 0.5)` - Drive relative to current position
 - `wait(duration)` - Wait for duration (e.g., `1.seconds`)

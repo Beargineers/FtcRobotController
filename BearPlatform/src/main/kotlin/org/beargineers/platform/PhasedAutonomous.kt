@@ -11,7 +11,8 @@ import kotlin.time.Duration
  *
  * A framework for creating structured, phase-based autonomous operations for FTC robots.
  * This system uses the **Composite design pattern** to allow you to break down complex
- * autonomous routines into discrete, sequential phases that can be organized hierarchically.
+ * autonomous routines into discrete phases that can be organized hierarchically and executed
+ * sequentially or in parallel.
  *
  * ## Key Concepts
  *
@@ -22,12 +23,14 @@ import kotlin.time.Duration
  * - **Loop**: Logic that runs repeatedly until the phase completes
  *
  * ### The Composite Pattern
- * The framework uses the Composite pattern to support both:
+ * The framework uses the Composite pattern to support:
  * - **Leaf phases**: Individual atomic operations (e.g., GotoPosePhase, WaitPhase)
- * - **Composite phases**: Containers that hold and execute multiple child phases sequentially
+ * - **SequentialPhase**: Containers that execute multiple child phases one after another
+ * - **ParallelPhase**: Containers that execute multiple child phases concurrently
  *
  * This allows you to:
  * - Nest phases hierarchically for better organization
+ * - Run multiple operations simultaneously (e.g., deploy arm while driving)
  * - Reuse common phase sequences across different autonomous modes
  * - Create clear, readable autonomous code with named groups
  *
@@ -36,7 +39,8 @@ import kotlin.time.Duration
  * 2. Then `loopPhase()` is called repeatedly each loop cycle
  * 3. When `loopPhase()` returns `false`, the phase ends and the next phase begins
  * 4. Return `true` to keep the phase running
- * 5. For CompositePhase, it manages child phases automatically
+ * 5. For SequentialPhase, child phases run one at a time in order
+ * 6. For ParallelPhase, all child phases run together until all complete
  *
  * ## Built-in Phases
  *
@@ -45,6 +49,8 @@ import kotlin.time.Duration
  * - **SimpleActionPhase**: Executes a single action immediately
  * - **GotoPosePhase**: Drives the robot to a target position on the field
  * - **DriveRelative**: Moves the robot relative to its current position
+ * - **SequentialPhase**: Executes child phases one after another
+ * - **ParallelPhase**: Executes child phases concurrently
  *
  * ## Creating Custom Phases
  *
@@ -88,6 +94,13 @@ import kotlin.time.Duration
  *             action { claw.release() }
  *         }
  *
+ *         // Run multiple actions concurrently
+ *         parallel("Deploy and drive") {
+ *             action { arm.lower() }
+ *             action { intake.start() }
+ *             driveTo(PICKUP_POSITION)
+ *         }
+ *
  *         // Park
  *         driveTo(OBSERVATION_ZONE)
  *     }
@@ -101,7 +114,8 @@ import kotlin.time.Duration
  * - **`wait(duration)`**: Wait for a specified duration
  * - **`action { ... }`**: Execute a single immediate action
  * - **`assumePosition(position)`**: Set the robot's believed position (e.g., at start)
- * - **`composite(name) { ... }`**: Group phases together with a name
+ * - **`composite(name) { ... }`**: Group phases to execute sequentially
+ * - **`parallel(name) { ... }`**: Group phases to execute concurrently
  *
  * The framework automatically handles phase transitions and stops when all phases complete.
  */
@@ -243,13 +257,14 @@ class DriveRelative<R: BaseRobot>(val movement: RobotMovement,
 fun <R: BaseRobot> PhaseBuilder<R>.driveRelative(movement: RobotMovement, maxSpeed: Double = 0.5) {
     phase(DriveRelative(movement, maxSpeed))
 }
+
 /**
- * A composite phase that executes a sequence of child phases.
+ * A composite phase that executes a sequence of child phases sequentially.
  *
  * @param name Name for this composite phase (shown in telemetry)
  * @param phases List of child phases to execute in sequence
  */
-class CompositePhase<Robot: BaseRobot>(
+class SequentialPhase<Robot: BaseRobot>(
     private val _name: String,
     private val childPhases: List<AutonomousPhase<Robot>>
 ) : AutonomousPhase<Robot> {
@@ -308,6 +323,63 @@ class CompositePhase<Robot: BaseRobot>(
 }
 
 /**
+ * A parallel phase that executes multiple child phases concurrently.
+ *
+ * All child phases start together and run in parallel until ALL phases complete.
+ * All phases share the same timer since they start simultaneously.
+ *
+ * @param name Name for this parallel phase (shown in telemetry)
+ * @param childPhases List of child phases to execute in parallel
+ */
+class ParallelPhase<Robot: BaseRobot>(
+    private val _name: String,
+    private val childPhases: List<AutonomousPhase<Robot>>
+) : AutonomousPhase<Robot> {
+
+    /** Track which phases have completed */
+    private val completed = BooleanArray(childPhases.size) { false }
+    private val childPhaseTime = ElapsedTime()
+
+    override fun name(): String = _name
+
+    override fun Robot.initPhase() {
+        // Initialize all child phases at once
+        for (i in childPhases.indices) {
+            with(childPhases[i]) {
+                initPhase()
+            }
+        }
+        childPhaseTime.reset()
+    }
+
+    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+        // Execute all child phases in parallel
+        for (i in childPhases.indices) {
+            // Skip phases that have already completed
+            if (completed[i]) continue
+
+            val phase = childPhases[i]
+
+            // Execute phase with shared timer
+            val continuePhase = with(phase) {
+                loopPhase(childPhaseTime)
+            }
+
+            if (!continuePhase) {
+                completed[i] = true
+            }
+        }
+
+        // Show progress
+        val completedCount = completed.count { it }
+        telemetry.addData("Progress $_name", "$completedCount / ${childPhases.size} complete")
+
+        // Continue until all phases complete
+        return completed.all { it }
+    }
+}
+
+/**
  * DSL marker annotation for the phase builder DSL.
  *
  * This prevents accidental nesting of builder scopes and provides better
@@ -335,18 +407,35 @@ class PhaseBuilder<Robot: BaseRobot> {
     }
 
     /**
-     * Creates a composite phase containing nested child phases.
+     * Creates a composite phase containing nested child phases that run sequentially.
      *
      * This function creates a new nested scope where you can define child phases.
-     * All phases defined in the block become children of the composite.
+     * All phases defined in the block become children of the composite and execute
+     * one after another.
      *
      * @param name The name for this composite phase (shown in telemetry)
      * @param phases A lambda that builds the child phases
      */
-    fun composite(name: String, phases: Phases<Robot>) {
+    fun seq(name: String, phases: Phases<Robot>) {
         val builder = PhaseBuilder<Robot>()
         builder.phases()
-        this@PhaseBuilder.phases.add(CompositePhase(name, builder.build()))
+        this@PhaseBuilder.phases.add(SequentialPhase(name, builder.build()))
+    }
+
+    /**
+     * Creates a parallel phase containing nested child phases that run concurrently.
+     *
+     * This function creates a new nested scope where you can define child phases.
+     * All phases defined in the block start together and run simultaneously until
+     * all phases complete.
+     *
+     * @param name The name for this parallel phase (shown in telemetry)
+     * @param phases A lambda that builds the child phases
+     */
+    fun par(name: String, phases: Phases<Robot>) {
+        val builder = PhaseBuilder<Robot>()
+        builder.phases()
+        this@PhaseBuilder.phases.add(ParallelPhase(name, builder.build()))
     }
 
     /**
@@ -363,7 +452,7 @@ abstract class PhasedAutonomous<Robot: BaseRobot>(alliance: Alliance, phases: Ph
         with(builder) {
             phases()
         }
-        CompositePhase("Plan", builder.build())
+        SequentialPhase("Plan", builder.build())
     }
 
     /** Whether the root phase has been initialized */
