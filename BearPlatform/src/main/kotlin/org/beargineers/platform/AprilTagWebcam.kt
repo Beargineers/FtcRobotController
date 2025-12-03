@@ -15,16 +15,6 @@ import kotlin.math.exp
 import kotlin.math.max
 
 @Configurable
-object CameraPosition {
-    var forward = 20.0
-    var up = 36.0
-    var right = 0.0
-    var pitch = -90.0
-    var yaw = 0.0
-    var roll = 0.0
-}
-
-@Configurable
 object AprilTagConfidenceParams {
     // Distance parameters (in cm)
     var optimalDistance = 100.0  // Distance with highest confidence
@@ -39,7 +29,13 @@ object AprilTagConfidenceParams {
     var angleWeight = 0.4  // How much viewing angle affects confidence
 }
 
-class AprilTagWebcam(op: BaseRobot): Hardware(op), AbsoluteLocalizer {
+class AprilTagWebcam(op: BaseRobot,
+    val forward: Double,
+    val right: Double,
+    val up: Double,
+    val pitch: Double,
+    val yaw: Double,
+    val roll: Double): Hardware(op), AbsoluteLocalizer {
     private val camera: WebcamName by hardware("Webcam 1")
 
     private lateinit var aprilTag: AprilTagProcessor
@@ -50,12 +46,12 @@ class AprilTagWebcam(op: BaseRobot): Hardware(op), AbsoluteLocalizer {
 
         val cameraPosition = org.firstinspires.ftc.robotcore.external.navigation.Position(
             DistanceUnit.CM,
-            CameraPosition.right, CameraPosition.forward, CameraPosition.up, 0
+            right, forward, up, 0
         )
 
         val cameraOrientation = YawPitchRollAngles(
             AngleUnit.DEGREES,
-            CameraPosition.yaw, CameraPosition.pitch, CameraPosition.roll, 0
+            yaw, pitch, roll, 0
         )
 
         aprilTag = AprilTagProcessor.Builder()

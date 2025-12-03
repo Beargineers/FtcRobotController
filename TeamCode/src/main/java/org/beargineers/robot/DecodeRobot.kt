@@ -13,7 +13,9 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
     override val relativeLocalizer get() = drive.localizerByMotorEncoders
     override val absoluteLocalizer get() = aprilTags
 
-    val aprilTags = AprilTagWebcam(this)
+    val aprilTags = AprilTagWebcam(this,
+        CameraPosition.forward, CameraPosition.right, CameraPosition.up,
+        CameraPosition.pitch, CameraPosition.yaw, CameraPosition.roll)
     val shooter = Shooter(this)
     val intake = Intake(this)
 
