@@ -1,6 +1,8 @@
 package org.beargineers
 
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.Alliance
+import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.Position
@@ -9,6 +11,10 @@ import org.beargineers.platform.assumePosition
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
+import org.beargineers.robot.DecodeRobot
+import org.beargineers.robot.IntakeMode
+import org.beargineers.robot.ShooterConfig
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 @PhaseDsl
@@ -73,4 +79,23 @@ private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
         shooter.defaultGoalDistance = savedGoalDistanceCM
     }
     wait(ShooterConfig.SHOOTING_TIME_SECONDS.seconds)
+}
+
+class WaitForDistance(val timeoutSec: Int) : AutonomousPhase<DecodeRobot> {
+    override fun DecodeRobot.initPhase() {
+        drive.stop()
+    }
+
+    override fun DecodeRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
+        goalDistanceCM?.let {
+            savedGoalDistanceCM = it
+            return false
+        }
+        return phaseTime.seconds() < timeoutSec
+    }
+}
+
+@PhaseDsl
+fun PhaseBuilder<DecodeRobot>.waitForDistance(timeoutSec: Duration = 3.seconds) {
+    phase(WaitForDistance(timeoutSec.inWholeSeconds.toInt()))
 }

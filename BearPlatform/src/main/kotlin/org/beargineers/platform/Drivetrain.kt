@@ -4,9 +4,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import java.util.Locale
 
-data class RobotMovement(val forward: Double, val right: Double, val turn: Double, val distanceUnit: DistanceUnit, val angleUnit: AngleUnit) {
-    fun toUnits(distanceUnit: DistanceUnit, angleUnit: AngleUnit): RobotMovement {
-        return RobotMovement(
+data class RelativePosition(val forward: Double, val right: Double, val turn: Double, val distanceUnit: DistanceUnit, val angleUnit: AngleUnit) {
+    fun toUnits(distanceUnit: DistanceUnit, angleUnit: AngleUnit): RelativePosition {
+        return RelativePosition(
             distanceUnit.fromUnit(this.distanceUnit, forward),
             distanceUnit.fromUnit(this.distanceUnit, right),
             angleUnit.fromUnit(this.angleUnit, turn),
@@ -14,9 +14,9 @@ data class RobotMovement(val forward: Double, val right: Double, val turn: Doubl
             angleUnit)
     }
 
-    operator fun plus(other: RobotMovement): RobotMovement {
+    operator fun plus(other: RelativePosition): RelativePosition {
         val other = other.toUnits(distanceUnit, angleUnit)
-        return RobotMovement(forward + other.forward, right + other.right, turn + other.turn, distanceUnit, angleUnit)
+        return RelativePosition(forward + other.forward, right + other.right, turn + other.turn, distanceUnit, angleUnit)
     }
 
     override fun toString(): String {
@@ -24,20 +24,20 @@ data class RobotMovement(val forward: Double, val right: Double, val turn: Doubl
     }
 
     companion object {
-        fun zero(): RobotMovement {
-            return RobotMovement(0.0, 0.0, 0.0, DistanceUnit.CM, AngleUnit.RADIANS)
+        fun zero(): RelativePosition {
+            return RelativePosition(0.0, 0.0, 0.0, DistanceUnit.CM, AngleUnit.RADIANS)
         }
 
-        fun forwardInch(inches: Double): RobotMovement {
-            return RobotMovement(inches, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
+        fun forwardInch(inches: Double): RelativePosition {
+            return RelativePosition(inches, 0.0, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
         }
 
-        fun rightInch(inches: Double): RobotMovement {
-            return RobotMovement(0.0, inches, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
+        fun rightInch(inches: Double): RelativePosition {
+            return RelativePosition(0.0, inches, 0.0, DistanceUnit.INCH, AngleUnit.RADIANS)
         }
 
-        fun turnCCW(degrees: Double): RobotMovement {
-            return RobotMovement(0.0, 0.0, degrees, DistanceUnit.INCH, AngleUnit.DEGREES)
+        fun turnCCW(degrees: Double): RelativePosition {
+            return RelativePosition(0.0, 0.0, degrees, DistanceUnit.INCH, AngleUnit.DEGREES)
         }
     }
 }
@@ -45,6 +45,4 @@ data class RobotMovement(val forward: Double, val right: Double, val turn: Doubl
 interface Drivetrain {
     fun stop()
     fun drive(forwardPower: Double, rightPower: Double, turnPower: Double, slow: Boolean = false)
-
-    fun robotMovedBy(): RobotMovement
 }

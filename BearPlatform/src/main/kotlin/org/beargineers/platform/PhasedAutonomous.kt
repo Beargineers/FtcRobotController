@@ -228,7 +228,7 @@ fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
     phase(GotoPosePhase(pose, maxSpeed))
 }
 
-class DriveRelative<R: BaseRobot>(val movement: RobotMovement,
+class DriveRelative<R: BaseRobot>(val movement: RelativePosition,
                                   val maxSpeed: Double) :
     AutonomousPhase<R> {
     lateinit var targetPosition: Position
@@ -254,7 +254,7 @@ class DriveRelative<R: BaseRobot>(val movement: RobotMovement,
 }
 
 @PhaseDsl
-fun <R: BaseRobot> PhaseBuilder<R>.driveRelative(movement: RobotMovement, maxSpeed: Double = 0.5) {
+fun <R: BaseRobot> PhaseBuilder<R>.driveRelative(movement: RelativePosition, maxSpeed: Double = 0.5) {
     phase(DriveRelative(movement, maxSpeed))
 }
 
@@ -262,7 +262,7 @@ fun <R: BaseRobot> PhaseBuilder<R>.driveRelative(movement: RobotMovement, maxSpe
  * A composite phase that executes a sequence of child phases sequentially.
  *
  * @param name Name for this composite phase (shown in telemetry)
- * @param phases List of child phases to execute in sequence
+ * @param childPhases List of child phases to execute in sequence
  */
 class SequentialPhase<Robot: BaseRobot>(
     private val _name: String,

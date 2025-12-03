@@ -1,4 +1,4 @@
-package org.beargineers
+package org.beargineers.robot
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
