@@ -1,4 +1,4 @@
-package org.beargineers
+package org.beargineers.robot
 
 import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.hardware.DcMotor
