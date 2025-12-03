@@ -11,3 +11,14 @@ object CameraPosition {
     var yaw = 0.0
     var roll = 0.0
 }
+
+@Configurable
+object KalmanFilterConfig {
+    // Process noise: uncertainty added per cycle (how much we distrust odometry)
+    var PROCESS_NOISE_POSITION = 0.5  // cm - odometry position drift per cycle
+    var PROCESS_NOISE_HEADING = 0.01  // radians - odometry heading drift per cycle
+
+    // Measurement noise: base uncertainty in vision measurements
+    var MEASUREMENT_NOISE_POSITION = 5.0  // cm - vision position measurement noise
+    var MEASUREMENT_NOISE_HEADING = 0.1   // radians - vision heading measurement noise
+}

@@ -30,24 +30,17 @@ object AutonomousConfig {
     var kP_heading = 0.01   // Heading gain (power per angle unit)
 }
 
-@Configurable
-object KalmanFilterConfig {
-    // Process noise: uncertainty added per cycle (how much we distrust odometry)
-    var PROCESS_NOISE_POSITION = 0.5  // cm - odometry position drift per cycle
-    var PROCESS_NOISE_HEADING = 0.01  // radians - odometry heading drift per cycle
-
-    // Measurement noise: base uncertainty in vision measurements
-    var MEASUREMENT_NOISE_POSITION = 5.0  // cm - vision position measurement noise
-    var MEASUREMENT_NOISE_HEADING = 0.1   // radians - vision heading measurement noise
-
-    // Minimum confidence threshold to accept vision measurements
-    var MIN_VISION_CONFIDENCE = 0.3
-}
+// Minimum confidence threshold to accept vision measurements
+var MIN_VISION_CONFIDENCE = 0.3
 
 abstract class BaseRobot(val opMode: RobotOpMode<*>) {
     abstract val drive: Drivetrain
     abstract val relativeLocalizer: RelativeLocalizer
     abstract val absoluteLocalizer: AbsoluteLocalizer
+
+    // Kalman filter for sensor fusion
+    abstract fun configureKalmanFilter(): KalmanFilter
+    private val kalmanFilter = configureKalmanFilter()
 
     val allHardware = mutableListOf<Hardware>()
 
@@ -61,14 +54,6 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
     var currentPosition: Position = FIELD_CENTER
 
     val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
-
-    // Kalman filter for sensor fusion
-    private val kalmanFilter = KalmanFilter(
-        processNoisePosition = KalmanFilterConfig.PROCESS_NOISE_POSITION,
-        processNoiseHeading = KalmanFilterConfig.PROCESS_NOISE_HEADING,
-        measurementNoisePosition = KalmanFilterConfig.MEASUREMENT_NOISE_POSITION,
-        measurementNoiseHeading = KalmanFilterConfig.MEASUREMENT_NOISE_HEADING
-    )
 
     open fun init() {
         allHardware.forEach {
@@ -100,7 +85,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
 
         // Step 2: Correction - update position using vision (absolute localizer) if available
         val visionMeasurement = absoluteLocalizer.getRobotPose()
-        if (visionMeasurement != null && visionMeasurement.timestampNano >= lastTimeMovedNanos && visionMeasurement.confidence >= KalmanFilterConfig.MIN_VISION_CONFIDENCE) {
+        if (visionMeasurement != null && visionMeasurement.timestampNano >= lastTimeMovedNanos && visionMeasurement.confidence >= MIN_VISION_CONFIDENCE) {
             kalmanFilter.correct(visionMeasurement)
             telemetry.addData("Vision", "✓ conf=%.2f".format(visionMeasurement.confidence))
         } else {
