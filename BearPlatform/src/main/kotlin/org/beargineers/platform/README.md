@@ -93,12 +93,46 @@ toggleButton("intake", gamepad1::b) { isOn ->
 
 ### Drivetrain
 
-Interface for drive subsystems. Implementations must provide:
+Interface for drive subsystems. Extends `RelativeLocalizer`. Implementations must provide:
 - `drive(forwardPower, rightPower, turnPower, slow)` - Apply drive power
 - `stop()` - Stop all drive motors
-- `robotMovedBy()` - Return movement since last call for odometry
+- `getMovementDelta()` - Return movement since last call for odometry (from RelativeLocalizer)
 
 Typical implementation uses mecanum wheels with encoders and IMU.
+
+### Localizer Interfaces
+
+**RelativeLocalizer** - Provides relative positioning (movement deltas):
+- `getMovementDelta()` - Returns `RobotMovement` with forward, right, and turn changes since last query
+- Used for odometry-based positioning (encoders, dead wheels, etc.)
+- Accumulates errors over time but always available
+
+**AbsoluteLocalizer** - Provides absolute positioning (field coordinates):
+- `getRobotPose()` - Returns `AbsolutePose?` with current x, y, heading, and confidence on field
+- `AbsolutePose` contains:
+  - `pose: Position` - The robot's position on the field
+  - `confidence: Double` - Quality metric (0.0 to 1.0) indicating measurement reliability
+- Used for vision-based or external reference positioning (AprilTags, GPS, etc.)
+- No error accumulation but may be intermittent (returns null when unavailable)
+
+**Confidence Score Interpretation:**
+- **1.0**: Excellent - Close range, perpendicular view, clear detection
+- **0.7-0.9**: Good - Moderate range/angle, suitable for most uses
+- **0.4-0.6**: Fair - Far range or poor angle, use with caution
+- **0.0-0.3**: Poor - Very far, extreme angle, or ambiguous detection
+
+**Confidence for Sensor Fusion:**
+```kotlin
+// Example: Use absolute positioning only when confidence is high
+val absolutePose = aprilTagWebcam.getRobotPose()
+if (absolutePose != null && absolutePose.confidence > 0.7) {
+    // Trust the absolute position - reset odometry drift
+    currentPosition = absolutePose.pose
+} else {
+    // Fall back to relative positioning
+    currentPosition += drivebase.getMovementDelta()
+}
+```
 
 ### PhasedAutonomous
 

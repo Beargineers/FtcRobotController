@@ -30,8 +30,25 @@ object AutonomousConfig {
     var kP_heading = 0.01   // Heading gain (power per angle unit)
 }
 
+@Configurable
+object KalmanFilterConfig {
+    // Process noise: uncertainty added per cycle (how much we distrust odometry)
+    var PROCESS_NOISE_POSITION = 0.5  // cm - odometry position drift per cycle
+    var PROCESS_NOISE_HEADING = 0.01  // radians - odometry heading drift per cycle
+
+    // Measurement noise: base uncertainty in vision measurements
+    var MEASUREMENT_NOISE_POSITION = 5.0  // cm - vision position measurement noise
+    var MEASUREMENT_NOISE_HEADING = 0.1   // radians - vision heading measurement noise
+
+    // Minimum confidence threshold to accept vision measurements
+    var MIN_VISION_CONFIDENCE = 0.3
+}
+
 abstract class BaseRobot(val opMode: RobotOpMode<*>) {
     abstract val drive: Drivetrain
+    abstract val relativeLocalizer: RelativeLocalizer
+    abstract val absoluteLocalizer: AbsoluteLocalizer
+
     val allHardware = mutableListOf<Hardware>()
 
     val telemetry: Telemetry get() = opMode.telemetry
@@ -39,13 +56,32 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
     val panelsTelemetry = PanelsTelemetry.telemetry
     val panelsField = PanelsField.field
 
+    var lastTimeMovedNanos: Long = 0
+
     var currentPosition: Position = FIELD_CENTER
-    var currentMove: RobotMovement = RobotMovement.zero()
+
+    val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
+
+    // Kalman filter for sensor fusion
+    private val kalmanFilter = KalmanFilter(
+        processNoisePosition = KalmanFilterConfig.PROCESS_NOISE_POSITION,
+        processNoiseHeading = KalmanFilterConfig.PROCESS_NOISE_HEADING,
+        measurementNoisePosition = KalmanFilterConfig.MEASUREMENT_NOISE_POSITION,
+        measurementNoiseHeading = KalmanFilterConfig.MEASUREMENT_NOISE_HEADING
+    )
 
     open fun init() {
         allHardware.forEach {
             it.init()
         }
+
+        // Initialize Kalman filter with current position
+        kalmanFilter.initialize(currentPosition)
+    }
+
+    fun isMoving(): Boolean {
+        val vel = currentVelocity
+        return abs(vel.forward) + abs(vel.right) + abs(vel.turn) > 0.001
     }
 
     open fun loop() {
@@ -53,11 +89,34 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
             it.loop()
         }
 
-        val move = drive.robotMovedBy().toUnits(DistanceUnit.CM, AngleUnit.RADIANS)
-        currentMove = move
-        currentPosition += positionChange(move)
+        if (isMoving()) {
+            lastTimeMovedNanos = System.nanoTime()
+        }
 
+        // Step 1: Prediction - update position using odometry (relative localizer)
+        val move = relativeLocalizer.getMovementDelta().toUnits(DistanceUnit.CM, AngleUnit.RADIANS)
+        val deltaPosition = positionChange(move)
+        kalmanFilter.predict(deltaPosition)
+
+        // Step 2: Correction - update position using vision (absolute localizer) if available
+        val visionMeasurement = absoluteLocalizer.getRobotPose()
+        if (visionMeasurement != null && visionMeasurement.timestampNano >= lastTimeMovedNanos && visionMeasurement.confidence >= KalmanFilterConfig.MIN_VISION_CONFIDENCE) {
+            kalmanFilter.correct(visionMeasurement)
+            telemetry.addData("Vision", "✓ conf=%.2f".format(visionMeasurement.confidence))
+        } else {
+            telemetry.addData("Vision", "✗ odometry only")
+        }
+
+        // Update current position from Kalman filter estimate
+        currentPosition = kalmanFilter.getEstimate(DistanceUnit.CM, AngleUnit.RADIANS)
+
+        // Display uncertainty for debugging
+        val (xStd, yStd, headStd) = kalmanFilter.getUncertainty()
         telemetry.addData("Position", currentPosition)
+        telemetry.addData("Uncertainty", "±%.1f cm, ±%.1f°".format(
+            sqrt(xStd * xStd + yStd * yStd),
+            Math.toDegrees(headStd)
+        ))
         telemetry.addData("Moved", move)
 
         drawRobotOnPanelsField()
@@ -95,7 +154,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
      *
      * @return Pose2D representing the change in position and orientation
      */
-    private fun positionChange(move: RobotMovement): Position {
+    private fun positionChange(move: RelativePosition): Position {
         val (forward, right, deltaYaw) = move
 
         val N = 10

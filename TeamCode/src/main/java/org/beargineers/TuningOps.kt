@@ -5,16 +5,14 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.Phases
-import org.beargineers.platform.RobotMovement
+import org.beargineers.platform.RelativePosition
 import org.beargineers.platform.action
 import org.beargineers.platform.assumePosition
 import org.beargineers.platform.driveRelative
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import kotlin.math.abs
+import org.beargineers.robot.DecodeRobot
 import kotlin.time.Duration.Companion.seconds
 
 open class TestOp(phases: Phases<DecodeRobot>) :
@@ -23,26 +21,26 @@ open class TestOp(phases: Phases<DecodeRobot>) :
 @Autonomous
 class Tune_HalfTileLoop : TestOp({
     wait(3.seconds)
-    driveRelative(RobotMovement.forwardInch(12.0))
-    driveRelative(RobotMovement.turnCCW(90.0))
-    driveRelative(RobotMovement.forwardInch(12.0))
-    driveRelative(RobotMovement.turnCCW(90.0))
-    driveRelative(RobotMovement.forwardInch(12.0))
-    driveRelative(RobotMovement.turnCCW(90.0))
-    driveRelative(RobotMovement.forwardInch(12.0))
-    driveRelative(RobotMovement.turnCCW(90.0))
+    driveRelative(RelativePosition.forwardInch(12.0))
+    driveRelative(RelativePosition.turnCCW(90.0))
+    driveRelative(RelativePosition.forwardInch(12.0))
+    driveRelative(RelativePosition.turnCCW(90.0))
+    driveRelative(RelativePosition.forwardInch(12.0))
+    driveRelative(RelativePosition.turnCCW(90.0))
+    driveRelative(RelativePosition.forwardInch(12.0))
+    driveRelative(RelativePosition.turnCCW(90.0))
 })
 
 @Autonomous
 class Tune_OneTileLeft : TestOp({
     wait(3.seconds)
-    driveRelative(RobotMovement.rightInch(-24.0))
+    driveRelative(RelativePosition.rightInch(-24.0))
 })
 
 @Autonomous
 class Tune_Turn90CCW : TestOp({
     wait(3.seconds)
-    driveRelative(RobotMovement.turnCCW(90.0))
+    driveRelative(RelativePosition.turnCCW(90.0))
 })
 
 @Autonomous
@@ -61,21 +59,14 @@ val startTestResults = mutableListOf<Double>()
 
 class DriveRelativeUntilMoved(val forward: Double, val right: Double, val turn: Double) : AutonomousPhase<DecodeRobot> {
     var curMaxSpeed = 0.0
-    var move: RobotMovement = RobotMovement(0.0, 0.0, 0.0, DistanceUnit.CM, AngleUnit.DEGREES)
 
     override fun DecodeRobot.initPhase() {
         curMaxSpeed = 0.0
         drive.stop()
     }
 
-    fun shifted(): Boolean {
-        val cm = move.toUnits(DistanceUnit.CM, AngleUnit.DEGREES)
-        return abs(cm.forward) > 1.0 || abs(cm.right) > 1.0 || abs(cm.turn) > 2.0
-    }
-
     override fun DecodeRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        move = currentMove
-        if (shifted()) {
+        if (isMoving()) {
             drive.stop()
             startTestResults += curMaxSpeed
             return false
@@ -92,21 +83,14 @@ val stopTestResults = mutableListOf<Double>()
 
 class DriveRelativeUntilStopped(val forward: Double, val right: Double, val turn: Double) : AutonomousPhase<DecodeRobot> {
     var curMaxSpeed = 0.0
-    var move: RobotMovement = RobotMovement(0.0, 0.0, 0.0, DistanceUnit.CM, AngleUnit.DEGREES)
 
     override fun DecodeRobot.initPhase() {
         curMaxSpeed = 0.3
         drive.stop()
     }
 
-    fun shifted(): Boolean {
-        val cm = move.toUnits(DistanceUnit.CM, AngleUnit.DEGREES)
-        return abs(cm.forward) > 0.0 || abs(cm.right) > 0.0 || abs(cm.turn) > 0.0
-    }
-
     override fun DecodeRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        move = currentMove
-        if (!shifted() && phaseTime.seconds() > 1) {
+        if (!isMoving() && phaseTime.seconds() > 1) {
             drive.stop()
             stopTestResults += curMaxSpeed
             return false

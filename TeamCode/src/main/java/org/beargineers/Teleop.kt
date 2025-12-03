@@ -3,7 +3,7 @@ package org.beargineers
 import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
-import org.beargineers.platform.FIELD_CENTER
+import org.beargineers.robot.IntakeMode
 import kotlin.math.abs
 
 @Configurable
@@ -31,10 +31,6 @@ open class Driving(alliance: Alliance) : DecodeOpMode(alliance) {
         button(gamepad1::right_bumper) {
             shooter.launch()
         }
-
-        button(gamepad1::b) {
-            currentPosition = aprilTagPose ?: FIELD_CENTER
-        }
     }
 
     override fun bearLoop() {
@@ -52,10 +48,9 @@ open class Driving(alliance: Alliance) : DecodeOpMode(alliance) {
         telemetry.addData("f/s/r", "%.2f / %.2f / %.2f", forward, strafe, rotation)
     }
 
-    fun Float.normalize(): Double = shape(deadband(this.toDouble()))
+    fun Float.normalize(): Double = deadband(toDouble())
 
     private fun deadband(v: Double, th: Double = 0.01) = if (abs(v) < th) 0.0 else v
-    private fun shape(v: Double) = v
 }
 
 @TeleOp
