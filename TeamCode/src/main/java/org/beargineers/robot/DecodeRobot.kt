@@ -3,6 +3,7 @@ package org.beargineers.robot
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AprilTagWebcam
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.KalmanFilter
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RobotOpMode
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
@@ -12,6 +13,15 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
 
     override val relativeLocalizer get() = drive.localizerByMotorEncoders
     override val absoluteLocalizer get() = aprilTags
+
+    override fun configureKalmanFilter(): KalmanFilter {
+        return KalmanFilter(
+            processNoisePosition = KalmanFilterConfig.PROCESS_NOISE_POSITION,
+            processNoiseHeading = KalmanFilterConfig.PROCESS_NOISE_HEADING,
+            measurementNoisePosition = KalmanFilterConfig.MEASUREMENT_NOISE_POSITION,
+            measurementNoiseHeading = KalmanFilterConfig.MEASUREMENT_NOISE_HEADING
+        )
+    }
 
     val aprilTags = AprilTagWebcam(this,
         CameraPosition.forward, CameraPosition.right, CameraPosition.up,
