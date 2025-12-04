@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AprilTagWebcam
+import org.beargineers.platform.AutonomousDriveConfig
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.KalmanFilter
 import org.beargineers.platform.MecanumDrive
@@ -41,6 +42,18 @@ object WheelCorrections {
     )
 }
 
+@Configurable
+object AutonomousConfig {
+    var MINIMAL_WHEEL_POWER: Double = 0.12
+
+    // Max default auto speed. Pass maxSpeed parameter to driveTo to overrun the default
+    var MAX_SPEED = 0.7
+
+
+    var kP_position = 0.035
+    var kP_heading = 0.01
+}
+
 class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
     override val drive = MecanumDrive(this, WheelCorrections.asConfig())
 
@@ -53,6 +66,15 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
             processNoiseHeading = KalmanFilterConfig.PROCESS_NOISE_HEADING,
             measurementNoisePosition = KalmanFilterConfig.MEASUREMENT_NOISE_POSITION,
             measurementNoiseHeading = KalmanFilterConfig.MEASUREMENT_NOISE_HEADING
+        )
+    }
+
+    override fun configureAutonomousDriving(): AutonomousDriveConfig {
+        return AutonomousDriveConfig(
+            minimalWheelPower = AutonomousConfig.MINIMAL_WHEEL_POWER,
+            maximumSpeed = AutonomousConfig.MAX_SPEED,
+            kP_position = AutonomousConfig.kP_position,
+            kP_heading = AutonomousConfig.kP_heading
         )
     }
 
