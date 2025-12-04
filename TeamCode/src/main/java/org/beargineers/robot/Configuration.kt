@@ -27,8 +27,8 @@ object KalmanFilterConfig {
 
 @Configurable
 object WheelCorrections {
-    var LF: Double = -1.0 // Negative value means this motor's encoder reports negative changes when positive power is applied
-    var RF: Double = -0.775
+    var LF: Double = 1.0
+    var RF: Double = 0.775
     var LB: Double = 1.0
     var RB: Double = 0.925
 
