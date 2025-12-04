@@ -1,6 +1,5 @@
 package org.beargineers.platform
 
-import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
@@ -11,18 +10,27 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
-@Configurable
-object WheelCorrections {
-    var LF: Double = -1.0 // Negative value means this motor's encoder reports negative changes when positive power is applied
-    var RF: Double = -0.775
-    var LB: Double = 1.0
-    var RB: Double = 0.925
+data class WheelsConfig(
+    val lf_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.REVERSE,
+    val rf_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
+    val lb_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.REVERSE,
+    val rb_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
 
-    var FORWARD_CM_PER_TICK: Double = 0.05752541667
-    var STRAFE_CM_PER_TICK: Double = 0.069 // 0.07096614583 // 0.049 //
-}
+    val lf_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
+    val rf_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
+    val lb_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
+    val rb_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
 
-class MecanumDrive(op: BaseRobot) : Hardware(op), Drivetrain {
+    val lf_correction: Double = 1.0,
+    val rf_correction: Double = 1.0,
+    val lb_correction: Double = 1.0,
+    val rb_correction: Double = 1.0,
+
+    val cm_per_tick_forward: Double,
+    val cm_per_tick_strafe: Double,
+)
+
+class MecanumDrive(op: BaseRobot, val config: WheelsConfig) : Hardware(op), Drivetrain {
 
     // Match these names in  RC configuration
     val lf: DcMotor by hardware("leftFront")
@@ -31,16 +39,15 @@ class MecanumDrive(op: BaseRobot) : Hardware(op), Drivetrain {
     val rb: DcMotor by hardware("rightBack")
     private val imu: IMU by hardware("imu")
 
-
     val localizerByMotorEncoders: RelativeLocalizer by lazy { MecanumEncodersLocalizers() }
 
     override fun init() {
         val allMotors = listOf(lf, rf, lb, rb)
 
-        lf.direction = DcMotorSimple.Direction.REVERSE
-        lb.direction = DcMotorSimple.Direction.REVERSE
-        rf.direction = DcMotorSimple.Direction.FORWARD
-        rb.direction = DcMotorSimple.Direction.FORWARD
+        lf.direction = config.lf_direction
+        lb.direction = config.lb_direction
+        rf.direction = config.rf_direction
+        rb.direction = config.rb_direction
 
         allMotors.forEach {
             it.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -69,13 +76,13 @@ class MecanumDrive(op: BaseRobot) : Hardware(op), Drivetrain {
         val limit = if (slow) 0.4 else 1.0
         fun normalize(v: Double) = (v / maxMag) * limit
 
-        val lfpn = normalize(lfP * abs(WheelCorrections.LF))
+        val lfpn = normalize(lfP * config.lf_correction)
         setMotorPower(lf, lfpn)
-        val rfpn = normalize(rfP * abs(WheelCorrections.RF))
+        val rfpn = normalize(rfP * config.rf_correction)
         setMotorPower(rf, rfpn)
-        val lbpn = normalize(lbP * abs(WheelCorrections.LB))
+        val lbpn = normalize(lbP * config.lb_correction)
         setMotorPower(lb, lbpn)
-        val rbpn = normalize(rbP * abs(WheelCorrections.RB))
+        val rbpn = normalize(rbP * config.rb_correction)
         setMotorPower(rb, rbpn)
 
         telemetry.addData(
@@ -164,15 +171,16 @@ class MecanumDrive(op: BaseRobot) : Hardware(op), Drivetrain {
             val rfp = rf.currentPosition
             val rbp = rb.currentPosition
 
-            val deltaLF = (lfp - lastLf) / WheelCorrections.LF
-            val deltaLB = (lbp - lastLb) / WheelCorrections.LB
-            val deltaRF = (rfp - lastRf) / WheelCorrections.RF
-            val deltaRB = (rbp - lastRb) / WheelCorrections.RB
+            fun DcMotorSimple.Direction.sign() = if (this == DcMotorSimple.Direction.FORWARD) 1 else -1
 
-            val forward = WheelCorrections.FORWARD_CM_PER_TICK * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
-            val right = WheelCorrections.STRAFE_CM_PER_TICK * (deltaLF - deltaRF + deltaRB - deltaLB) / (4 * sqrt(
-                2.0
-            ))
+            val deltaLF = (lfp - lastLf) / config.lf_correction * config.lf_encoder_direction.sign()
+            val deltaLB = (lbp - lastLb) / config.lb_correction * config.lb_encoder_direction.sign()
+            val deltaRF = (rfp - lastRf) / config.rf_correction * config.rf_encoder_direction.sign()
+            val deltaRB = (rbp - lastRb) / config.rb_correction * config.rb_encoder_direction.sign()
+
+
+            val forward = config.cm_per_tick_forward * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
+            val right = config.cm_per_tick_strafe * (deltaLF - deltaRF + deltaRB - deltaLB) / (4 * sqrt(2.0))
 
             return RelativePosition(
                 forward = forward,
