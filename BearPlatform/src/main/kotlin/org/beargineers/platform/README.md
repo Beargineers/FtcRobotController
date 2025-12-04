@@ -150,13 +150,13 @@ class RedSouth : PhasedAutonomous<MyRobot>(Alliance.RED) {
         action { intake.setPower(1.0) }
         wait(1.seconds)
 
-        composite("Score") {
+        seq("Score") {
             driveTo(CHAMBER)
             action { arm.deploy() }
             wait(0.5.seconds)
         }
 
-        parallel("Deploy and intake") {
+        par("Deploy and intake") {
             action { arm.lower() }
             action { intake.start() }
             driveTo(PICKUP_POSITION)
@@ -232,19 +232,6 @@ enum class Alliance {
 
 Passed to RobotOpMode constructor. Used for field position mirroring and alliance-specific logic.
 
-## Configuration
-
-Framework uses `@Configurable` annotation for runtime parameter tuning:
-
-```kotlin
-@Configurable
-object AutonomousConfig {
-    var MINIMAL_WHEEL_POWER: Double = 0.12
-    var MAX_SPEED = 0.7
-    var kP_position = 0.035
-    var kP_heading = 0.01
-}
-```
 
 Parameters adjustable from Driver Station without rebuilding.
 
