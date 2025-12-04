@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 open class TestOp(phases: Phases<DecodeRobot>) :
     DecodeAutonomous(Alliance.BLUE, phases)
 
-@Autonomous
+@Autonomous(group = "Tune")
 class Tune_HalfTileLoop : TestOp({
     wait(3.seconds)
     driveRelative(RelativePosition.forwardInch(12.0))
@@ -31,25 +31,25 @@ class Tune_HalfTileLoop : TestOp({
     driveRelative(RelativePosition.turnCCW(90.0))
 })
 
-@Autonomous
+@Autonomous(group = "Tune")
 class Tune_OneTileLeft : TestOp({
     wait(3.seconds)
     driveRelative(RelativePosition.rightInch(-24.0))
 })
 
-@Autonomous
+@Autonomous(group = "Tune")
 class Tune_Turn90CCW : TestOp({
     wait(3.seconds)
     driveRelative(RelativePosition.turnCCW(90.0))
 })
 
-@Autonomous
+@Autonomous(group = "Tune")
 class Tune_C1ToC6Forward : TestOp({
     assumePosition(tilePosition("C1:180"))
     driveTo(tilePosition("C6:180"))
 })
 
-@Autonomous
+@Autonomous(group = "Tune")
 class Tune_B1ToB6Left : TestOp({
     assumePosition(tilePosition("B1:90"))
     driveTo(tilePosition("B6:90"))
@@ -103,7 +103,8 @@ class DriveRelativeUntilStopped(val forward: Double, val right: Double, val turn
     }
 }
 
-@Autonomous // Current test results: F:0.15, R:0.27, T:0.14
+@Autonomous(group = "Tune")
+// Current test results: F:0.15, R:0.27, T:0.14
 class Tune_StartingPowers() : TestOp({
     val forward = DriveRelativeUntilMoved(1.0, 0.0, 0.0)
     val right = DriveRelativeUntilMoved(0.0, 1.0, 0.0)
@@ -123,7 +124,8 @@ class Tune_StartingPowers() : TestOp({
     }
 }
 
-@Autonomous // Current test results: F: 0.04, R:0.11, T:0.01
+@Autonomous(group = "Tune")
+// Current test results: F: 0.04, R:0.11, T:0.01
 class Tune_StoppingPowers() : TestOp({
     val forward = DriveRelativeUntilStopped(1.0, 0.0, 0.0)
     val right = DriveRelativeUntilStopped(0.0, 1.0, 0.0)
@@ -143,7 +145,7 @@ class Tune_StoppingPowers() : TestOp({
     }
 }
 
-@Autonomous
+@Autonomous(group = "Tune")
 class Tune_TestWheelNames() : TestOp({
     action {
         drive.stop()
