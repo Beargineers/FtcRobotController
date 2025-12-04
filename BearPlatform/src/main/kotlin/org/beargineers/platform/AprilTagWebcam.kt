@@ -84,7 +84,7 @@ class AprilTagWebcam(op: BaseRobot,
      */
     fun getAprilReadings(tagID: Int): List<AprilTagDetection> {
         return aprilTag.detections.filter {
-            it.metadata != null && (tagID < 0 || it.id == tagID)
+            it.metadata != null && it.metadata.fieldPosition.magnitude() > 0.01 && (tagID < 0 || it.id == tagID)
         }
     }
 
