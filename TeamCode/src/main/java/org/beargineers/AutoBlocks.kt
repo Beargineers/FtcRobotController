@@ -5,7 +5,10 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
+import org.beargineers.platform.PhasedAutonomous
+import org.beargineers.platform.Phases
 import org.beargineers.platform.Position
+import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.action
 import org.beargineers.platform.assumePosition
 import org.beargineers.platform.driveTo
@@ -41,6 +44,11 @@ fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Position) 
     }
 }
 
+abstract class DecodeAutonomous(alliance: Alliance, phases: Phases<DecodeRobot>) : PhasedAutonomous<DecodeRobot>(alliance, phases) {
+    override fun createRobot(opMode: RobotOpMode<DecodeRobot>): DecodeRobot {
+        return DecodeRobot(this)
+    }
+}
 open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg spikes: Spike) :
     DecodeAutonomous(alliance, {
         val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }

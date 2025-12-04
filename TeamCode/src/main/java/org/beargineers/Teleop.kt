@@ -3,6 +3,8 @@ package org.beargineers
 import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
+import org.beargineers.platform.RobotOpMode
+import org.beargineers.robot.DecodeRobot
 import org.beargineers.robot.IntakeMode
 import kotlin.math.abs
 
@@ -12,7 +14,11 @@ object TeleopConfigs {
     var ROTATION_TRIGGER_REDUCTION: Float = 0.5f
 }
 
-open class Driving(alliance: Alliance) : DecodeOpMode(alliance) {
+open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
+    override fun createRobot(opMode: RobotOpMode<DecodeRobot>): DecodeRobot {
+        return DecodeRobot(this)
+    }
+
     override fun bearInit() {
         super.bearInit()
 
