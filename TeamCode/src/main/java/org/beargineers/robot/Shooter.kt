@@ -1,18 +1,9 @@
 package org.beargineers.robot
 
-import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
-
-@Configurable
-object ShooterConfig {
-    var SHOOTER_POWER_ADJUST = 1.0
-    var SHOOTER_DISTANCE_QUOTIENT = 0.00101
-    var SHOOTER_FREE_QUOTIENT = 0.556
-    var SHOOTING_TIME_SECONDS: Double = 4.5
-}
 
 class Shooter(op: BaseRobot): Hardware(op) {
     val fly1 by hardware<DcMotor>()
