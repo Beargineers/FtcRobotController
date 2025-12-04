@@ -3,6 +3,7 @@ package org.beargineers
 import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import org.beargineers.platform.Alliance
+import org.beargineers.platform.decode.Spike
 
 @Configurable
 // Starting,Shooting positions and angles
