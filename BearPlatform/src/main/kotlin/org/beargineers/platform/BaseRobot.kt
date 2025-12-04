@@ -2,7 +2,6 @@
 
 package org.beargineers.platform
 
-import com.bylazar.configurables.annotations.Configurable
 import com.bylazar.field.PanelsField
 import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.Telemetry
@@ -17,18 +16,18 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 
-@Configurable
-object AutonomousConfig {
-    var MINIMAL_WHEEL_POWER: Double = 0.12
+data class AutonomousDriveConfig(
+    val minimalWheelPower: Double = 0.12,
+    val maximumSpeed: Double = 1.0,
 
-    // Max default auto speed. Pass maxSpeed parameter to driveTo to overrun the default
-    var MAX_SPEED = 0.7
+    // Proportional control gains (tune these values for your robot).
+    // Too low values will result in robot moving unnecessarily slow
+    // Too high values will result in robot driving past destination and maybe even oscillating around it
 
 
-    // Proportional control gains (tune these values for your robot)
-    var kP_position = 0.035  // Position gain (power per distance unit)
-    var kP_heading = 0.01   // Heading gain (power per angle unit)
-}
+    val kP_position: Double = 0.035, // Position gain (power per distance unit)
+    val kP_heading: Double = 0.01 // Heading gain (power per angle unit)
+)
 
 // Minimum confidence threshold to accept vision measurements
 var MIN_VISION_CONFIDENCE = 0.3
@@ -40,7 +39,9 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
 
     // Kalman filter for sensor fusion
     abstract fun configureKalmanFilter(): KalmanFilter
+    abstract fun configureAutonomousDriving(): AutonomousDriveConfig
     private val kalmanFilter = configureKalmanFilter()
+    private val autoConfig = configureAutonomousDriving()
 
     val allHardware = mutableListOf<Hardware>()
 
@@ -209,7 +210,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         positionTolerance: Double = 2.0,
         headingTolerance: Double = 5.0
     ): Boolean {
-        val maxSpeed = min(maxSpeed, AutonomousConfig.MAX_SPEED)
+        val maxSpeed = min(maxSpeed, autoConfig.maximumSpeed)
         // Make sure current and target positions are in the same units.
         val cp = currentPosition.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
         val tp = target.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
@@ -245,14 +246,14 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         val robotRight = deltaX * sin(robotHeadingRad) - deltaY * cos(robotHeadingRad)
 
         // Calculate drive powers using proportional control
-        val forwardPower = robotForward * AutonomousConfig.kP_position
-        val strafePower = robotRight * AutonomousConfig.kP_position
-        val turnPower = -Math.toDegrees(headingError) * AutonomousConfig.kP_heading // Positive power to turn CW, but positive delta heating is CCW
+        val forwardPower = robotForward * autoConfig.kP_position
+        val strafePower = robotRight * autoConfig.kP_position
+        val turnPower = -Math.toDegrees(headingError) * autoConfig.kP_heading // Positive power to turn CW, but positive delta heating is CCW
 
         val maxPower = listOf(forwardPower, strafePower, turnPower).maxOf { abs(it) }
         val maxV = when {
             maxPower > maxSpeed -> maxPower / maxSpeed
-            maxPower < AutonomousConfig.MINIMAL_WHEEL_POWER -> maxPower / AutonomousConfig.MINIMAL_WHEEL_POWER
+            maxPower < autoConfig.minimalWheelPower -> maxPower / autoConfig.minimalWheelPower
             else -> 1.0
         }
 
