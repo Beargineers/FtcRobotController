@@ -11,6 +11,7 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.action
 import org.beargineers.platform.assumePosition
+import org.beargineers.platform.decode.Spike
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
@@ -66,7 +67,8 @@ open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg 
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
                                                    launchPoint: Position,
-                                                   vararg spikes: Spike) {
+                                                   vararg spikes: Spike
+) {
     assumePosition(startingPoint)
     shootInitialLoad(launchPoint)
     scoopAndShoot(spikes[0], launchPoint)

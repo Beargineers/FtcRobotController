@@ -1,4 +1,4 @@
-package org.beargineers
+package org.beargineers.platform.decode
 
 import org.beargineers.platform.TileOffset
 import org.beargineers.platform.tileLocation
