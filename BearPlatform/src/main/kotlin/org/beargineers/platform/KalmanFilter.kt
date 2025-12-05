@@ -57,7 +57,8 @@ class KalmanFilter(
     /**
      * Prediction step: Update state estimate based on odometry movement.
      *
-     * This increases uncertainty (covariance) to account for odometry drift.
+     * This increases uncertainty (covariance) to account for odometry drift,
+     * scaled by the amount of movement. No movement = no additional uncertainty.
      *
      * @param deltaPosition Movement delta from relative localizer
      */
@@ -69,10 +70,14 @@ class KalmanFilter(
         stateY += delta.y
         stateHeading = normalizeAngle(stateHeading + delta.heading)
 
-        // Increase covariance (uncertainty grows with movement)
-        // Process noise Q
-        val qPos = processNoisePosition * processNoisePosition
-        val qHead = processNoiseHeading * processNoiseHeading
+        // Increase covariance (uncertainty grows proportionally to movement)
+        // Process noise Q, scaled by movement magnitude
+        val positionMovement = kotlin.math.sqrt(delta.x * delta.x + delta.y * delta.y)
+        val headingMovement = kotlin.math.abs(delta.heading)
+
+        // Only add process noise proportional to actual movement
+        val qPos = processNoisePosition * processNoisePosition * positionMovement
+        val qHead = processNoiseHeading * processNoiseHeading * headingMovement
 
         covariance[0] += qPos  // P[0,0] - x variance
         covariance[4] += qPos  // P[1,1] - y variance
