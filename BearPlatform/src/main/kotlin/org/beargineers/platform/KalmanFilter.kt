@@ -3,6 +3,8 @@ package org.beargineers.platform
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 /**
  * A Kalman filter for fusing relative (odometry) and absolute (vision) localization data.
@@ -72,8 +74,8 @@ class KalmanFilter(
 
         // Increase covariance (uncertainty grows proportionally to movement)
         // Process noise Q, scaled by movement magnitude
-        val positionMovement = kotlin.math.sqrt(delta.x * delta.x + delta.y * delta.y)
-        val headingMovement = kotlin.math.abs(delta.heading)
+        val positionMovement = sqrt(delta.x * delta.x + delta.y * delta.y)
+        val headingMovement = abs(delta.heading)
 
         // Only add process noise proportional to actual movement
         val qPos = processNoisePosition * processNoisePosition * positionMovement
@@ -169,9 +171,9 @@ class KalmanFilter(
      */
     fun getUncertainty(): Triple<Double, Double, Double> {
         return Triple(
-            kotlin.math.sqrt(covariance[0]),  // x std dev
-            kotlin.math.sqrt(covariance[4]),  // y std dev
-            kotlin.math.sqrt(covariance[8])   // heading std dev
+            sqrt(covariance[0]),  // x std dev
+            sqrt(covariance[4]),  // y std dev
+            sqrt(covariance[8])   // heading std dev
         )
     }
 
