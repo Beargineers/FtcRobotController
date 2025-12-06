@@ -53,6 +53,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
     var lastTimeMovedNanos: Long = 0
 
     var currentPosition: Position = FIELD_CENTER
+    private set
 
     val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
 
@@ -63,6 +64,11 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
 
         // Initialize Kalman filter with current position
         kalmanFilter.initialize(currentPosition)
+    }
+
+    fun assumePosition(position: Position) {
+        currentPosition = position
+        kalmanFilter.initialize(position)
     }
 
     fun isMoving(): Boolean {
