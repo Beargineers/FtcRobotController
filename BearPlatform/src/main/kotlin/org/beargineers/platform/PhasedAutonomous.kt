@@ -51,6 +51,7 @@ import kotlin.time.Duration
  * - **DriveRelative**: Moves the robot relative to its current position
  * - **SequentialPhase**: Executes child phases one after another
  * - **ParallelPhase**: Executes child phases concurrently
+ * - **DoWhilePhase**: Loops while condition is true, then executes another phase
  *
  * ## Creating Custom Phases
  *
@@ -114,8 +115,9 @@ import kotlin.time.Duration
  * - **`wait(duration)`**: Wait for a specified duration
  * - **`action { ... }`**: Execute a single immediate action
  * - **`assumePosition(position)`**: Set the robot's believed position (e.g., at start)
- * - **`composite(name) { ... }`**: Group phases to execute sequentially
- * - **`parallel(name) { ... }`**: Group phases to execute concurrently
+ * - **`seq(name) { ... }`**: Group phases to execute sequentially
+ * - **`par(name) { ... }`**: Group phases to execute concurrently
+ * - **`doWhile(name) { condition { ... } looping { ... } then { ... } }`**: Loop while condition, then continue
  *
  * The framework automatically handles phase transitions and stops when all phases complete.
  */
@@ -210,7 +212,7 @@ fun <Robot: BaseRobot> PhaseBuilder<Robot>.action(action: Robot.() -> Unit) {
 @PhaseDsl
 fun <Robot: BaseRobot> PhaseBuilder<Robot>.assumePosition(position: Position) {
     action {
-        currentPosition = position
+        assumePosition(position)
     }
 }
 
@@ -319,6 +321,148 @@ class SequentialPhase<Robot: BaseRobot>(
 
         // Continue composite phase as long as there are more child phases
         return true
+    }
+}
+
+/**
+ * A phase that runs one set of phases while a condition is true, then switches
+ * permanently to another set of phases once the condition becomes false.
+ *
+ * The condition is evaluated on every loop iteration while running the "while" phase.
+ * Once the condition becomes false, execution switches to the "then" phase permanently
+ * (no switching back). This is useful for behaviors like "keep searching while not found,
+ * then score".
+ *
+ * @param name Name for this phase (shown in telemetry)
+ * @param condition Function that returns true to continue the "while" phase
+ * @param whilePhase Phase to execute while condition is true
+ * @param thenPhase Phase to execute after condition becomes false
+ */
+class DoWhilePhase<Robot: BaseRobot>(
+    private val _name: String,
+    private val condition: Robot.() -> Boolean,
+    private val whilePhase: AutonomousPhase<Robot>,
+    private val thenPhase: AutonomousPhase<Robot>
+) : AutonomousPhase<Robot> {
+
+    /** Whether we've switched to the "then" phase */
+    private var switchedToThen = false
+
+    /** Whether the current phase has been initialized */
+    private var currentPhaseInitialized = false
+
+    /** Timer for the current child phase */
+    private val childPhaseTime = ElapsedTime()
+
+    override fun name(): String = _name
+
+    override fun Robot.initPhase() {
+        switchedToThen = false
+        currentPhaseInitialized = false
+    }
+
+    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+        // Check condition only if we haven't switched yet
+        if (!switchedToThen && !condition()) {
+            switchedToThen = true
+            currentPhaseInitialized = false
+            telemetry.addLine("'$_name': condition false -> ${thenPhase.name()}")
+        }
+
+        val currentPhase = if (switchedToThen) thenPhase else whilePhase
+
+        // Initialize current phase if needed
+        if (!currentPhaseInitialized) {
+            with(currentPhase) {
+                initPhase()
+            }
+            childPhaseTime.reset()
+            currentPhaseInitialized = true
+        }
+
+        // Delegate to the current phase
+        return with(currentPhase) {
+            loopPhase(childPhaseTime)
+        }
+    }
+}
+
+/**
+ * Builder for constructing a "doWhile" phase using a DSL.
+ *
+ * Example usage:
+ * ```kotlin
+ * doWhile("Search for sample") {
+ *     condition { !sampleDetected() }
+ *     looping {
+ *         // Keep searching while condition is true
+ *         driveTo(SEARCH_POSITION)
+ *     }
+ *     then {
+ *         // Execute after condition becomes false
+ *         action { grabSample() }
+ *         driveTo(SCORING_POSITION)
+ *     }
+ * }
+ * ```
+ */
+@PhaseDsl
+class DoWhileBuilder<Robot: BaseRobot> {
+    private var conditionBlock: (Robot.() -> Boolean)? = null
+    private var whilePhases: Phases<Robot>? = null
+    private var thenPhases: Phases<Robot>? = null
+
+    /**
+     * Sets the condition to evaluate. The "looping" phase runs while this returns true.
+     *
+     * @param block A lambda that returns true to continue looping
+     */
+    fun condition(block: Robot.() -> Boolean) {
+        conditionBlock = block
+    }
+
+    /**
+     * Sets the phases to execute while the condition is true.
+     *
+     * @param phases A lambda that builds the "while" phases
+     */
+    fun looping(phases: Phases<Robot>) {
+        whilePhases = phases
+    }
+
+    /**
+     * Sets the phases to execute after the condition becomes false.
+     *
+     * @param phases A lambda that builds the "then" phases
+     */
+    fun then(phases: Phases<Robot>) {
+        thenPhases = phases
+    }
+
+    /**
+     * Builds the doWhile phase.
+     *
+     * @param name The name for this phase
+     * @return The constructed DoWhilePhase
+     * @throws IllegalStateException if condition, looping, or then is not set
+     */
+    internal fun build(name: String): DoWhilePhase<Robot> {
+        val condition = conditionBlock
+            ?: throw IllegalStateException("doWhile '$name' requires a condition block")
+        val whileBlock = whilePhases
+            ?: throw IllegalStateException("doWhile '$name' requires a looping block")
+        val thenBlock = thenPhases
+            ?: throw IllegalStateException("doWhile '$name' requires a then block")
+
+        val whileBuilder = PhaseBuilder<Robot>()
+        whileBuilder.whileBlock()
+        val whilePhase = SequentialPhase("$name:while", whileBuilder.build())
+
+        val thenBuilder = PhaseBuilder<Robot>()
+        thenBuilder.thenBlock()
+        val thenPhase = SequentialPhase("$name:then", thenBuilder.build())
+
+        return DoWhilePhase(name, condition, whilePhase, thenPhase)
     }
 }
 
@@ -436,6 +580,35 @@ class PhaseBuilder<Robot: BaseRobot> {
         val builder = PhaseBuilder<Robot>()
         builder.phases()
         this@PhaseBuilder.phases.add(ParallelPhase(name, builder.build()))
+    }
+
+    /**
+     * Creates a phase that loops while a condition is true, then executes another phase.
+     *
+     * The condition is evaluated on every loop. While true, the `looping` phase runs.
+     * Once the condition becomes false, execution switches permanently to the `then` phase.
+     *
+     * Example usage:
+     * ```kotlin
+     * doWhile("Search for sample") {
+     *     condition { !sampleDetected() }
+     *     looping {
+     *         driveTo(SEARCH_POSITION)
+     *     }
+     *     then {
+     *         action { grabSample() }
+     *         driveTo(SCORING_POSITION)
+     *     }
+     * }
+     * ```
+     *
+     * @param name The name for this phase (shown in telemetry)
+     * @param block A lambda that configures the condition and phases
+     */
+    fun doWhile(name: String, block: DoWhileBuilder<Robot>.() -> Unit) {
+        val builder = DoWhileBuilder<Robot>()
+        builder.block()
+        this@PhaseBuilder.phases.add(builder.build(name))
     }
 
     /**
