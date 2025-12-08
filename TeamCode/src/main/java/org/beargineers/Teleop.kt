@@ -3,18 +3,27 @@ package org.beargineers
 import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
+import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.robot.DecodeRobot
 import org.beargineers.robot.IntakeMode
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
+import kotlin.math.atan2
 
 @Configurable
 object TeleopConfigs {
     @JvmField
     var ROTATION_TRIGGER_REDUCTION: Float = 0.5f
+
+    var POSITIONAL_GAIN = 60
+    var ROTATIONAL_GAIN = 50
 }
 
 open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
+    var fpvDrive = false
+
     override fun createRobot(opMode: RobotOpMode<DecodeRobot>): DecodeRobot {
         return DecodeRobot(this)
     }
@@ -30,6 +39,10 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             intake.enable(if (on) IntakeMode.REVERSE else IntakeMode.OFF)
         }
 
+        toggleButton("FPV Drive", gamepad1::b) {
+            fpvDrive = it
+        }
+
         toggleButton("Shooter", gamepad1::a) { on ->
             shooter.enableFlywheel(on)
         }
@@ -42,16 +55,38 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     override fun bearLoop() {
         super.bearLoop()
 
-        val forward = -gamepad1.left_stick_y.normalize()
-        val strafe = gamepad1.left_stick_x.normalize()
-        val rotation =
-            (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * TeleopConfigs.ROTATION_TRIGGER_REDUCTION).normalize()
-
-        val slow = !gamepad1.left_bumper
-        robot.drive.drive(forward, strafe, rotation, slow)
-
+        val slow = gamepad1.left_bumper
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
-        telemetry.addData("f/s/r", "%.2f / %.2f / %.2f", forward, strafe, rotation)
+
+        if (!fpvDrive) {
+            val sign = if (alliance == Alliance.BLUE) -1 else 1
+
+            val dx = gamepad1.left_stick_x.toDouble() * TeleopConfigs.POSITIONAL_GAIN * sign
+            val dy = gamepad1.left_stick_y.toDouble() * TeleopConfigs.POSITIONAL_GAIN * -sign
+            val rx = gamepad1.right_stick_x * sign
+            val ry = gamepad1.right_stick_y * sign * -1
+            val dh = 0.0 + (gamepad1.left_trigger - gamepad1.right_trigger) * TeleopConfigs.ROTATIONAL_GAIN
+
+            val heading = Math.toDegrees(if (abs(ry)  + abs(rx) > 0.01)
+                atan2(ry.toDouble(), rx.toDouble())
+            else
+                robot.currentPosition.heading) + dh
+
+            val deltaPosition = Position(dx, dy, heading - Math.toDegrees(robot.currentPosition.heading),
+                DistanceUnit.CM, AngleUnit.DEGREES)
+
+            val targetPosition = robot.currentPosition.plus(deltaPosition)
+            robot.driveToTarget(targetPosition, if (slow) 0.4 else 1.0)
+        }
+        else {
+            val forward = -gamepad1.left_stick_y.normalize()
+            val strafe = gamepad1.left_stick_x.normalize()
+            val rotation =
+                (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * TeleopConfigs.ROTATION_TRIGGER_REDUCTION).normalize()
+
+            robot.drive.drive(forward, strafe, rotation, slow)
+            telemetry.addData("f/s/r", "%.2f / %.2f / %.2f", forward, strafe, rotation)
+        }
     }
 
     fun Float.normalize(): Double = deadband(toDouble())
