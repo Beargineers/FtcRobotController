@@ -7,7 +7,10 @@ import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.KalmanFilter
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.tileLocation
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
+import kotlin.math.sqrt
 
 class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
     override val drive = MecanumDrive(this, WheelCorrections.asConfig())
@@ -40,19 +43,18 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
     val intake = Intake(this)
 
     var goalDistanceCM: Double? = null
-    var savedGoalDistanceCM: Double = 90.0
 
     override fun loop() {
         super.loop()
 
-        if (isMoving()) {
-            goalDistanceCM = null
-        }
+        val goalCoords =
+            (if (opMode.alliance == Alliance.BLUE) tileLocation("A6")
+            else tileLocation("F6")).toUnit(DistanceUnit.CM)
 
-        val target = findTarget()
-        if (target != null) {
-            goalDistanceCM = target.ftcPose.range
-        }
+        fun sqr(d: Double) = d*d
+
+        val cp = currentPosition.toDistanceUnit(DistanceUnit.CM)
+        goalDistanceCM = sqrt(sqr(cp.x - goalCoords.x) + sqr(cp.y - goalCoords.y))
 
         telemetry.addData("Goal distance", goalDistanceCM ?: "goal not found")
     }
