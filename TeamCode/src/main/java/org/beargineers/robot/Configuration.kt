@@ -32,7 +32,7 @@ object WheelCorrections {
     var LB: Double = 1.0
     var RB: Double = 0.925
 
-    var FORWARD_CM_PER_TICK: Double = 0.05752541667
+    var FORWARD_CM_PER_TICK: Double = 0.0594
     var STRAFE_CM_PER_TICK: Double = 0.069 // 0.07096614583 // 0.049 //
 
     fun asConfig(): WheelsConfig = WheelsConfig(
