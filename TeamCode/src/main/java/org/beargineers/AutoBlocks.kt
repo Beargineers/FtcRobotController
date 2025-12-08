@@ -71,8 +71,9 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
 ) {
     assumePosition(startingPoint)
     shootInitialLoad(launchPoint)
-    scoopAndShoot(spikes[0], launchPoint)
-    scoopSpike(spikes[1])
+    for (spike in spikes) {
+        scoopAndShoot(spike, launchPoint)
+    }
 }
 
 @PhaseDsl
@@ -86,7 +87,6 @@ private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
     waitForDistance()
     action {
         shooter.launch()
-        shooter.defaultGoalDistance = savedGoalDistanceCM
     }
     wait(ShooterConfig.SHOOTING_TIME_SECONDS.seconds)
 }
@@ -97,11 +97,7 @@ class WaitForDistance(val timeoutSec: Int) : AutonomousPhase<DecodeRobot> {
     }
 
     override fun DecodeRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        goalDistanceCM?.let {
-            savedGoalDistanceCM = it
-            return false
-        }
-        return phaseTime.seconds() < timeoutSec
+        return goalDistanceCM != null && phaseTime.seconds() < timeoutSec
     }
 }
 
