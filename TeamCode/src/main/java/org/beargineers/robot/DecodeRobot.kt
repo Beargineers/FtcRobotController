@@ -30,7 +30,6 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
     override fun configureAutonomousDriving(): AutonomousDriveConfig {
         return AutonomousDriveConfig(
             minimalWheelPower = AutonomousConfig.MINIMAL_WHEEL_POWER,
-            maximumSpeed = AutonomousConfig.MAX_SPEED,
             kP_position = AutonomousConfig.kP_position,
             kP_heading = AutonomousConfig.kP_heading
         )
