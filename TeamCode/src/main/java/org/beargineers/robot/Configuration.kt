@@ -59,9 +59,6 @@ object WheelCorrections {
 object AutonomousConfig {
     var MINIMAL_WHEEL_POWER: Double = 0.12
 
-    // Max default auto speed. Pass maxSpeed parameter to driveTo to overrun the default
-    var MAX_SPEED = 0.7
-
 
     var kP_position = 0.035
     var kP_heading = 0.01

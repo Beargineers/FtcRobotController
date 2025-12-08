@@ -10,7 +10,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
-import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -216,7 +215,6 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         positionTolerance: Double = 2.0,
         headingTolerance: Double = 5.0
     ): Boolean {
-        val maxSpeed = min(maxSpeed, autoConfig.maximumSpeed)
         // Make sure current and target positions are in the same units.
         val cp = currentPosition.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
         val tp = target.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
