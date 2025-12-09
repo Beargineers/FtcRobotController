@@ -8,6 +8,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 data class WheelsConfig(
@@ -106,22 +108,27 @@ class MecanumDrive(op: BaseRobot, val config: WheelsConfig) : Hardware(op), Driv
     override fun stop() = drive(0.0, 0.0, 0.0)
 
     inner class MecanumEncodersLocalizers() : RelativeLocalizer {
+        private var currentPositionEstimate: Position = Position.zero()
+
         private var lastLf: Int = 0
         private var lastRf: Int = 0
         private var lastLb: Int = 0
         private var lastRb: Int = 0
         private var lastYaw: Double? = null
 
-        private var currentRelativePosition: RelativePosition = RelativePosition.zero()
         private var currentVelocity: RelativePosition = RelativePosition.zero()
         private var previousTime: Long? = null
 
-        override fun getMovementDelta(): RelativePosition {
-            return currentRelativePosition
-        }
-
         override fun getVelocity(): RelativePosition {
             return currentVelocity
+        }
+
+        override fun getPosition(): Position {
+            return currentPositionEstimate
+        }
+
+        override fun updatePositionEstimate(position: Position) {
+            currentPositionEstimate = position
         }
 
         fun init() {
@@ -135,16 +142,16 @@ class MecanumDrive(op: BaseRobot, val config: WheelsConfig) : Hardware(op), Driv
 
         fun loop() {
             val now = System.currentTimeMillis()
-            val delta = calculateDelta()
 
             if (previousTime == null) {
-                currentRelativePosition = RelativePosition.zero()
                 currentVelocity = RelativePosition.zero()
             }
             else {
                 val timeDelta = (now - previousTime!!) / 1000.0
-                currentRelativePosition = delta
-                currentVelocity = RelativePosition(delta.forward / timeDelta, delta.right / timeDelta, delta.turn / timeDelta, delta.distanceUnit, delta.angleUnit)
+                val robotDelta = calculateRobotPositionDelta()
+                val positionDelta = positionChange(robotDelta)
+                currentPositionEstimate += positionDelta
+                currentVelocity = RelativePosition(robotDelta.forward / timeDelta, robotDelta.right / timeDelta, robotDelta.turn / timeDelta, robotDelta.distanceUnit, robotDelta.angleUnit)
             }
 
             previousTime = now
@@ -162,7 +169,7 @@ class MecanumDrive(op: BaseRobot, val config: WheelsConfig) : Hardware(op), Driv
             return yawRadians
         }
 
-        private fun calculateDelta(): RelativePosition {
+        private fun calculateRobotPositionDelta(): RelativePosition {
             val yaw = getYawFromQuaternionInRadians()
             val deltaYaw = yaw - (lastYaw ?: yaw)
 
@@ -195,6 +202,51 @@ class MecanumDrive(op: BaseRobot, val config: WheelsConfig) : Hardware(op), Driv
                 lastRb = rbp
                 lastYaw = yaw
             }
+        }
+
+        /**
+         * Calculates the change in robot pose based on encoder readings.
+         *
+         * Uses mecanum wheel forward kinematics to determine the robot's movement
+         * in the robot frame since the last encoder reset.
+         *
+         * Forward kinematics for mecanum drive:
+         * - Forward/backward (y): All wheels contribute equally
+         * - Strafe left/right (x): Diagonal wheels oppose each other
+         * - Heading: From IMU yaw angle
+         *
+         * @return Pose2D representing the change in position and orientation
+         */
+        private fun positionChange(move: RelativePosition): Position {
+            val (forward, right, deltaYaw) = move
+
+            val N = 10
+            val fn = forward / N
+            val rn = right / N
+
+            var deltaX = 0.0
+            var deltaY = 0.0
+
+            val oldHeading: Double = currentPositionEstimate.toAngleUnit(AngleUnit.RADIANS).heading
+            var heading = oldHeading
+
+            repeat(N) {
+                deltaX += fn * cos(heading) + rn * sin(heading)
+                deltaY += fn * sin(heading) - rn * cos(heading)
+
+                heading += deltaYaw / N
+            }
+
+            return Position(
+                // Forward: all wheels contribute equally
+                x = deltaX,
+                // Strafe: diagonal wheels oppose (LF and RB forward = strafe right)
+                y = deltaY,
+                // Get yaw in radians to match the angleUnit specification
+                heading = deltaYaw,
+                distanceUnit = DistanceUnit.CM,
+                angleUnit = AngleUnit.RADIANS
+            ).normalizeHeading()
         }
     }
 }

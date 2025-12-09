@@ -6,6 +6,7 @@ import com.bylazar.configurables.annotations.Configurable
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
@@ -105,7 +106,7 @@ class AprilTagWebcam(op: BaseRobot,
     override fun getRobotPose(): AbsolutePose? {
         // Get robot pose based on any AprilTag with metadata with highest confidence
         return getAprilReadings(-1)
-            .map { AbsolutePose(it.robotPose(), calculateConfidence(it), it.frameAcquisitionNanoTime) }
+            .map { AbsolutePose(it.robotPose.robotPose(90.0), calculateConfidence(it), it.frameAcquisitionNanoTime) }
             .maxByOrNull {it.confidence}
     }
 
@@ -159,14 +160,13 @@ class AprilTagWebcam(op: BaseRobot,
     }
 }
 
-fun AprilTagDetection.robotPose() : Position {
-    val rp = this.robotPose
-    val offset = ANGLE_UNIT.fromDegrees(90.0)
+fun Pose3D.robotPose(corrDegrees: Double = 0.0): Position {
+    val offset = ANGLE_UNIT.fromDegrees(corrDegrees)
     return Position(
-        rp.position.x,
-        rp.position.y,
-        rp.orientation.getYaw(ANGLE_UNIT) + offset,
-        rp.position.unit,
+        position.x,
+        position.y,
+        orientation.getYaw(ANGLE_UNIT) + offset,
+        position.unit,
         ANGLE_UNIT
     )
 }
