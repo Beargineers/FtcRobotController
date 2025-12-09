@@ -84,14 +84,14 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         }
 
         // Step 1: Prediction - update position using odometry (relative localizer)
-        val move = relativeLocalizer.getMovementDelta().toUnits(DistanceUnit.CM, AngleUnit.RADIANS)
-        val deltaPosition = positionChange(move)
-        kalmanFilter.predict(deltaPosition)
+        val basePosition = relativeLocalizer.getPosition()
+        kalmanFilter.predictByAbsolute(basePosition)
 
         // Step 2: Correction - update position using vision (absolute localizer) if available
         val visionMeasurement = absoluteLocalizer.getRobotPose()
         if (visionMeasurement != null && visionMeasurement.timestampNano >= lastTimeMovedNanos && visionMeasurement.confidence >= MIN_VISION_CONFIDENCE) {
             kalmanFilter.correct(visionMeasurement)
+            relativeLocalizer.updatePositionEstimate(kalmanFilter.getEstimate())
             telemetry.addData("Vision", "✓ conf=%.2f".format(visionMeasurement.confidence))
         } else {
             telemetry.addData("Vision", "✗ odometry only")
@@ -107,7 +107,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
             hypot(xStd, yStd),
             Math.toDegrees(headStd)
         ))
-        telemetry.addData("Moved", move)
+        telemetry.addData("Velocity", "%.2f cm/s", hypot(currentVelocity.forward, currentVelocity.right))
 
         drawRobotOnPanelsField()
     }
@@ -131,50 +131,6 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         allHardware += hardware
     }
 
-    /**
-     * Calculates the change in robot pose based on encoder readings.
-     *
-     * Uses mecanum wheel forward kinematics to determine the robot's movement
-     * in the robot frame since the last encoder reset.
-     *
-     * Forward kinematics for mecanum drive:
-     * - Forward/backward (y): All wheels contribute equally
-     * - Strafe left/right (x): Diagonal wheels oppose each other
-     * - Heading: From IMU yaw angle
-     *
-     * @return Pose2D representing the change in position and orientation
-     */
-    private fun positionChange(move: RelativePosition): Position {
-        val (forward, right, deltaYaw) = move
-
-        val N = 10
-        val fn = forward / N
-        val rn = right / N
-
-        var deltaX = 0.0
-        var deltaY = 0.0
-
-        val oldHeading: Double = currentPosition.toAngleUnit(AngleUnit.RADIANS).heading
-        var heading = oldHeading
-
-        repeat(N) {
-            deltaX += fn * cos(heading) + rn * sin(heading)
-            deltaY += fn * sin(heading) - rn * cos(heading)
-
-            heading += deltaYaw / N
-        }
-
-        return Position(
-            // Forward: all wheels contribute equally
-            x = deltaX,
-            // Strafe: diagonal wheels oppose (LF and RB forward = strafe right)
-            y = deltaY,
-            // Get yaw in radians to match the angleUnit specification
-            heading = deltaYaw,
-            distanceUnit = DistanceUnit.CM,
-            angleUnit = AngleUnit.RADIANS
-        ).normalizeHeading()
-    }
 
     /**
      * Continuously drives the robot toward a target pose using proportional control.

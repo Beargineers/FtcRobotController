@@ -57,6 +57,19 @@ class KalmanFilter(
         }
     }
 
+    fun predictByAbsolute(position: Position) {
+        val pos = position.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
+        val delta = Position(
+            pos.x - stateX,
+            pos.y - stateY,
+            pos.heading - stateHeading,
+            DistanceUnit.CM,
+            AngleUnit.RADIANS
+        )
+
+        predictByDelta(delta)
+    }
+
     /**
      * Prediction step: Update state estimate based on odometry movement.
      *
@@ -65,7 +78,7 @@ class KalmanFilter(
      *
      * @param deltaPosition Movement delta from relative localizer
      */
-    fun predict(deltaPosition: Position) {
+    fun predictByDelta(deltaPosition: Position) {
         val delta = deltaPosition.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
 
         // Update state estimate (simple addition)
