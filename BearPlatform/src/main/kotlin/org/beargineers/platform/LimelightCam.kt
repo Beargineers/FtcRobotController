@@ -9,7 +9,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 
-class LimelightCam(op: BaseRobot): Hardware(op), AbsoluteLocalizer {
+class LimelightCam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
     private val limelight by hardware<Limelight3A>("limelight")
 
     override fun init() {
