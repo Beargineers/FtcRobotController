@@ -4,6 +4,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
@@ -74,7 +75,7 @@ class KalmanFilter(
 
         // Increase covariance (uncertainty grows proportionally to movement)
         // Process noise Q, scaled by movement magnitude
-        val positionMovement = sqrt(delta.x * delta.x + delta.y * delta.y)
+        val positionMovement = hypot(delta.x, delta.y)
         val headingMovement = abs(delta.heading)
 
         // Only add process noise proportional to actual movement

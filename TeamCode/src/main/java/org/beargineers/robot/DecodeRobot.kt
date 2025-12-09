@@ -10,7 +10,7 @@ import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.tileLocation
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
-import kotlin.math.sqrt
+import kotlin.math.hypot
 
 class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
     override val drive = MecanumDrive(this, WheelCorrections.asConfig())
@@ -50,10 +50,8 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
             (if (opMode.alliance == Alliance.BLUE) tileLocation("A6")
             else tileLocation("F6")).toUnit(DistanceUnit.CM)
 
-        fun sqr(d: Double) = d*d
-
         val cp = currentPosition.toDistanceUnit(DistanceUnit.CM)
-        goalDistanceCM = sqrt(sqr(cp.x - goalCoords.x) + sqr(cp.y - goalCoords.y))
+        goalDistanceCM = hypot(cp.x - goalCoords.x, cp.y - goalCoords.y)
 
         telemetry.addData("Goal distance", goalDistanceCM ?: "goal not found")
     }
