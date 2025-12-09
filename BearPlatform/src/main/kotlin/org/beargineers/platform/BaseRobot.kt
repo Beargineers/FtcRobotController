@@ -10,9 +10,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
-import kotlin.math.pow
+import kotlin.math.hypot
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 
 data class AutonomousDriveConfig(
@@ -105,7 +104,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         val (xStd, yStd, headStd) = kalmanFilter.getUncertainty()
         telemetry.addData("Position", currentPosition)
         telemetry.addData("Uncertainty", "±%.1f cm, ±%.1f°".format(
-            sqrt(xStd * xStd + yStd * yStd),
+            hypot(xStd, yStd),
             Math.toDegrees(headStd)
         ))
         telemetry.addData("Moved", move)
@@ -224,7 +223,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         val deltaY = tp.y - cp.y
 
         // Calculate distance to target
-        val distanceToTarget = sqrt(deltaX.pow(2) + deltaY.pow(2))
+        val distanceToTarget = hypot(deltaX, deltaY)
 
         // Calculate heading error (normalized to -180 to 180 degrees equivalent)
         var headingError = tp.heading - cp.heading
