@@ -30,13 +30,13 @@ object AprilTagConfidenceParams {
     var angleWeight = 0.4  // How much viewing angle affects confidence
 }
 
-class AprilTagWebcam(op: BaseRobot,
-    val forward: Double,
-    val right: Double,
-    val up: Double,
-    val pitch: Double,
-    val yaw: Double,
-    val roll: Double): Hardware(op), AbsoluteLocalizer {
+class AprilTagWebcam(robot: BaseRobot,
+                     val forward: Double,
+                     val right: Double,
+                     val up: Double,
+                     val pitch: Double,
+                     val yaw: Double,
+                     val roll: Double): Hardware(robot), AbsoluteLocalizer {
     private val camera: WebcamName by hardware("Webcam 1")
 
     private lateinit var aprilTag: AprilTagProcessor

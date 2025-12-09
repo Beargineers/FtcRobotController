@@ -32,7 +32,7 @@ data class WheelsConfig(
     val cm_per_tick_strafe: Double,
 )
 
-class MecanumDrive(op: BaseRobot, val config: WheelsConfig) : Hardware(op), Drivetrain {
+class MecanumDrive(robot: BaseRobot, val config: WheelsConfig) : Hardware(robot), Drivetrain {
 
     // Match these names in  RC configuration
     val lf: DcMotor by hardware("leftFront")

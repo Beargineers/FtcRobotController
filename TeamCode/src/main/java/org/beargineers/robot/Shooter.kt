@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 
-class Shooter(op: BaseRobot): Hardware(op) {
+class Shooter(robot: BaseRobot): Hardware(robot) {
     val fly1 by hardware<DcMotor>()
     val fly2 by hardware<DcMotor>()
 
@@ -50,7 +50,7 @@ class Shooter(op: BaseRobot): Hardware(op) {
         feederStartedAt = System.currentTimeMillis()
     }
 
-    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((robot as DecodeRobot).goalDistanceCM ?: defaultGoalDistance)
+    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistanceCM ?: defaultGoalDistance)
 
     override fun loop() {
         if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > ShooterConfig.SHOOTING_TIME_SECONDS * 1000) {

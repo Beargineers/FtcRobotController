@@ -8,7 +8,7 @@ import org.beargineers.platform.Hardware
 enum class IntakeMode {
     OFF, ON, REVERSE
 }
-class Intake(op: BaseRobot): Hardware(op) {
+class Intake(robot: BaseRobot): Hardware(robot) {
     val intake: DcMotor by hardware("intake")
 
     override fun init() {
