@@ -9,17 +9,9 @@ package org.beargineers.platform
  * updates regardless of environmental conditions.
  */
 interface RelativeLocalizer {
-    /**
-     * Returns the robot's movement since the last call to this method.
-     * This includes forward/right displacement and rotation.
-     *
-     * Each call updates internal state, so calling this method twice
-     * in succession will return different deltas (second call returns
-     * movement since first call).
-     *
-     * @return RobotMovement containing forward, right, and turn deltas
-     */
-    fun getMovementDelta(): RelativePosition
+    fun getPosition(): Position
+
+    fun updatePositionEstimate(position: Position)
 
     /**
      * Returns movement delta normalized by time elapsed.

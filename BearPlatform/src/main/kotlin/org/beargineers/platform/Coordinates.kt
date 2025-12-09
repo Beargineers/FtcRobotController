@@ -111,4 +111,8 @@ class Position(
     override fun toString(): String {
         return String.format(Locale.getDefault(), "(%.3f %.3f)%s  %.3f%s", x, y, distanceUnit, heading, angleUnit)
     }
+
+    companion object {
+        fun zero() : Position = Position(0.0, 0.0, 0.0)
+    }
 }
