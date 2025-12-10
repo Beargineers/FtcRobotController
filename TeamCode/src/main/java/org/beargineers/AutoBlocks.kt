@@ -8,7 +8,6 @@ import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Phases
 import org.beargineers.platform.Position
-import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.action
 import org.beargineers.platform.assumePosition
 import org.beargineers.platform.decode.Spike
@@ -46,7 +45,7 @@ fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Position) 
 }
 
 abstract class DecodeAutonomous(alliance: Alliance, phases: Phases<DecodeRobot>) : PhasedAutonomous<DecodeRobot>(alliance, phases) {
-    override fun createRobot(opMode: RobotOpMode<DecodeRobot>): DecodeRobot {
+    override fun createRobot(): DecodeRobot {
         return DecodeRobot(this)
     }
 }
