@@ -27,10 +27,9 @@ object TeleopConfigs {
 
 open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     var fpvDrive = false
-
     var lookAtGoal = false
 
-    override fun createRobot(opMode: RobotOpMode<DecodeRobot>): DecodeRobot {
+    override fun createRobot(): DecodeRobot {
         return DecodeRobot(this)
     }
 

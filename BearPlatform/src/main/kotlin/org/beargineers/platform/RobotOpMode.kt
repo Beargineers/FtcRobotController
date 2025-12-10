@@ -6,11 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 
 
-abstract class RobotOpMode<T: BaseRobot>(val alliance: Alliance) : OpMode() {
+abstract class RobotOpMode<out T: BaseRobot>(val alliance: Alliance) : OpMode() {
     private val allButtons = mutableListOf<Button<T>>()
-    protected abstract fun createRobot(opMode: RobotOpMode<T>): T
+    protected abstract fun createRobot(): T
 
-    val robot by lazy { createRobot(this) }
+    val robot by lazy { createRobot() }
     private val allHubs by lazy {
         hardwareMap.getAll(LynxModule::class.java)
     }

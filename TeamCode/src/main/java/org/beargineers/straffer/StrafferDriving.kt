@@ -7,8 +7,8 @@ import org.beargineers.platform.RobotOpMode
 
 @TeleOp
 class StrafferDriving : RobotOpMode<StrafferRobot>(Alliance.BLUE) {
-    override fun createRobot(opMode: RobotOpMode<StrafferRobot>): StrafferRobot {
-        return StrafferRobot(opMode)
+    override fun createRobot(): StrafferRobot {
+        return StrafferRobot(this)
     }
 
     override fun bearLoop() {
