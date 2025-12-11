@@ -9,11 +9,15 @@ import org.beargineers.platform.KalmanFilter
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RED_GOAL
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.decode.DecodeRobot
+import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.tileLocation
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import kotlin.math.hypot
 
-class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
+@Suppress("unused")
+class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRobot {
     override val drive = MecanumDrive(this, WheelCorrections.asConfig())
 
     override val relativeLocalizer get() = drive.localizerByMotorEncoders
@@ -69,5 +73,21 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
 
     fun findBlueTarget() : AprilTagDetection? {
         return aprilTags.getAprilReadings(20).singleOrNull()
+    }
+
+    override fun intakeMode(mode: IntakeMode) {
+        intake.enable(mode)
+    }
+
+    override fun launch() {
+        shooter.launch()
+    }
+
+    override fun enableFlywheel(on: Boolean) {
+        shooter.enableFlywheel(on)
+    }
+
+    override fun isShooting(): Boolean {
+        return shooter.feederStartedAt != 0L
     }
 }

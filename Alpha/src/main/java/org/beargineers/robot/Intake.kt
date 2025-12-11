@@ -4,10 +4,8 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
+import org.beargineers.platform.decode.IntakeMode
 
-enum class IntakeMode {
-    OFF, ON, REVERSE
-}
 class Intake(robot: BaseRobot): Hardware(robot) {
     val intake: DcMotor by hardware("intake")
 

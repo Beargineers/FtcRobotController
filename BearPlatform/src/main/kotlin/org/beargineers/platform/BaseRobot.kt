@@ -13,6 +13,9 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
 
+val positionTolerance: Double = 2.0
+val headingTolerance: Double = 5.0
+
 
 data class AutonomousDriveConfig(
     val minimalWheelPower: Double = 0.12,
@@ -30,7 +33,7 @@ data class AutonomousDriveConfig(
 // Minimum confidence threshold to accept vision measurements
 var MIN_VISION_CONFIDENCE = 0.3
 
-abstract class BaseRobot(val opMode: RobotOpMode<*>) {
+abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
     abstract val relativeLocalizer: RelativeLocalizer
     abstract val absoluteLocalizer: AbsoluteLocalizer
@@ -43,19 +46,18 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
 
     val allHardware = mutableListOf<Hardware>()
 
-    val telemetry: Telemetry get() = opMode.telemetry
+    override val telemetry: Telemetry get() = opMode.telemetry
 
     val panelsTelemetry = PanelsTelemetry.telemetry
     val panelsField = PanelsField.field
 
     var lastTimeMovedNanos: Long = 0
 
-    var currentPosition: Position = FIELD_CENTER
-    private set
+    override var currentPosition: Position = FIELD_CENTER
 
     val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
 
-    open fun init() {
+    override fun init() {
         allHardware.forEach {
             it.init()
         }
@@ -64,17 +66,18 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         kalmanFilter.initialize(currentPosition)
     }
 
-    fun assumePosition(position: Position) {
+    override fun assumePosition(position: Position) {
         currentPosition = position
         kalmanFilter.initialize(position)
+        relativeLocalizer.updatePositionEstimate(position)
     }
 
-    fun isMoving(): Boolean {
+    override fun isMoving(): Boolean {
         val vel = currentVelocity
         return abs(vel.forward) + abs(vel.right) + abs(vel.turn) > 0.001
     }
 
-    open fun loop() {
+    override fun loop() {
         allHardware.forEach {
             it.loop()
         }
@@ -123,7 +126,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         panelsField.update()
     }
 
-    open fun stop() {
+    override fun stop() {
         allHardware.forEach { it.stop() }
     }
 
@@ -164,12 +167,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
      * }
      * ```
      */
-    fun driveToTarget(
-        target: Position,
-        maxSpeed: Double,
-        positionTolerance: Double = 2.0,
-        headingTolerance: Double = 5.0
-    ): Boolean {
+    override fun driveToTarget(target: Position, maxSpeed: Double): Boolean {
         // Make sure current and target positions are in the same units.
         val cp = currentPosition.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
         val tp = target.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
@@ -221,12 +219,25 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) {
         }
 
         // Apply drive power
-        drive.drive(
+        drive(
             forwardPower = clamp(forwardPower),
             rightPower = clamp(strafePower),
             turnPower = clamp(turnPower)
         )
 
         return true
+    }
+
+    override fun drive(
+        forwardPower: Double,
+        rightPower: Double,
+        turnPower: Double,
+        slow: Boolean
+    ) {
+        drive.drive(forwardPower, rightPower, turnPower, slow)
+    }
+
+    override fun stopDriving() {
+        drive.stop()
     }
 }

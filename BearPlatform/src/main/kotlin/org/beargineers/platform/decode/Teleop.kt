@@ -1,4 +1,4 @@
-package org.beargineers
+package org.beargineers.platform.decode
 
 import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
@@ -7,8 +7,6 @@ import org.beargineers.platform.BLUE_GOAL
 import org.beargineers.platform.Position
 import org.beargineers.platform.RED_GOAL
 import org.beargineers.platform.RobotOpMode
-import org.beargineers.robot.DecodeRobot
-import org.beargineers.robot.IntakeMode
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
@@ -29,19 +27,15 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     var fpvDrive = false
     var lookAtGoal = false
 
-    override fun createRobot(): DecodeRobot {
-        return DecodeRobot(this)
-    }
-
     override fun bearInit() {
         super.bearInit()
 /*
         toggleButton("Intake", gamepad1::x) { on ->
-            intake.enable(if (on) IntakeMode.ON else IntakeMode.OFF)
+            intakeMode(if (on) IntakeMode.ON else IntakeMode.OFF)
         }
 */
         toggleButton("Intake Reverse", gamepad1::y) { on ->
-            intake.enable(if (on) IntakeMode.REVERSE else IntakeMode.ON)
+            intakeMode(if (on) IntakeMode.REVERSE else IntakeMode.ON)
         }
 
         toggleButton("FPV Drive", gamepad1::b) {
@@ -49,7 +43,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
 /*
         toggleButton("Shooter", gamepad1::a) { on ->
-            shooter.enableFlywheel(on)
+            enableFlywheel(on)
         }
 */
         toggleButton("Look At Goal", gamepad1::right_bumper) {
@@ -57,16 +51,15 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
 
         button(gamepad1::a) {
-            shooter.launch()
+            launch()
         }
     }
 
     override fun bearStart() {
         super.bearStart()
 
-        robot.intake.enable(IntakeMode.ON)
-
-        robot.shooter.enableFlywheel(true)
+        robot.intakeMode(IntakeMode.ON)
+        robot.enableFlywheel(true)
     }
 
     override fun bearLoop() {
@@ -102,8 +95,8 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val h = robot.currentPosition.toAngleUnit(AngleUnit.RADIANS).heading
             val forward = -gamepad1.left_stick_y.normalize()
             val strafe = gamepad1.left_stick_x.normalize()
-            val dx = forward * cos(h) + strafe * sin(h)
-            val dy = forward * sin(h) - strafe * cos(h)
+            val dx = (forward * cos(h) + strafe * sin(h)) * TeleopConfigs.POSITIONAL_GAIN
+            val dy = (forward * sin(h) - strafe * cos(h)) * TeleopConfigs.POSITIONAL_GAIN
 
             val rotation =
                 (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * TeleopConfigs.ROTATION_TRIGGER_REDUCTION).normalize()

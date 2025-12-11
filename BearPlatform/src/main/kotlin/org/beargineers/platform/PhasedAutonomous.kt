@@ -121,7 +121,7 @@ import kotlin.time.Duration
  *
  * The framework automatically handles phase transitions and stops when all phases complete.
  */
-interface AutonomousPhase<in Robot: BaseRobot> {
+interface AutonomousPhase<in R: Robot> {
     /**
      * Returns the name of this phase for display in telemetry.
      *
@@ -140,7 +140,7 @@ interface AutonomousPhase<in Robot: BaseRobot> {
      *
      * @receiver Robot The robot instance this phase will control
      */
-    fun Robot.initPhase()
+    fun R.initPhase()
 
     /**
      * Called repeatedly while this phase is active (every loop iteration).
@@ -176,15 +176,15 @@ interface AutonomousPhase<in Robot: BaseRobot> {
      * return !colorSensor.isDetected()
      * ```
      */
-    fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean
+    fun R.loopPhase(phaseTime: ElapsedTime): Boolean
 }
 
-class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase<BaseRobot> {
-    override fun BaseRobot.initPhase() {
-        drive.stop()
+class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase<Robot> {
+    override fun Robot.initPhase() {
+        stopDriving()
     }
 
-    override fun BaseRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
+    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
         return phaseTime.seconds() < durationInSeconds
     }
 }
@@ -194,33 +194,33 @@ fun PhaseBuilder<*>.wait(duration: Duration) {
     phase(WaitPhase(duration.inWholeSeconds.toDouble()))
 }
 
-class SimpleActionPhase<Robot: BaseRobot>(private val action: Robot.() -> Unit) : AutonomousPhase<Robot> {
-    override fun Robot.initPhase() {
+class SimpleActionPhase<R: Robot>(private val action: R.() -> Unit) : AutonomousPhase<R> {
+    override fun R.initPhase() {
         action()
     }
 
-    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+    override fun R.loopPhase(phaseTime: ElapsedTime): Boolean {
         return false
     }
 }
 
 @PhaseDsl
-fun <Robot: BaseRobot> PhaseBuilder<Robot>.action(action: Robot.() -> Unit) {
+fun <R: Robot> PhaseBuilder<R>.action(action: R.() -> Unit) {
     phase(SimpleActionPhase(action))
 }
 
 @PhaseDsl
-fun <Robot: BaseRobot> PhaseBuilder<Robot>.assumePosition(position: Position) {
+fun <R: Robot> PhaseBuilder<R>.assumeRobotPosition(position: Position) {
     action {
         assumePosition(position)
     }
 }
 
-class GotoPosePhase(val pose: Position, val maxSpeed: Double) : AutonomousPhase<BaseRobot> {
-    override fun BaseRobot.initPhase() {
+class GotoPosePhase(val pose: Position, val maxSpeed: Double) : AutonomousPhase<Robot> {
+    override fun Robot.initPhase() {
     }
 
-    override fun BaseRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
+    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
         return driveToTarget(pose, maxSpeed)
     }
 }
@@ -230,9 +230,8 @@ fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
     phase(GotoPosePhase(pose, maxSpeed))
 }
 
-class DriveRelative<R: BaseRobot>(val movement: RelativePosition,
-                                  val maxSpeed: Double) :
-    AutonomousPhase<R> {
+class DriveRelative<R: Robot>(val movement: RelativePosition,
+                              val maxSpeed: Double) : AutonomousPhase<R> {
     lateinit var targetPosition: Position
 
     override fun R.initPhase() {
@@ -256,7 +255,7 @@ class DriveRelative<R: BaseRobot>(val movement: RelativePosition,
 }
 
 @PhaseDsl
-fun <R: BaseRobot> PhaseBuilder<R>.driveRelative(movement: RelativePosition, maxSpeed: Double = 0.5) {
+fun <R: Robot> PhaseBuilder<R>.driveRelative(movement: RelativePosition, maxSpeed: Double = 0.5) {
     phase(DriveRelative(movement, maxSpeed))
 }
 
@@ -266,10 +265,10 @@ fun <R: BaseRobot> PhaseBuilder<R>.driveRelative(movement: RelativePosition, max
  * @param name Name for this composite phase (shown in telemetry)
  * @param childPhases List of child phases to execute in sequence
  */
-class SequentialPhase<Robot: BaseRobot>(
+class SequentialPhase<R: Robot>(
     private val _name: String,
-    private val childPhases: List<AutonomousPhase<Robot>>
-) : AutonomousPhase<Robot> {
+    private val childPhases: List<AutonomousPhase<R>>
+) : AutonomousPhase<R> {
 
     /** Index of the current child phase (0-based) */
     private var currentPhaseIdx = 0
@@ -282,13 +281,13 @@ class SequentialPhase<Robot: BaseRobot>(
 
     override fun name(): String = _name
 
-    override fun Robot.initPhase() {
+    override fun R.initPhase() {
         // Reset state when the composite phase starts
         currentPhaseIdx = 0
         currentPhaseInitialized = false
     }
 
-    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+    override fun R.loopPhase(phaseTime: ElapsedTime): Boolean {
         // If all child phases are complete, signal completion
         if (currentPhaseIdx >= childPhases.size) {
             return false
@@ -338,12 +337,12 @@ class SequentialPhase<Robot: BaseRobot>(
  * @param whilePhase Phase to execute while condition is true
  * @param thenPhase Phase to execute after condition becomes false
  */
-class DoWhilePhase<Robot: BaseRobot>(
+class DoWhilePhase<R: Robot>(
     private val _name: String,
-    private val condition: Robot.() -> Boolean,
-    private val whilePhase: AutonomousPhase<Robot>,
-    private val thenPhase: AutonomousPhase<Robot>
-) : AutonomousPhase<Robot> {
+    private val condition: R.() -> Boolean,
+    private val whilePhase: AutonomousPhase<R>,
+    private val thenPhase: AutonomousPhase<R>
+) : AutonomousPhase<R> {
 
     /** Whether we've switched to the "then" phase */
     private var switchedToThen = false
@@ -356,12 +355,12 @@ class DoWhilePhase<Robot: BaseRobot>(
 
     override fun name(): String = _name
 
-    override fun Robot.initPhase() {
+    override fun R.initPhase() {
         switchedToThen = false
         currentPhaseInitialized = false
     }
 
-    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+    override fun R.loopPhase(phaseTime: ElapsedTime): Boolean {
         // Check condition only if we haven't switched yet
         if (!switchedToThen && !condition()) {
             switchedToThen = true
@@ -407,17 +406,17 @@ class DoWhilePhase<Robot: BaseRobot>(
  * ```
  */
 @PhaseDsl
-class DoWhileBuilder<Robot: BaseRobot> {
-    private var conditionBlock: (Robot.() -> Boolean)? = null
-    private var whilePhases: Phases<Robot>? = null
-    private var thenPhases: Phases<Robot>? = null
+class DoWhileBuilder<R: Robot> {
+    private var conditionBlock: (R.() -> Boolean)? = null
+    private var whilePhases: Phases<R>? = null
+    private var thenPhases: Phases<R>? = null
 
     /**
      * Sets the condition to evaluate. The "looping" phase runs while this returns true.
      *
      * @param block A lambda that returns true to continue looping
      */
-    fun condition(block: Robot.() -> Boolean) {
+    fun condition(block: R.() -> Boolean) {
         conditionBlock = block
     }
 
@@ -426,7 +425,7 @@ class DoWhileBuilder<Robot: BaseRobot> {
      *
      * @param phases A lambda that builds the "while" phases
      */
-    fun looping(phases: Phases<Robot>) {
+    fun looping(phases: Phases<R>) {
         whilePhases = phases
     }
 
@@ -435,7 +434,7 @@ class DoWhileBuilder<Robot: BaseRobot> {
      *
      * @param phases A lambda that builds the "then" phases
      */
-    fun then(phases: Phases<Robot>) {
+    fun then(phases: Phases<R>) {
         thenPhases = phases
     }
 
@@ -446,7 +445,7 @@ class DoWhileBuilder<Robot: BaseRobot> {
      * @return The constructed DoWhilePhase
      * @throws IllegalStateException if condition, looping, or then is not set
      */
-    internal fun build(name: String): DoWhilePhase<Robot> {
+    internal fun build(name: String): DoWhilePhase<R> {
         val condition = conditionBlock
             ?: throw IllegalStateException("doWhile '$name' requires a condition block")
         val whileBlock = whilePhases
@@ -454,11 +453,11 @@ class DoWhileBuilder<Robot: BaseRobot> {
         val thenBlock = thenPhases
             ?: throw IllegalStateException("doWhile '$name' requires a then block")
 
-        val whileBuilder = PhaseBuilder<Robot>()
+        val whileBuilder = PhaseBuilder<R>()
         whileBuilder.whileBlock()
         val whilePhase = SequentialPhase("$name:while", whileBuilder.build())
 
-        val thenBuilder = PhaseBuilder<Robot>()
+        val thenBuilder = PhaseBuilder<R>()
         thenBuilder.thenBlock()
         val thenPhase = SequentialPhase("$name:then", thenBuilder.build())
 
@@ -475,10 +474,10 @@ class DoWhileBuilder<Robot: BaseRobot> {
  * @param name Name for this parallel phase (shown in telemetry)
  * @param childPhases List of child phases to execute in parallel
  */
-class ParallelPhase<Robot: BaseRobot>(
+class ParallelPhase<R: Robot>(
     private val _name: String,
-    private val childPhases: List<AutonomousPhase<Robot>>
-) : AutonomousPhase<Robot> {
+    private val childPhases: List<AutonomousPhase<R>>
+) : AutonomousPhase<R> {
 
     /** Track which phases have completed */
     private val completed = BooleanArray(childPhases.size) { false }
@@ -486,7 +485,7 @@ class ParallelPhase<Robot: BaseRobot>(
 
     override fun name(): String = _name
 
-    override fun Robot.initPhase() {
+    override fun R.initPhase() {
         // Initialize all child phases at once
         for (i in childPhases.indices) {
             with(childPhases[i]) {
@@ -496,7 +495,7 @@ class ParallelPhase<Robot: BaseRobot>(
         childPhaseTime.reset()
     }
 
-    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
+    override fun R.loopPhase(phaseTime: ElapsedTime): Boolean {
         // Execute all child phases in parallel
         for (i in childPhases.indices) {
             // Skip phases that have already completed
@@ -538,15 +537,15 @@ typealias Phases<Robot> = PhaseBuilder<Robot>.() -> Unit
  * Builder class for constructing phases using a Kotlin DSL.
  */
 @PhaseDsl
-class PhaseBuilder<Robot: BaseRobot> {
-    private val phases = mutableListOf<AutonomousPhase<Robot>>()
+class PhaseBuilder<R: Robot> {
+    private val phases = mutableListOf<AutonomousPhase<R>>()
 
     /**
      * Adds a single phase to the sequence.
      *
      * @param phase The phase to add
      */
-    fun phase(phase: AutonomousPhase<Robot>) {
+    fun phase(phase: AutonomousPhase<R>) {
         phases.add(phase)
     }
 
@@ -560,8 +559,8 @@ class PhaseBuilder<Robot: BaseRobot> {
      * @param name The name for this composite phase (shown in telemetry)
      * @param phases A lambda that builds the child phases
      */
-    fun seq(name: String, phases: Phases<Robot>) {
-        val builder = PhaseBuilder<Robot>()
+    fun seq(name: String, phases: Phases<R>) {
+        val builder = PhaseBuilder<R>()
         builder.phases()
         this@PhaseBuilder.phases.add(SequentialPhase(name, builder.build()))
     }
@@ -576,8 +575,8 @@ class PhaseBuilder<Robot: BaseRobot> {
      * @param name The name for this parallel phase (shown in telemetry)
      * @param phases A lambda that builds the child phases
      */
-    fun par(name: String, phases: Phases<Robot>) {
-        val builder = PhaseBuilder<Robot>()
+    fun par(name: String, phases: Phases<R>) {
+        val builder = PhaseBuilder<R>()
         builder.phases()
         this@PhaseBuilder.phases.add(ParallelPhase(name, builder.build()))
     }
@@ -605,8 +604,8 @@ class PhaseBuilder<Robot: BaseRobot> {
      * @param name The name for this phase (shown in telemetry)
      * @param block A lambda that configures the condition and phases
      */
-    fun doWhile(name: String, block: DoWhileBuilder<Robot>.() -> Unit) {
-        val builder = DoWhileBuilder<Robot>()
+    fun doWhile(name: String, block: DoWhileBuilder<R>.() -> Unit) {
+        val builder = DoWhileBuilder<R>()
         builder.block()
         this@PhaseBuilder.phases.add(builder.build(name))
     }
@@ -616,12 +615,12 @@ class PhaseBuilder<Robot: BaseRobot> {
      *
      * @return An immutable list of all phases added to this builder
      */
-    internal fun build(): List<AutonomousPhase<Robot>> = phases.toList()
+    internal fun build(): List<AutonomousPhase<R>> = phases.toList()
 }
 
-abstract class PhasedAutonomous<Robot: BaseRobot>(alliance: Alliance, phases: Phases<Robot>) : RobotOpMode<Robot>(alliance) {
+abstract class PhasedAutonomous<R: Robot>(alliance: Alliance, phases: Phases<R>) : RobotOpMode<R>(alliance) {
     val rootPhase by lazy {
-        val builder = PhaseBuilder<Robot>()
+        val builder = PhaseBuilder<R>()
         with(builder) {
             phases()
         }
