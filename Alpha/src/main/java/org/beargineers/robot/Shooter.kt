@@ -50,7 +50,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         feederStartedAt = System.currentTimeMillis()
     }
 
-    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistanceCM ?: defaultGoalDistance)
+    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as AlphaRobot).goalDistanceCM ?: defaultGoalDistance)
 
     override fun loop() {
         if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > ShooterConfig.SHOOTING_TIME_SECONDS * 1000) {
