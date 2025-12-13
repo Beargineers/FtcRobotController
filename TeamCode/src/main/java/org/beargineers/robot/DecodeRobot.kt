@@ -3,11 +3,12 @@ package org.beargineers.robot
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AprilTagWebcam
 import org.beargineers.platform.AutonomousDriveConfig
+import org.beargineers.platform.BLUE_GOAL
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.KalmanFilter
 import org.beargineers.platform.MecanumDrive
+import org.beargineers.platform.RED_GOAL
 import org.beargineers.platform.RobotOpMode
-import org.beargineers.platform.tileLocation
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import kotlin.math.hypot
@@ -47,8 +48,7 @@ class DecodeRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode) {
         super.loop()
 
         val goalCoords =
-            (if (opMode.alliance == Alliance.BLUE) tileLocation("A6")
-            else tileLocation("F6")).toUnit(DistanceUnit.CM)
+            (if (opMode.alliance == Alliance.BLUE) BLUE_GOAL else RED_GOAL).toUnit(DistanceUnit.CM)
 
         val cp = currentPosition.toDistanceUnit(DistanceUnit.CM)
         goalDistanceCM = hypot(cp.x - goalCoords.x, cp.y - goalCoords.y)
