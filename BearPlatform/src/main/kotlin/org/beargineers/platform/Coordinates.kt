@@ -19,6 +19,10 @@ val ANGLE_UNIT = AngleUnit.DEGREES
 
 val FIELD_CENTER = Location(0.0, 0.0).withHeading(0.0, AngleUnit.DEGREES)
 
+val RED_GOAL = tileLocation("F6")
+
+val BLUE_GOAL = tileLocation("A6")
+
 class Location(
     val x: Double,
     val y: Double,
