@@ -19,9 +19,9 @@ val ANGLE_UNIT = AngleUnit.DEGREES
 
 val FIELD_CENTER = Location(0.0, 0.0).withHeading(0.0, AngleUnit.DEGREES)
 
-val RED_GOAL = tileLocation("F6")
+val RED_GOAL = Location(-58.3727, 55.6425, DistanceUnit.INCH)
 
-val BLUE_GOAL = tileLocation("A6")
+val BLUE_GOAL = Location(-58.3727, -55.6425, DistanceUnit.INCH)
 
 val RED_PARK = tileLocation("B2", tileOffset = TileOffset.BOTTOM_RIGHT).toUnit(DistanceUnit.INCH).shift(-9.0,-9.0)
 
