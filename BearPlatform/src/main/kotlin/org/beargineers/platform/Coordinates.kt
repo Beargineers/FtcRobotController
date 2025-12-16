@@ -23,6 +23,10 @@ val RED_GOAL = tileLocation("F6")
 
 val BLUE_GOAL = tileLocation("A6")
 
+val RED_PARK = tileLocation("B2BR").toUnit(DistanceUnit.INCH).shift(-9.0,-9.0)
+
+val BLUE_PARK = tileLocation("E2BL").toUnit(DistanceUnit.INCH).shift(-9.0,9.0)
+
 class Location(
     val x: Double,
     val y: Double,

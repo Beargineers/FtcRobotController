@@ -8,4 +8,6 @@ interface DecodeRobot : Robot {
     fun enableFlywheel(on: Boolean)
 
     fun isShooting(): Boolean
+
+    fun park()
 }
