@@ -23,10 +23,13 @@ val RED_GOAL = tileLocation("F6")
 
 val BLUE_GOAL = tileLocation("A6")
 
-val RED_PARK = tileLocation("B2BR").toUnit(DistanceUnit.INCH).shift(-9.0,-9.0)
+val RED_PARK = tileLocation("B2", tileOffset = TileOffset.BOTTOM_RIGHT).toUnit(DistanceUnit.INCH).shift(-9.0,-9.0)
 
-val BLUE_PARK = tileLocation("E2BL").toUnit(DistanceUnit.INCH).shift(-9.0,9.0)
+val BLUE_PARK = tileLocation("E2", tileOffset = TileOffset.BOTTOM_LEFT).toUnit(DistanceUnit.INCH).shift(-9.0,9.0)
 
+val RED_OPEN_GATE = tileLocation("F3", tileOffset = TileOffset.TOP_CENTER)
+
+val BLUE_OPEN_GATE = tileLocation("A3", tileOffset = TileOffset.TOP_CENTER  )
 class Location(
     val x: Double,
     val y: Double,
