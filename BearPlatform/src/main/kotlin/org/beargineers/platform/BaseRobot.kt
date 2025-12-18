@@ -9,8 +9,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.cosh
 import kotlin.math.hypot
+import kotlin.math.pow
 import kotlin.math.sin
 
 val positionTolerance: Double = 2.0
@@ -239,5 +242,30 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
 
     override fun stopDriving() {
         drive.stop()
+    }
+
+    fun curveToTarget(target: Position, radius: Double, CW: Boolean, radiusDistanceUnit: DistanceUnit , maxSpeed: Double){
+
+        val r = target.distanceUnit.fromUnit(radiusDistanceUnit, radius)
+
+        val cp = currentPosition.toDistanceUnit(target.distanceUnit)
+
+        val distanceToTarget: Double = hypot((target.x - cp.x), (target.y - cp.y))
+
+        val t = cosh(1- 0.5*(distanceToTarget/r).pow(2))
+
+        val t2: Double = PI/4 - 0.5 * t
+
+        val curvedDistanceToTarget: Double = t * r
+
+        val vectorHeading: Double = when(CW){
+            true -> atan2((target.y - cp.y), (target.x - cp.x)) + (PI/4 - t2)
+            false -> atan2((target.y - cp.y), (target.x - cp.x)) - (PI/4 - t2)
+        }
+
+        val driveTo = Position(curvedDistanceToTarget * cos(vectorHeading), curvedDistanceToTarget * sin(vectorHeading), target.heading, target.distanceUnit, target.angleUnit)
+
+        driveToTarget(driveTo, maxSpeed)
+
     }
 }
