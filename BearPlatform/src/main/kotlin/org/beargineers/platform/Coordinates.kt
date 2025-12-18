@@ -4,6 +4,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import java.util.Locale
 import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
 
 /*
 Make sure to read https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html#square-field-inverted-alliance-area
@@ -126,4 +130,24 @@ class Position(
     companion object {
         fun zero() : Position = Position(0.0, 0.0, 0.0)
     }
+}
+
+fun Position.toAbsolute(): Position {
+    val h = toAngleUnit(AngleUnit.RADIANS).heading
+    val magnitude = hypot(x, y)
+    val absoluteH = atan2(y,x)
+    val absH = absoluteH + h
+    val absX = cos(absH)*magnitude
+    val absY = sin(absH)*magnitude
+    return Position(absX, absY, absH, angleUnit = AngleUnit.RADIANS)
+}
+
+fun Position.toRelative(): Position {
+    val h = toAngleUnit(AngleUnit.RADIANS).heading
+    val magnitude = hypot(x, y)
+    val absoluteH = atan2(y,x)
+    val relH = absoluteH - h
+    val relX = cos(relH)*magnitude
+    val relY = sin(relH)*magnitude
+    return Position(relX, relY, relH, angleUnit = AngleUnit.RADIANS)
 }
