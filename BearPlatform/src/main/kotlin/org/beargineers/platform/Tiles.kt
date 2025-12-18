@@ -2,13 +2,38 @@ package org.beargineers.platform
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 /*
 Tiles are marked vertically 1 (lowest row) through 6 (highest row)
 and A (leftmost column) through F (rightmost column) horizontally, where A6 holds blue goal and F6 holds red goal.
 Each tile is 24x24 inches
  */
+fun Position.toAbsolute(): Position {
+    val h = toAngleUnit(AngleUnit.RADIANS).heading
+    val magnitude = hypot(x, y)
+    val absoluteH = atan2(y,x)
+    val absH = absoluteH + h
+    val absX = cos(absH)*magnitude
+    val absY = sin(absH)*magnitude
+    return Position(absX, absY, absH, angleUnit = AngleUnit.RADIANS)
+}
 
+fun Position.toRelative(): Position {
+    val h = toAngleUnit(AngleUnit.RADIANS).heading
+    val magnitude = hypot(x, y)
+    val absoluteH = atan2(y,x)
+    val relH = absoluteH - h
+    val relX = cos(relH)*magnitude
+    val relY = sin(relH)*magnitude
+    return Position(relX, relY, relH, angleUnit = AngleUnit.RADIANS)
+}
 enum class TileOffset(val yoffset: Int, val xoffset: Int) {
     CENTER(0, 0),
 
