@@ -54,5 +54,5 @@ interface Robot {
 
     val currentPosition: Position
 
-
+    fun configValue(name: String): String?
 }
