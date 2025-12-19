@@ -17,26 +17,6 @@ import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.sin
 
-val positionTolerance: Double = 2.0
-val headingTolerance: Double = 5.0
-
-
-data class AutonomousDriveConfig(
-    val minimalWheelPower: Double = 0.12,
-    val maximumSpeed: Double = 1.0,
-
-    // Proportional control gains (tune these values for your robot).
-    // Too low values will result in robot moving unnecessarily slow
-    // Too high values will result in robot driving past destination and maybe even oscillating around it
-
-
-    val kP_position: Double = 0.035, // Position gain (power per distance unit)
-    val kP_heading: Double = 0.01 // Heading gain (power per angle unit)
-)
-
-// Minimum confidence threshold to accept vision measurements
-var MIN_VISION_CONFIDENCE = 0.3
-
 abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
     abstract val relativeLocalizer: RelativeLocalizer
@@ -45,11 +25,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
     abstract val configResource: Int
 
     // Kalman filter for sensor fusion
-    abstract fun configureKalmanFilter(): KalmanFilter
-    abstract fun configureAutonomousDriving(): AutonomousDriveConfig
-    private val kalmanFilter = configureKalmanFilter()
-    private val autoConfig = configureAutonomousDriving()
-
+    private val kalmanFilter = KalmanFilter(this)
     val allHardware = mutableListOf<Hardware>()
 
     override val telemetry: Telemetry get() = opMode.telemetry
@@ -67,7 +43,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
     internal var currentConfigText = initialConfigText
     private set
 
-    private var config = readConfigs()
+    private var configs = readConfigs()
 
     private fun readConfigs(): Properties {
         val defaults = Properties().apply {
@@ -81,11 +57,11 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
 
     fun updateConfigText(text: String) {
         currentConfigText = text
-        config = readConfigs()
+        configs = readConfigs()
     }
 
     override fun configValue(name: String): String? {
-        return config[name] as? String
+        return configs[name] as? String
     }
 
     override fun init() {
@@ -234,14 +210,14 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
         val robotRight = deltaX * sin(robotHeadingRad) - deltaY * cos(robotHeadingRad)
 
         // Calculate drive powers using proportional control
-        val forwardPower = robotForward * autoConfig.kP_position
-        val strafePower = robotRight * autoConfig.kP_position
-        val turnPower = -Math.toDegrees(headingError) * autoConfig.kP_heading // Positive power to turn CW, but positive delta heating is CCW
+        val forwardPower = robotForward * kP_position
+        val strafePower = robotRight * kP_position
+        val turnPower = -Math.toDegrees(headingError) * kP_heading // Positive power to turn CW, but positive delta heating is CCW
 
         val maxPower = listOf(forwardPower, strafePower, turnPower).maxOf { abs(it) }
         val maxV = when {
             maxPower > maxSpeed -> maxPower / maxSpeed
-            maxPower < autoConfig.minimalWheelPower -> maxPower / autoConfig.minimalWheelPower
+            maxPower < minimalWheelPower -> maxPower / minimalWheelPower
             else -> 1.0
         }
 
@@ -272,7 +248,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
         drive.stop()
     }
 
-    fun curveToTarget(target: Position, radius: Double, CW: Boolean, radiusDistanceUnit: DistanceUnit , maxSpeed: Double){
+    fun curveToTarget(target: Position, radius: Double, clockwise: Boolean, radiusDistanceUnit: DistanceUnit, maxSpeed: Double){
 
         val r = target.distanceUnit.fromUnit(radiusDistanceUnit, radius)
 
@@ -286,7 +262,7 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
 
         val curvedDistanceToTarget: Double = t * r
 
-        val vectorHeading: Double = when(CW){
+        val vectorHeading: Double = when(clockwise){
             true -> atan2((target.y - cp.y), (target.x - cp.x)) + (PI/4 - t2)
             false -> atan2((target.y - cp.y), (target.x - cp.x)) - (PI/4 - t2)
         }
@@ -294,6 +270,23 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
         val driveTo = Position(curvedDistanceToTarget * cos(vectorHeading), curvedDistanceToTarget * sin(vectorHeading), target.heading, target.distanceUnit, target.angleUnit)
 
         driveToTarget(driveTo, maxSpeed)
-
     }
+
+
+    val minimalWheelPower by config(0.12)
+    val maximumSpeed by config(1.0)
+
+    // Proportional control gains (tune these values for your robot).
+    // Too low values will result in robot moving unnecessarily slow
+    // Too high values will result in robot driving past destination and maybe even oscillating around it
+
+    val kP_position by config(0.035) // Position gain (power per distance unit)
+    val kP_heading by config(0.01) // Heading gain (power per angle unit)
+
+    val positionTolerance by config(2.0)
+    val headingTolerance by config(5.0)
+
+
+    // Minimum confidence threshold to accept vision measurements
+    val MIN_VISION_CONFIDENCE by config(0.3)
 }

@@ -24,12 +24,12 @@ import kotlin.math.sqrt
  * @property measurementNoisePosition Base measurement noise for vision position (in cm)
  * @property measurementNoiseHeading Base measurement noise for vision heading (in radians)
  */
-class KalmanFilter(
-    private val processNoisePosition: Double = 0.5,  // cm - odometry drift per cycle
-    private val processNoiseHeading: Double = 0.01,  // radians - heading drift per cycle
-    private val measurementNoisePosition: Double = 5.0,  // cm - vision measurement noise
-    private val measurementNoiseHeading: Double = 0.1    // radians - vision heading noise
-) {
+class KalmanFilter(val robot: BaseRobot) {
+    private val processNoisePosition by robot.config(0.5)  // cm - odometry drift per cycle
+    private val processNoiseHeading by robot.config(0.01)  // radians - heading drift per cycle
+    private val measurementNoisePosition by robot.config(5.0)  // cm - vision measurement noise
+    private val measurementNoiseHeading by robot.config(0.1)    // radians - vision heading noise
+
     // State estimate: [x, y, heading]
     private var stateX: Double = 0.0
     private var stateY: Double = 0.0

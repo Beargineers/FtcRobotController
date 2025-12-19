@@ -2,7 +2,6 @@ package org.beargineers.platform
 
 import android.util.Size
 import com.bylazar.camerastream.PanelsCameraStream
-import com.bylazar.configurables.annotations.Configurable
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -15,28 +14,28 @@ import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.max
 
-@Configurable
-object AprilTagConfidenceParams {
+class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
+                         
     // Distance parameters (in cm)
-    var optimalDistance = 100.0  // Distance with highest confidence
-    var maxUsableDistance = 300.0  // Beyond this, confidence drops significantly
+    val optimalDistance by robot.config(100.0)  // Distance with highest confidence
+    val maxUsableDistance by robot.config(300.0)  // Beyond this, confidence drops significantly
 
     // Angle parameters (in degrees)
-    var optimalAngle = 0.0  // Perpendicular view (0° relative to tag normal)
-    var maxUsableAngle = 60.0  // Beyond this, confidence drops significantly
+    val optimalAngle by robot.config(0.0)  // Perpendicular view (0° relative to tag normal)
+    val maxUsableAngle by robot.config(60.0)  // Beyond this, confidence drops significantly
 
     // Weighting factors (should sum to ~1.0)
-    var distanceWeight = 0.6  // How much distance affects confidence
-    var angleWeight = 0.4  // How much viewing angle affects confidence
-}
+    val distanceWeight by robot.config(0.6)  // How much distance affects confidence
+    val angleWeight by robot.config(0.4)  // How much viewing angle affects confidence
 
-class AprilTagWebcam(robot: BaseRobot,
-                     val forward: Double,
-                     val right: Double,
-                     val up: Double,
-                     val pitch: Double,
-                     val yaw: Double,
-                     val roll: Double): Hardware(robot), AbsoluteLocalizer {
+    val CameraPosition_forward by robot.config(0.0)
+    val CameraPosition_up by robot.config(0.0)
+    val CameraPosition_right by robot.config(0.0)
+    val CameraPosition_pitch by robot.config(0.0)
+    val CameraPosition_yaw by robot.config(0.0)
+    val CameraPosition_roll by robot.config(0.0)
+
+
     private val camera: WebcamName by hardware("Webcam 1")
 
     private lateinit var aprilTag: AprilTagProcessor
@@ -47,12 +46,12 @@ class AprilTagWebcam(robot: BaseRobot,
 
         val cameraPosition = org.firstinspires.ftc.robotcore.external.navigation.Position(
             DistanceUnit.CM,
-            right, forward, up, 0
+            CameraPosition_right, CameraPosition_forward, CameraPosition_up, 0
         )
 
         val cameraOrientation = YawPitchRollAngles(
             AngleUnit.DEGREES,
-            yaw, pitch, roll, 0
+            CameraPosition_yaw, CameraPosition_pitch, CameraPosition_roll, 0
         )
 
         aprilTag = AprilTagProcessor.Builder()
@@ -124,10 +123,9 @@ class AprilTagWebcam(robot: BaseRobot,
         val rangeCm = DistanceUnit.CM.fromUnit(DISTANCE_UNIT, detection.ftcPose.range)
 
         // Gaussian-like falloff centered at optimal distance
-        val distanceError = abs(rangeCm - AprilTagConfidenceParams.optimalDistance)
-        val distanceScale = AprilTagConfidenceParams.maxUsableDistance / 2.0
-        val distanceConfidence =
-            exp(-(distanceError * distanceError) / (2 * distanceScale * distanceScale))
+        val distanceError = abs(rangeCm - optimalDistance)
+        val distanceScale = maxUsableDistance / 2.0
+        val distanceConfidence = exp(-(distanceError * distanceError) / (2 * distanceScale * distanceScale))
 
         // Angle factor: use bearing (horizontal angle) and yaw (tag rotation)
         // Both should be close to 0 for best results
@@ -139,17 +137,17 @@ class AprilTagWebcam(robot: BaseRobot,
 
         // Linear falloff for angle
         val angleConfidence = when {
-            effectiveAngle <= AprilTagConfidenceParams.optimalAngle -> 1.0
+            effectiveAngle <= optimalAngle -> 1.0
             else -> {
-                val angleFraction = (effectiveAngle - AprilTagConfidenceParams.optimalAngle) /
-                        (AprilTagConfidenceParams.maxUsableAngle - AprilTagConfidenceParams.optimalAngle)
+                val angleFraction = (effectiveAngle - optimalAngle) /
+                        (maxUsableAngle - optimalAngle)
                 (1.0 - angleFraction).coerceIn(0.0, 1.0)
             }
         }
 
         // Weighted combination
-        val confidence = (AprilTagConfidenceParams.distanceWeight * distanceConfidence +
-                         AprilTagConfidenceParams.angleWeight * angleConfidence)
+        val confidence = (distanceWeight * distanceConfidence +
+                         angleWeight * angleConfidence)
 
         return confidence.coerceIn(0.0, 1.0)
     }

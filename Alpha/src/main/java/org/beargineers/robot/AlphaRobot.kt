@@ -3,11 +3,9 @@ package org.beargineers.robot
 import org.beargineers.R
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AprilTagWebcam
-import org.beargineers.platform.AutonomousDriveConfig
 import org.beargineers.platform.BLUE_GOAL
 import org.beargineers.platform.BLUE_PARK
 import org.beargineers.platform.BaseRobot
-import org.beargineers.platform.KalmanFilter
 import org.beargineers.platform.Location
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RED_GOAL
@@ -23,33 +21,13 @@ import kotlin.math.hypot
 
 @Suppress("unused")
 class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRobot {
-    override val drive = MecanumDrive(this, WheelCorrections.asConfig())
+    override val configResource: Int = R.raw.config
+    override val drive = MecanumDrive(this)
 
     override val relativeLocalizer get() = drive.localizerByMotorEncoders
     override val absoluteLocalizer get() = aprilTags
 
-    override fun configureKalmanFilter(): KalmanFilter {
-        return KalmanFilter(
-            processNoisePosition = KalmanFilterConfig.PROCESS_NOISE_POSITION,
-            processNoiseHeading = KalmanFilterConfig.PROCESS_NOISE_HEADING,
-            measurementNoisePosition = KalmanFilterConfig.MEASUREMENT_NOISE_POSITION,
-            measurementNoiseHeading = KalmanFilterConfig.MEASUREMENT_NOISE_HEADING
-        )
-    }
-
-    override val configResource: Int = R.raw.config
-
-    override fun configureAutonomousDriving(): AutonomousDriveConfig {
-        return AutonomousDriveConfig(
-            minimalWheelPower = AutonomousConfig.MINIMAL_WHEEL_POWER,
-            kP_position = AutonomousConfig.kP_position,
-            kP_heading = AutonomousConfig.kP_heading
-        )
-    }
-
-    val aprilTags = AprilTagWebcam(this,
-        CameraPosition.forward, CameraPosition.right, CameraPosition.up,
-        CameraPosition.pitch, CameraPosition.yaw, CameraPosition.roll)
+    val aprilTags = AprilTagWebcam(this)
     val shooter = Shooter(this)
     val intake = Intake(this)
 

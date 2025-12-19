@@ -1,12 +1,12 @@
 package org.beargineers.platform.decode
 
-import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.BLUE_GOAL
 import org.beargineers.platform.Position
 import org.beargineers.platform.RED_GOAL
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.config
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
@@ -14,16 +14,11 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
-@Configurable
-object TeleopConfigs {
-    @JvmField
-    var ROTATION_TRIGGER_REDUCTION: Float = 0.5f
-
-    var POSITIONAL_GAIN = 60
-    var ROTATIONAL_GAIN = 50
-}
-
 open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
+    val ROTATION_TRIGGER_REDUCTION by robot.config(0.5)
+    val POSITIONAL_GAIN by robot.config(60)
+    val ROTATIONAL_GAIN by robot.config(50)
+
     var fpvDrive = false
     var lookAtGoal = false
 
@@ -71,11 +66,11 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         if (!fpvDrive) {
             val sign = if (alliance == Alliance.BLUE) -1 else 1
 
-            val dx = gamepad1.left_stick_x.toDouble() * TeleopConfigs.POSITIONAL_GAIN * sign
-            val dy = gamepad1.left_stick_y.toDouble() * TeleopConfigs.POSITIONAL_GAIN * -sign
+            val dx = gamepad1.left_stick_x.toDouble() * POSITIONAL_GAIN * sign
+            val dy = gamepad1.left_stick_y.toDouble() * POSITIONAL_GAIN * -sign
             val rx = gamepad1.right_stick_x * sign
             val ry = gamepad1.right_stick_y * sign * -1
-            val dh = 0.0 + (gamepad1.left_trigger - gamepad1.right_trigger) * TeleopConfigs.ROTATIONAL_GAIN
+            val dh = 0.0 + (gamepad1.left_trigger - gamepad1.right_trigger) * ROTATIONAL_GAIN
 
             val heading = Math.toDegrees(
                 when {
@@ -95,11 +90,11 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val h = robot.currentPosition.toAngleUnit(AngleUnit.RADIANS).heading - shootingAngleCorrectionForMovement()
             val forward = -gamepad1.left_stick_y.normalize()
             val strafe = gamepad1.left_stick_x.normalize()
-            val dx = (forward * cos(h) + strafe * sin(h)) * TeleopConfigs.POSITIONAL_GAIN
-            val dy = (forward * sin(h) - strafe * cos(h)) * TeleopConfigs.POSITIONAL_GAIN
+            val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN
+            val dy = (forward * sin(h) - strafe * cos(h)) * POSITIONAL_GAIN
 
             val rotation =
-                (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * TeleopConfigs.ROTATION_TRIGGER_REDUCTION).normalize()
+                (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * ROTATION_TRIGGER_REDUCTION).normalize()
             val heading = Math.toDegrees(
                 if (lookAtGoal) headingToGoal()
                 else robot.currentPosition.heading + rotation
@@ -125,6 +120,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     }
 
     fun Float.normalize(): Double = deadband(toDouble())
+    fun Double.normalize(): Double = deadband(this)
 
     private fun deadband(v: Double, th: Double = 0.01) = if (abs(v) < th) 0.0 else v
 }
