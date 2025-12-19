@@ -19,6 +19,8 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val absoluteLocalizer: AbsoluteLocalizer = LimelightCam(this)
     override val relativeLocalizer: RelativeLocalizer = PinpointLocalizer(this)
 
+    override val configResource: Int = R.raw.config
+
     override fun configureKalmanFilter(): KalmanFilter {
         return KalmanFilter()
     }
@@ -37,6 +39,10 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun enableFlywheel(on: Boolean) {
         // TODO("Not yet implemented")
+    }
+
+    override fun park() {
+        TODO("Not yet implemented")
     }
 
     override fun isShooting(): Boolean {

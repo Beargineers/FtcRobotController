@@ -1,5 +1,6 @@
 package org.beargineers.robot
 
+import org.beargineers.R
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AprilTagWebcam
 import org.beargineers.platform.AutonomousDriveConfig
@@ -9,13 +10,11 @@ import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.KalmanFilter
 import org.beargineers.platform.Location
 import org.beargineers.platform.MecanumDrive
-import org.beargineers.platform.Position
 import org.beargineers.platform.RED_GOAL
 import org.beargineers.platform.RED_PARK
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
-import org.beargineers.platform.tileLocation
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
@@ -37,6 +36,8 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
             measurementNoiseHeading = KalmanFilterConfig.MEASUREMENT_NOISE_HEADING
         )
     }
+
+    override val configResource: Int = R.raw.config
 
     override fun configureAutonomousDriving(): AutonomousDriveConfig {
         return AutonomousDriveConfig(

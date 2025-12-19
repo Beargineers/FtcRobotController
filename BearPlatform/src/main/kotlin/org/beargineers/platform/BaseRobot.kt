@@ -7,6 +7,7 @@ import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import java.util.Properties
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -41,6 +42,8 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
     abstract val relativeLocalizer: RelativeLocalizer
     abstract val absoluteLocalizer: AbsoluteLocalizer
 
+    abstract val configResource: Int
+
     // Kalman filter for sensor fusion
     abstract fun configureKalmanFilter(): KalmanFilter
     abstract fun configureAutonomousDriving(): AutonomousDriveConfig
@@ -59,6 +62,31 @@ abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
     override var currentPosition: Position = FIELD_CENTER
 
     val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
+
+    private val initialConfigText: String  = opMode.hardwareMap.appContext.resources.openRawResource(configResource).reader().readText()
+    internal var currentConfigText = initialConfigText
+    private set
+
+    private var config = readConfigs()
+
+    private fun readConfigs(): Properties {
+        val defaults = Properties().apply {
+            load(opMode.hardwareMap.appContext.resources.openRawResource(R.raw.config))
+        }
+
+        return Properties(defaults).apply {
+            load(currentConfigText.reader())
+        }
+    }
+
+    fun updateConfigText(text: String) {
+        currentConfigText = text
+        config = readConfigs()
+    }
+
+    override fun configValue(name: String): String? {
+        return config[name] as? String
+    }
 
     override fun init() {
         allHardware.forEach {
