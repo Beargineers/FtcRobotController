@@ -12,27 +12,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-data class WheelsConfig(
-    val lf_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.REVERSE,
-    val rf_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
-    val lb_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.REVERSE,
-    val rb_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
 
-    val lf_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
-    val rf_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
-    val lb_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
-    val rb_encoder_direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
-
-    val lf_correction: Double = 1.0,
-    val rf_correction: Double = 1.0,
-    val lb_correction: Double = 1.0,
-    val rb_correction: Double = 1.0,
-
-    val cm_per_tick_forward: Double,
-    val cm_per_tick_strafe: Double,
-)
-
-class MecanumDrive(robot: BaseRobot, val config: WheelsConfig) : Hardware(robot), Drivetrain {
+class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
 
     // Match these names in  RC configuration
     val lf: DcMotor by hardware("leftFront")
@@ -42,6 +23,7 @@ class MecanumDrive(robot: BaseRobot, val config: WheelsConfig) : Hardware(robot)
     private val imu: IMU by hardware("imu")
 
     val localizerByMotorEncoders: RelativeLocalizer by lazy { MecanumEncodersLocalizers() }
+    val config = WheelsConfig()
 
     override fun init() {
         val allMotors = listOf(lf, rf, lb, rb)
@@ -249,4 +231,25 @@ class MecanumDrive(robot: BaseRobot, val config: WheelsConfig) : Hardware(robot)
             ).normalizeHeading()
         }
     }
+
+    inner class WheelsConfig {
+        val lf_direction by robot.config(DcMotorSimple.Direction.REVERSE)
+        val rf_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+        val lb_direction by robot.config( DcMotorSimple.Direction.REVERSE)
+        val rb_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+
+        val lf_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+        val rf_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+        val lb_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+        val rb_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+
+        val lf_correction by robot.config(1.0)
+        val rf_correction by robot.config(1.0)
+        val lb_correction by robot.config(1.0)
+        val rb_correction by robot.config(1.0)
+
+        val cm_per_tick_forward by robot.config(0.0)
+        val cm_per_tick_strafe by robot.config(0.0)
+    }
+
 }
