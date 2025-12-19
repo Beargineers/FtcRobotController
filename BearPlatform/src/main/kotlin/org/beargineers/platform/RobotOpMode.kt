@@ -17,6 +17,8 @@ abstract class RobotOpMode<out T : Robot>(val alliance: Alliance) : OpMode() {
     private val loopsTimer = ElapsedTime()
     private var loopsCount = 0
 
+    private lateinit var settingsServer: SettingsWebServer
+
     open fun bearInit() {}
 
     final override fun init() {
@@ -30,6 +32,7 @@ abstract class RobotOpMode<out T : Robot>(val alliance: Alliance) : OpMode() {
         robot.init()
 
         bearInit()
+        settingsServer = SettingsWebServer(robot, 9000)
         telemetry.addLine("Initialized")
     }
 
@@ -40,6 +43,12 @@ abstract class RobotOpMode<out T : Robot>(val alliance: Alliance) : OpMode() {
         loopsCount = 0
 
         bearStart()
+    }
+
+    override fun stop() {
+        super.stop()
+        robot.stop()
+        settingsServer.stop()
     }
 
     open fun bearLoop() {}
