@@ -17,7 +17,7 @@ import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.sin
 
-abstract class BaseRobot(val opMode: RobotOpMode<*>) : Robot {
+abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
     abstract val relativeLocalizer: RelativeLocalizer
     abstract val absoluteLocalizer: AbsoluteLocalizer
