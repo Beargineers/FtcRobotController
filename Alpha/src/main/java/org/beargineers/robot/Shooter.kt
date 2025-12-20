@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
+import org.beargineers.platform.goalDistanceCM
 
 class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_POWER_ADJUST by robot.config(1.0)
@@ -22,7 +23,6 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     var flywheelEnabled = false
     var frozenFlywheelPower: Double? = null
 
-    var defaultGoalDistance: Double = 90.0
 
     override fun init() {
         super.init()
@@ -56,7 +56,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         feederStartedAt = System.currentTimeMillis()
     }
 
-    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as AlphaRobot).goalDistanceCM ?: defaultGoalDistance)
+    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as AlphaRobot).goalDistanceCM())
 
     override fun loop() {
         if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > SHOOTING_TIME_SECONDS * 1000) {

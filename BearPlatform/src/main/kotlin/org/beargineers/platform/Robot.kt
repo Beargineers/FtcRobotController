@@ -55,4 +55,6 @@ interface Robot {
     val currentPosition: Position
 
     fun configValue(name: String): String?
+
+    val opMode: RobotOpMode<*>
 }
