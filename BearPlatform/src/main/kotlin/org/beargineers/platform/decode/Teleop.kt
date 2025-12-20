@@ -2,11 +2,11 @@ package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
-import org.beargineers.platform.BLUE_GOAL
 import org.beargineers.platform.Position
-import org.beargineers.platform.RED_GOAL
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.config
+import org.beargineers.platform.headingToGoal
+import org.beargineers.platform.shootingAngleCorrectionForMovement
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
@@ -74,7 +74,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
 
             val heading = Math.toDegrees(
                 when {
-                    lookAtGoal -> headingToGoal()
+                    lookAtGoal -> robot.headingToGoal()
                     abs(ry) + abs(rx) > 0.01 -> atan2(ry.toDouble(), rx.toDouble())
                     else -> robot.currentPosition.heading
                 }
@@ -87,7 +87,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             robot.driveToTarget(targetPosition, if (slow) 0.4 else 1.0)
         }
         else {
-            val h = robot.currentPosition.toAngleUnit(AngleUnit.RADIANS).heading - shootingAngleCorrectionForMovement()
+            val h = robot.currentPosition.toAngleUnit(AngleUnit.RADIANS).heading - robot.shootingAngleCorrectionForMovement()
             val forward = -gamepad1.left_stick_y.normalize()
             val strafe = gamepad1.left_stick_x.normalize()
             val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN
@@ -96,7 +96,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val rotation =
                 (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * ROTATION_TRIGGER_REDUCTION).normalize()
             val heading = Math.toDegrees(
-                if (lookAtGoal) headingToGoal()
+                if (lookAtGoal) robot.headingToGoal()
                 else robot.currentPosition.heading + rotation
             )
             val deltaPosition = Position(dx, dy, heading - Math.toDegrees(robot.currentPosition.heading),
@@ -107,17 +107,9 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
     }
 
-    private fun shootingAngleCorrectionForMovement() : Double {
-        return 0.0
-    }
 
-    private fun headingToGoal(): Double {
-        val goal = (if (alliance == Alliance.BLUE) BLUE_GOAL else RED_GOAL).toUnit(DistanceUnit.CM)
-        val cp = robot.currentPosition.toDistanceUnit(DistanceUnit.CM)
-        val dx = goal.x - cp.x
-        val dy = goal.y - cp.y
-        return atan2(dy, dx) + shootingAngleCorrectionForMovement()
-    }
+
+
 
     fun Float.normalize(): Double = deadband(toDouble())
     fun Double.normalize(): Double = deadband(this)
