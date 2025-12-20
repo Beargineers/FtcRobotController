@@ -11,7 +11,7 @@ import org.beargineers.platform.RED_PARK
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
-import org.beargineers.platform.goalDistanceCM
+import org.beargineers.platform.goalDistance
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
@@ -36,7 +36,7 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
 
 
 
-        telemetry.addData("Goal distance", goalDistanceCM())
+        telemetry.addData("Goal distance", goalDistance())
     }
 
     fun findTarget(): AprilTagDetection? {

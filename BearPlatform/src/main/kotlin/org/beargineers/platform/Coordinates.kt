@@ -65,15 +65,83 @@ class Distance( val distance: Double, val distanceUnit: DistanceUnit = DISTANCE_
         return Distance(unit.fromUnit(distanceUnit, distance), unit)
     }
 
-    // TODO: fun add (take in the distance to add, and distance unit of the add)
+    override fun toString(): String {
+        return String.format(Locale.US, "%.3f%s", distance, distanceUnit)
+    }
+
+    operator fun plus(other: Distance): Distance {
+        return Distance(distance + distanceUnit.fromUnit(other.distanceUnit, other.distance), distanceUnit)
+    }
+
+    operator fun minus(other: Distance): Distance {
+        return Distance(distance - distanceUnit.fromUnit(other.distanceUnit, other.distance), distanceUnit)
+    }
+
+    operator fun times(other: Double): Distance {
+        return Distance(distance * other, distanceUnit)
+    }
+
+    operator fun div(other: Double): Distance {
+        return Distance(distance / other, distanceUnit)
+    }
+
+    fun cm() : Double = DistanceUnit.CM.fromUnit(distanceUnit, distance)
+    fun inch(): Double = DistanceUnit.INCH.fromUnit(distanceUnit, distance)
+}
+
+fun Double.cm(): Distance = Distance(this, DistanceUnit.CM)
+fun Double.inch(): Distance = Distance(this, DistanceUnit.INCH)
+fun Int.cm(): Distance = Distance(this.toDouble(), DistanceUnit.CM)
+fun Int.inch(): Distance = Distance(this.toDouble(), DistanceUnit.INCH)
+
+fun atan2(y: Distance, x: Distance): Angle {
+    return Angle(atan2(y.cm(), x.cm()), AngleUnit.RADIANS)
+}
+
+fun hypot(x: Distance, y: Distance): Distance {
+    return Distance(hypot(x.cm(), y.cm()), DistanceUnit.CM)
 }
 
 class Angle(val angle: Double, val angleUnit: AngleUnit = ANGLE_UNIT){
     fun toAngleUnit(unit: AngleUnit): Angle{
         return Angle(unit.fromUnit(angleUnit, angle), unit)
     }
+
+    override fun toString(): String {
+        return String.format(Locale.US, "%.3f%s", angle, angleUnit)
+    }
+
+    operator fun plus(other: Angle): Angle {
+        return Angle(angle + angleUnit.fromUnit(other.angleUnit, other.angle), angleUnit)
+    }
+
+    operator fun minus(other: Angle): Angle {
+        return Angle(angle - angleUnit.fromUnit(other.angleUnit, other.angle), angleUnit)
+    }
+
+    operator fun times(other: Double): Angle {
+        return Angle(angle * other, angleUnit)
+    }
+
+    operator fun div(other: Double): Angle {
+        return Angle(angle / other, angleUnit)
+    }
+
+    fun radians(): Double = AngleUnit.RADIANS.fromUnit(angleUnit, angle)
+    fun degrees(): Double = AngleUnit.DEGREES.fromUnit(angleUnit, angle)
 }
 
+fun sin(theta: Angle): Double {
+    return sin(theta.radians())
+}
+
+fun cos(theta: Angle): Double {
+    return cos(theta.radians())
+}
+
+fun Double.degrees(): Angle = Angle(this, AngleUnit.DEGREES)
+fun Double.radians(): Angle = Angle(this, AngleUnit.RADIANS)
+fun Int.degrees(): Angle = Angle(this.toDouble(), AngleUnit.DEGREES)
 
 class Position(
     val x: Double,
@@ -187,13 +255,13 @@ fun Location.toRelative(heading: Angle): Location {
     return Location(relX, relY, unit)
 }
 
-fun DecodeRobot.goalDistanceCM(): Double {
+fun DecodeRobot.goalDistance(): Distance {
     val goalCords =
         (if (opMode.alliance == Alliance.BLUE) BLUE_GOAL else RED_GOAL).toUnit(DistanceUnit.CM)
 
     val cp = currentPosition.toDistanceUnit(DistanceUnit.CM)
     val goalDistanceCM = hypot(cp.x - goalCords.x, cp.y - goalCords.y)
-    return goalDistanceCM
+    return goalDistanceCM.cm()
 }
 
 fun DecodeRobot.shootingAngleCorrectionForMovement() : Double {
@@ -238,9 +306,9 @@ fun DecodeRobot.clearForShooting(): Boolean{
     }
 
     fun headingIsAtGoal(): Boolean{
-        val sideDistanceDeviation = Distance(15.0, distanceUnit = DistanceUnit.CM)
-        val distanceToGoal = Distance(goalDistanceCM(), distanceUnit = DistanceUnit.CM)
-        val maxHeadingDeviation: Double = atan2(sideDistanceDeviation.toDistanceUnit(distanceToGoal.distanceUnit).distance, distanceToGoal.distance)
+        val sideDistanceDeviation = 15.0.cm()
+        val distanceToGoal = goalDistance()
+        val maxHeadingDeviation: Double = atan2(sideDistanceDeviation, distanceToGoal).radians()
         return currentPosition.heading > headingToGoal() - maxHeadingDeviation && currentPosition.heading < headingToGoal() + maxHeadingDeviation
     }
 
