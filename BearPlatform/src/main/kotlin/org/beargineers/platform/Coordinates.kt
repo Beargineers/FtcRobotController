@@ -47,15 +47,11 @@ class Location(val x: Distance, val y: Distance) {
     }
 
     fun distanceTo(other: Position) : Distance {
-        val Other: Location = Location(other.x, other.y)
-        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
-            distanceUnit = DistanceUnit.CM)
+        return hypot(x - other.x, y - other.y)
     }
 
     fun distanceTo(other: Location) : Distance {
-        val Other: Location = Location(other.x, other.y)
-        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
-            distanceUnit = DistanceUnit.CM)
+        return hypot(x - other.x, y - other.y)
     }
 }
 
@@ -218,15 +214,11 @@ class Position(val x: Distance, val y: Distance, val heading: Angle) {
     }
 
     fun distanceTo(other: Position) : Distance {
-        val Other: Location = Location(other.x, other.y)
-        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
-            distanceUnit = DistanceUnit.CM)
+        return hypot(x - other.x, y - other.y)
     }
 
     fun distanceTo(other: Location) : Distance {
-        val Other: Location = Location(other.x, other.y)
-        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
-            distanceUnit = DistanceUnit.CM)
+        return hypot(x - other.x, y - other.y)
     }
 }
 
@@ -317,9 +309,6 @@ fun DecodeRobot.clearForShooting(): Boolean{
         return currentPosition.heading > headingToGoal() - maxHeadingDeviation && currentPosition.heading < headingToGoal() + maxHeadingDeviation
     }
 
-    fun correctSpeedOfFlywheel(): Boolean{
-        return true
-    }
     // TODO: add a check if the speed if the flywheel is good
-    return inShootingZone() && headingIsAtGoal() && correctSpeedOfFlywheel()
+    return inShootingZone() && headingIsAtGoal()
 }
