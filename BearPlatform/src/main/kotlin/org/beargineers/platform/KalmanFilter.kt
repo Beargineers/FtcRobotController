@@ -1,10 +1,5 @@
 package org.beargineers.platform
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
@@ -31,9 +26,9 @@ class KalmanFilter(val robot: BaseRobot) {
     private val measurementNoiseHeading by robot.config(0.1)    // radians - vision heading noise
 
     // State estimate: [x, y, heading]
-    private var stateX: Double = 0.0
-    private var stateY: Double = 0.0
-    private var stateHeading: Double = 0.0
+    private var stateX = 0.cm
+    private var stateY = 0.cm
+    private var stateHeading = 0.degrees
 
     // Covariance matrix (3x3, stored as flattened array)
     // Represents uncertainty in [x, y, heading]
@@ -46,10 +41,10 @@ class KalmanFilter(val robot: BaseRobot) {
      * @param initialUncertainty Initial uncertainty in position (cm) and heading (radians)
      */
     fun initialize(initialPosition: Position, initialUncertainty: Double = 100.0) {
-        val pos = initialPosition.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
+        val pos = initialPosition
         stateX = pos.x
         stateY = pos.y
-        stateHeading = normalizeAngle(pos.heading)
+        stateHeading = pos.heading.normalize()
 
         // Initialize covariance as diagonal matrix with initial uncertainty
         for (i in 0..8) {
@@ -58,13 +53,10 @@ class KalmanFilter(val robot: BaseRobot) {
     }
 
     fun predictByAbsolute(position: Position) {
-        val pos = position.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
         val delta = Position(
-            pos.x - stateX,
-            pos.y - stateY,
-            pos.heading - stateHeading,
-            DistanceUnit.CM,
-            AngleUnit.RADIANS
+            position.x - stateX,
+            position.y - stateY,
+            position.heading - stateHeading
         )
 
         predictByDelta(delta)
@@ -76,15 +68,13 @@ class KalmanFilter(val robot: BaseRobot) {
      * This increases uncertainty (covariance) to account for odometry drift,
      * scaled by the amount of movement. No movement = no additional uncertainty.
      *
-     * @param deltaPosition Movement delta from relative localizer
+     * @param delta Movement delta from relative localizer
      */
-    fun predictByDelta(deltaPosition: Position) {
-        val delta = deltaPosition.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
-
+    fun predictByDelta(delta: Position) {
         // Update state estimate (simple addition)
         stateX += delta.x
         stateY += delta.y
-        stateHeading = normalizeAngle(stateHeading + delta.heading)
+        stateHeading = (stateHeading + delta.heading).normalize()
 
         // Increase covariance (uncertainty grows proportionally to movement)
         // Process noise Q, scaled by movement magnitude
@@ -95,9 +85,9 @@ class KalmanFilter(val robot: BaseRobot) {
         val qPos = processNoisePosition * processNoisePosition * positionMovement
         val qHead = processNoiseHeading * processNoiseHeading * headingMovement
 
-        covariance[0] += qPos  // P[0,0] - x variance
-        covariance[4] += qPos  // P[1,1] - y variance
-        covariance[8] += qHead // P[2,2] - heading variance
+        covariance[0] += qPos.cm()  // P[0,0] - x variance
+        covariance[4] += qPos.cm()  // P[1,1] - y variance
+        covariance[8] += qHead.radians() // P[2,2] - heading variance
     }
 
     /**
@@ -110,7 +100,7 @@ class KalmanFilter(val robot: BaseRobot) {
      * @return true if correction was applied, false if measurement was rejected
      */
     fun correct(measurement: AbsolutePose): Boolean {
-        val meas = measurement.pose.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
+        val meas = measurement.pose
 
         // Scale measurement noise by confidence (low confidence = high noise)
         // confidence 1.0 -> use base noise, confidence 0.5 -> double the noise
@@ -125,7 +115,7 @@ class KalmanFilter(val robot: BaseRobot) {
         // Innovation (measurement residual): z - h(x)
         val innovX = meas.x - stateX
         val innovY = meas.y - stateY
-        val innovHeading = normalizeAngle(meas.heading - stateHeading)
+        val innovHeading = (meas.heading - stateHeading).normalize()
 
         // Innovation covariance: S = H * P * H^T + R
         // Since H is identity, S = P + R
@@ -142,7 +132,7 @@ class KalmanFilter(val robot: BaseRobot) {
         // Update state estimate: x = x + K * innovation
         stateX += kx * innovX
         stateY += ky * innovY
-        stateHeading = normalizeAngle(stateHeading + kh * innovHeading)
+        stateHeading = (stateHeading + kh * innovHeading).normalize()
 
         // Update covariance: P = (I - K * H) * P
         // For diagonal case: P = (1 - K) * P
@@ -161,21 +151,10 @@ class KalmanFilter(val robot: BaseRobot) {
     /**
      * Get the current state estimate.
      *
-     * @param distanceUnit Desired distance unit for output
-     * @param angleUnit Desired angle unit for output
      * @return Current estimated position
      */
-    fun getEstimate(
-        distanceUnit: DistanceUnit = DistanceUnit.CM,
-        angleUnit: AngleUnit = AngleUnit.RADIANS
-    ): Position {
-        return Position(
-            stateX,
-            stateY,
-            stateHeading,
-            DistanceUnit.CM,
-            AngleUnit.RADIANS
-        ).toDistanceUnit(distanceUnit).toAngleUnit(angleUnit)
+    fun getEstimate(): Position {
+        return Position(stateX, stateY, stateHeading)
     }
 
     /**
@@ -189,15 +168,5 @@ class KalmanFilter(val robot: BaseRobot) {
             sqrt(covariance[4]),  // y std dev
             sqrt(covariance[8])   // heading std dev
         )
-    }
-
-    /**
-     * Normalize angle to [-π, π]
-     */
-    private fun normalizeAngle(angle: Double): Double {
-        var normalized = angle
-        while (normalized > PI) normalized -= 2 * PI
-        while (normalized < -PI) normalized += 2 * PI
-        return normalized
     }
 }

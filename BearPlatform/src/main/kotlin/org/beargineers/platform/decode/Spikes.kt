@@ -1,8 +1,8 @@
 package org.beargineers.platform.decode
 
 import org.beargineers.platform.TileOffset
+import org.beargineers.platform.degrees
 import org.beargineers.platform.tileLocation
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 
 enum class Spike(start: String, end: String) {
     LEFT1("B2", "A2"),
@@ -14,10 +14,10 @@ enum class Spike(start: String, end: String) {
     RIGHT3("E4", "F4");
 
     val left = name.startsWith("LEFT")
-    val heading = if (left) -90.0 else 90.0
+    val heading = (if (left) -90.0 else 90.0).degrees
     val startPose = tileLocation(
         start,
         if (left) TileOffset.CENTER_RIGHT else TileOffset.CENTER_LEFT
-    ).withHeading(heading, AngleUnit.DEGREES)
-    val endPose = tileLocation(end, if (left) TileOffset.CENTER_RIGHT else TileOffset.CENTER_LEFT).withHeading(heading, AngleUnit.DEGREES)
+    ).withHeading(heading)
+    val endPose = tileLocation(end, if (left) TileOffset.CENTER_RIGHT else TileOffset.CENTER_LEFT).withHeading(heading)
 }

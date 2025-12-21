@@ -5,17 +5,12 @@ package org.beargineers.platform
 import com.bylazar.field.PanelsField
 import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import java.util.Properties
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.cosh
 import kotlin.math.hypot
 import kotlin.math.pow
-import kotlin.math.sin
 
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
@@ -81,7 +76,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun isMoving(): Boolean {
         val vel = currentVelocity
-        return abs(vel.forward) + abs(vel.right) + abs(vel.turn) > 0.001
+        return abs(vel.forward).cm() + abs(vel.right).cm() + abs(vel.turn).degrees() > 0.001
     }
 
     override fun loop() {
@@ -108,7 +103,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         }
 
         // Update current position from Kalman filter estimate
-        currentPosition = kalmanFilter.getEstimate(DistanceUnit.CM, AngleUnit.RADIANS)
+        currentPosition = kalmanFilter.getEstimate()
 
         // Display uncertainty for debugging
         val (xStd, yStd, headStd) = kalmanFilter.getUncertainty()
@@ -123,12 +118,11 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     }
 
     private fun drawRobotOnPanelsField() {
-        val cp = currentPosition.toDistanceUnit(DistanceUnit.INCH).toAngleUnit(AngleUnit.RADIANS)
-
-        panelsField.moveCursor(cp.x, cp.y)
+        val cp = currentPosition
+        panelsField.moveCursor(cp.x.inch(), cp.y.inch())
         panelsField.circle(2.0)
 
-        panelsField.moveCursor(cp.x + 3 * cos(cp.heading), cp.y + 3 * sin(cp.heading))
+        panelsField.moveCursor(cp.x.inch() + 3 * cos(cp.heading), cp.y.inch() + 3 * sin(cp.heading))
         panelsField.circle(1.0)
         panelsField.update()
     }
@@ -155,9 +149,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
      * - Power is clamped to safe limits
      *
      * @param target Target pose (position and heading) to drive to
-     * @param positionTolerance Distance threshold in the pose's distance units (default 2.0)
-     * @param headingTolerance Angle threshold in the pose's angle units (default 5.0)
-     * @return true if robot has reached the target within tolerances, false otherwise
+     * @return false if robot has reached the target within tolerances, true otherwise
      *
      * ## Example Usage
      * ```kotlin
@@ -175,9 +167,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
      * ```
      */
     override fun driveToTarget(target: Position, maxSpeed: Double): Boolean {
-        // Make sure current and target positions are in the same units.
-        val cp = currentPosition.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
-        val tp = target.toDistanceUnit(DistanceUnit.CM).toAngleUnit(AngleUnit.RADIANS)
+        val cp = currentPosition
+        val tp = target
 
         // Calculate position error (field frame)
         val deltaX = tp.x - cp.x
@@ -187,18 +178,13 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         val distanceToTarget = hypot(deltaX, deltaY)
 
         // Calculate heading error (normalized to -180 to 180 degrees equivalent)
-        var headingError = tp.heading - cp.heading
-        val halfCircle = PI
-        val fullCircle = halfCircle * 2
-        // Normalize heading error to [-180, 180] or [-π, π]
-        while (headingError > halfCircle) headingError -= fullCircle
-        while (headingError < -halfCircle) headingError += fullCircle
+        val headingError = (tp.heading - cp.heading).normalize()
 
-        telemetry.addData("Distance to target", "%.2f %s".format(distanceToTarget, tp.distanceUnit))
+        telemetry.addData("Distance to target", distanceToTarget)
         telemetry.addData("Heading Error", headingError)
 
         // Check if we've reached the target
-        if (distanceToTarget < positionTolerance && Math.toDegrees(abs(headingError)) < headingTolerance) {
+        if (distanceToTarget.cm() < positionTolerance && abs(headingError).degrees() < headingTolerance) {
             drive.stop()
             return false
         }
@@ -210,9 +196,9 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         val robotRight = deltaX * sin(robotHeadingRad) - deltaY * cos(robotHeadingRad)
 
         // Calculate drive powers using proportional control
-        val forwardPower = robotForward * kP_position
-        val strafePower = robotRight * kP_position
-        val turnPower = -Math.toDegrees(headingError) * kP_heading // Positive power to turn CW, but positive delta heating is CCW
+        val forwardPower = robotForward.cm() * kP_position
+        val strafePower = robotRight.cm() * kP_position
+        val turnPower = -headingError.degrees() * kP_heading // Positive power to turn CW, but positive delta heating is CCW
 
         val maxPower = listOf(forwardPower, strafePower, turnPower).maxOf { abs(it) }
         val maxV = when {
@@ -248,26 +234,24 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         drive.stop()
     }
 
-    fun curveToTarget(target: Position, radius: Double, clockwise: Boolean, radiusDistanceUnit: DistanceUnit, maxSpeed: Double){
+    fun curveToTarget(target: Position, radius: Distance, clockwise: Boolean, maxSpeed: Double){
+        val r = radius
+        val cp = currentPosition
 
-        val r = target.distanceUnit.fromUnit(radiusDistanceUnit, radius)
-
-        val cp = currentPosition.toDistanceUnit(target.distanceUnit)
-
-        val distanceToTarget: Double = hypot((target.x - cp.x), (target.y - cp.y))
-
+        val distanceToTarget = hypot((target.x - cp.x), (target.y - cp.y))
         val t = cosh(1- 0.5*(distanceToTarget/r).pow(2))
-
         val t2: Double = PI/4 - 0.5 * t
+        val curvedDistanceToTarget = t * r
 
-        val curvedDistanceToTarget: Double = t * r
-
-        val vectorHeading: Double = when(clockwise){
-            true -> atan2((target.y - cp.y), (target.x - cp.x)) + (PI/4 - t2)
-            false -> atan2((target.y - cp.y), (target.x - cp.x)) - (PI/4 - t2)
+        val vectorHeading = when(clockwise){
+            true -> atan2((target.y - cp.y), (target.x - cp.x)) + ((PI/4).radians - t2.radians)
+            false -> atan2((target.y - cp.y), (target.x - cp.x)) - ((PI/4).radians - t2.radians)
         }
 
-        val driveTo = Position(curvedDistanceToTarget * cos(vectorHeading), curvedDistanceToTarget * sin(vectorHeading), target.heading, target.distanceUnit, target.angleUnit)
+        val driveTo = Position(
+            curvedDistanceToTarget * cos(vectorHeading),
+            curvedDistanceToTarget * sin(vectorHeading),
+            target.heading)
 
         driveToTarget(driveTo, maxSpeed)
     }

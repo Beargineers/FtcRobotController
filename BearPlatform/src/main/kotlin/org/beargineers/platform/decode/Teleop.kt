@@ -2,17 +2,19 @@ package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
+import org.beargineers.platform.Angle
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.cm
 import org.beargineers.platform.config
+import org.beargineers.platform.cos
+import org.beargineers.platform.degrees
 import org.beargineers.platform.headingToGoal
+import org.beargineers.platform.radians
 import org.beargineers.platform.shootingAngleCorrectionForMovement
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.beargineers.platform.sin
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
 
 open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     val ROTATION_TRIGGER_REDUCTION by robot.config(0.5)
@@ -72,35 +74,29 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val ry = gamepad1.right_stick_y * sign * -1
             val dh = 0.0 + (gamepad1.left_trigger - gamepad1.right_trigger) * ROTATIONAL_GAIN
 
-            val heading = Math.toDegrees(
-                when {
-                    lookAtGoal -> robot.headingToGoal()
-                    abs(ry) + abs(rx) > 0.01 -> atan2(ry.toDouble(), rx.toDouble())
-                    else -> robot.currentPosition.heading
-                }
-            ) + dh
+            val heading: Angle= when {
+                lookAtGoal -> robot.headingToGoal()
+                abs(ry) + abs(rx) > 0.01 -> atan2(ry.toDouble(), rx.toDouble()).radians
+                else -> robot.currentPosition.heading
+            } + dh.degrees
 
-            val deltaPosition = Position(dx, dy, heading - Math.toDegrees(robot.currentPosition.heading),
-                DistanceUnit.CM, AngleUnit.DEGREES)
+            val deltaPosition = Position(dx.cm, dy.cm, heading - robot.currentPosition.heading)
 
             val targetPosition = robot.currentPosition.plus(deltaPosition)
             robot.driveToTarget(targetPosition, if (slow) 0.4 else 1.0)
         }
         else {
-            val h = robot.currentPosition.toAngleUnit(AngleUnit.RADIANS).heading - robot.shootingAngleCorrectionForMovement()
-            val forward = -gamepad1.left_stick_y.normalize()
-            val strafe = gamepad1.left_stick_x.normalize()
-            val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN
-            val dy = (forward * sin(h) - strafe * cos(h)) * POSITIONAL_GAIN
+            val h = robot.currentPosition.heading - robot.shootingAngleCorrectionForMovement()
+            val forward = -gamepad1.left_stick_y.normalize().cm
+            val strafe = gamepad1.left_stick_x.normalize().cm
+            val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN.toDouble()
+            val dy = (forward * sin(h) - strafe * cos(h)) * POSITIONAL_GAIN.toDouble()
 
             val rotation =
-                (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * ROTATION_TRIGGER_REDUCTION).normalize()
-            val heading = Math.toDegrees(
-                if (lookAtGoal) robot.headingToGoal()
-                else robot.currentPosition.heading + rotation
-            )
-            val deltaPosition = Position(dx, dy, heading - Math.toDegrees(robot.currentPosition.heading),
-                DistanceUnit.CM, AngleUnit.DEGREES)
+                (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * ROTATION_TRIGGER_REDUCTION).normalize().degrees
+            val heading = if (lookAtGoal) robot.headingToGoal() else robot.currentPosition.heading + rotation
+
+            val deltaPosition = Position(dx, dy, heading - robot.currentPosition.heading)
 
             val targetPosition = robot.currentPosition.plus(deltaPosition)
             robot.driveToTarget(targetPosition, if (slow) 0.4 else 1.0)

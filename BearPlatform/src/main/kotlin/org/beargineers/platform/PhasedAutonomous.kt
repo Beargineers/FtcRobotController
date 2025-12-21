@@ -1,9 +1,6 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.time.Duration
 
 /**
@@ -235,17 +232,12 @@ class DriveRelative<R: Robot>(val movement: RelativePosition,
     lateinit var targetPosition: Position
 
     override fun R.initPhase() {
-        val cp = currentPosition.toDistanceUnit(movement.distanceUnit).toAngleUnit(AngleUnit.RADIANS)
-        val t = if (movement.angleUnit == AngleUnit.RADIANS) movement.turn else Math.toRadians(movement.turn)
+        val cp = currentPosition
+        val t = movement.turn
         targetPosition = Position(
-            // Forward: all wheels contribute equally
             x = cp.x + movement.forward * cos(cp.heading) + movement.right * sin(cp.heading),
-            // Strafe: diagonal wheels oppose (LF and RB forward = strafe right)
             y = cp.y + movement.forward * sin(cp.heading) - movement.right * cos(cp.heading),
-            // Get yaw in radians to match the angleUnit specification
-            heading = cp.heading + t,
-            distanceUnit = movement.distanceUnit,
-            angleUnit = AngleUnit.RADIANS
+            heading = cp.heading + t
         )
     }
 

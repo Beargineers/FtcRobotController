@@ -4,12 +4,8 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.IMU
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 
@@ -133,7 +129,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
                 val robotDelta = calculateRobotPositionDelta()
                 val positionDelta = positionChange(robotDelta)
                 currentPositionEstimate += positionDelta
-                currentVelocity = RelativePosition(robotDelta.forward / timeDelta, robotDelta.right / timeDelta, robotDelta.turn / timeDelta, robotDelta.distanceUnit, robotDelta.angleUnit)
+                currentVelocity = RelativePosition(robotDelta.forward / timeDelta, robotDelta.right / timeDelta, robotDelta.turn / timeDelta)
             }
 
             previousTime = now
@@ -172,11 +168,9 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
             val right = config.cm_per_tick_strafe * (deltaLF - deltaRF + deltaRB - deltaLB) / (4 * sqrt(2.0))
 
             return RelativePosition(
-                forward = forward,
-                right = right,
-                turn = deltaYaw,
-                distanceUnit = DistanceUnit.CM,
-                angleUnit = AngleUnit.RADIANS
+                forward = forward.cm,
+                right = right.cm,
+                turn = deltaYaw.radians
             ).also {
                 lastLf = lfp
                 lastLb = lbp
@@ -202,17 +196,17 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
         private fun positionChange(move: RelativePosition): Position {
             val (forward, right, deltaYaw) = move
 
-            val N = 10
+            val N = 10.0
             val fn = forward / N
             val rn = right / N
 
-            var deltaX = 0.0
-            var deltaY = 0.0
+            var deltaX = 0.cm
+            var deltaY = 0.cm
 
-            val oldHeading: Double = currentPositionEstimate.toAngleUnit(AngleUnit.RADIANS).heading
+            val oldHeading = currentPositionEstimate.heading
             var heading = oldHeading
 
-            repeat(N) {
+            repeat(N.toInt()) {
                 deltaX += fn * cos(heading) + rn * sin(heading)
                 deltaY += fn * sin(heading) - rn * cos(heading)
 
@@ -225,9 +219,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
                 // Strafe: diagonal wheels oppose (LF and RB forward = strafe right)
                 y = deltaY,
                 // Get yaw in radians to match the angleUnit specification
-                heading = deltaYaw,
-                distanceUnit = DistanceUnit.CM,
-                angleUnit = AngleUnit.RADIANS
+                heading = deltaYaw
             ).normalizeHeading()
         }
     }

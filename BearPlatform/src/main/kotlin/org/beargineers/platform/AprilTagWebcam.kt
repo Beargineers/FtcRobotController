@@ -59,7 +59,7 @@ class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
             .setDrawTagOutline(true)
             .setDrawAxes(true)
             .setDrawCubeProjection(true)
-            .setOutputUnits(DISTANCE_UNIT, ANGLE_UNIT)
+            .setOutputUnits(DistanceUnit.CM, AngleUnit.DEGREES)
             .setCameraPose(cameraPosition, cameraOrientation)
             .build()
 
@@ -105,7 +105,7 @@ class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
     override fun getRobotPose(): AbsolutePose? {
         // Get robot pose based on any AprilTag with metadata with highest confidence
         return getAprilReadings(-1)
-            .map { AbsolutePose(it.robotPose.robotPose(90.0), calculateConfidence(it), it.frameAcquisitionNanoTime) }
+            .map { AbsolutePose(it.robotPose.robotPose(90.degrees), calculateConfidence(it), it.frameAcquisitionNanoTime) }
             .maxByOrNull {it.confidence}
     }
 
@@ -120,7 +120,7 @@ class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
     private fun calculateConfidence(detection: AprilTagDetection): Double {
         // Distance factor: exponential decay from optimal distance
         // Convert range to cm if needed
-        val rangeCm = DistanceUnit.CM.fromUnit(DISTANCE_UNIT, detection.ftcPose.range)
+        val rangeCm = detection.ftcPose.range
 
         // Gaussian-like falloff centered at optimal distance
         val distanceError = abs(rangeCm - optimalDistance)
@@ -129,8 +129,8 @@ class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
 
         // Angle factor: use bearing (horizontal angle) and yaw (tag rotation)
         // Both should be close to 0 for best results
-        val bearingDeg = AngleUnit.DEGREES.fromUnit(ANGLE_UNIT, abs(detection.ftcPose.bearing))
-        val yawDeg = AngleUnit.DEGREES.fromUnit(ANGLE_UNIT, abs(detection.ftcPose.yaw))
+        val bearingDeg = abs(detection.ftcPose.bearing)
+        val yawDeg = abs(detection.ftcPose.yaw)
 
         // Take the worse of the two angles (most limiting factor)
         val effectiveAngle = max(bearingDeg, yawDeg)
@@ -158,13 +158,10 @@ class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
     }
 }
 
-fun Pose3D.robotPose(corrDegrees: Double = 0.0): Position {
-    val offset = ANGLE_UNIT.fromDegrees(corrDegrees)
+fun Pose3D.robotPose(correction: Angle = 0.degrees): Position {
     return Position(
-        position.x,
-        position.y,
-        orientation.getYaw(ANGLE_UNIT) + offset,
-        position.unit,
-        ANGLE_UNIT
+        DistanceUnit.CM.fromUnit(position.unit, position.x).cm,
+        DistanceUnit.CM.fromUnit(position.unit, position.y).cm,
+        orientation.getYaw(AngleUnit.DEGREES).degrees + correction
     )
 }

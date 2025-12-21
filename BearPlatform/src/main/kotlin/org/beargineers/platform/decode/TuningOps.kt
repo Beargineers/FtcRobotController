@@ -9,8 +9,10 @@ import org.beargineers.platform.Phases
 import org.beargineers.platform.RelativePosition
 import org.beargineers.platform.Robot
 import org.beargineers.platform.assumeRobotPosition
+import org.beargineers.platform.degrees
 import org.beargineers.platform.driveRelative
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.inch
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -21,26 +23,26 @@ open class TestOp(phases: Phases<DecodeRobot>) :
 @Autonomous(group = "Tune")
 class Tune_HalfTileLoop : TestOp({
     wait(3.seconds)
-    driveRelative(RelativePosition.forwardInch(12.0))
-    driveRelative(RelativePosition.turnCCW(90.0))
-    driveRelative(RelativePosition.forwardInch(12.0))
-    driveRelative(RelativePosition.turnCCW(90.0))
-    driveRelative(RelativePosition.forwardInch(12.0))
-    driveRelative(RelativePosition.turnCCW(90.0))
-    driveRelative(RelativePosition.forwardInch(12.0))
-    driveRelative(RelativePosition.turnCCW(90.0))
+    driveRelative(RelativePosition.forward(12.inch))
+    driveRelative(RelativePosition.turnCCW(90.degrees))
+    driveRelative(RelativePosition.forward(12.inch))
+    driveRelative(RelativePosition.turnCCW(90.degrees))
+    driveRelative(RelativePosition.forward(12.inch))
+    driveRelative(RelativePosition.turnCCW(90.degrees))
+    driveRelative(RelativePosition.forward(12.inch))
+    driveRelative(RelativePosition.turnCCW(90.degrees))
 })
 
 @Autonomous(group = "Tune")
 class Tune_OneTileLeft : TestOp({
     wait(3.seconds)
-    driveRelative(RelativePosition.rightInch(-24.0))
+    driveRelative(RelativePosition.right(-24.inch))
 })
 
 @Autonomous(group = "Tune")
 class Tune_Turn90CCW : TestOp({
     wait(3.seconds)
-    driveRelative(RelativePosition.turnCCW(90.0))
+    driveRelative(RelativePosition.turnCCW(90.degrees))
 })
 
 @Autonomous(group = "Tune")

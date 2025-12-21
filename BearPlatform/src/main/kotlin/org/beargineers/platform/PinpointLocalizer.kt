@@ -29,30 +29,27 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
 
     override fun updatePositionEstimate(position: Position) {
         with(pinpoint) {
-            setPosX(position.x, position.distanceUnit)
-            setPosY(position.y, position.distanceUnit)
-            setHeading(position.heading, position.angleUnit)
+            setPosX(position.x.cm(), DistanceUnit.CM)
+            setPosY(position.y.cm(), DistanceUnit.CM)
+            setHeading(position.heading.radians(), AngleUnit.RADIANS)
         }
     }
 
     override fun getPosition(): Position {
         with(pinpoint) {
             return Position(
-                x = getPosX(DISTANCE_UNIT),
-                y = getPosY(DISTANCE_UNIT),
-                heading = getHeading(ANGLE_UNIT),
-                distanceUnit = DISTANCE_UNIT,
-                angleUnit = ANGLE_UNIT
+                x = getPosX(DistanceUnit.CM).cm,
+                y = getPosY(DistanceUnit.CM).cm,
+                heading = getHeading(AngleUnit.DEGREES).degrees
             )
         }
     }
 
     override fun getVelocity(): RelativePosition {
         return RelativePosition(
-            pinpoint.getVelX(DISTANCE_UNIT),
-            pinpoint.getVelY(DISTANCE_UNIT),
-            pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES),
-            DISTANCE_UNIT, AngleUnit.DEGREES
+            pinpoint.getVelX(DistanceUnit.CM).cm,
+            pinpoint.getVelY(DistanceUnit.CM).cm,
+            pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES).degrees,
         )
     }
 }
