@@ -45,6 +45,18 @@ class Location(val x: Distance, val y: Distance) {
     override fun toString(): String {
         return String.format(Locale.getDefault(), "(%s %s)", x, y)
     }
+
+    fun distanceTo(other: Position) : Distance {
+        val Other: Location = Location(other.x, other.y)
+        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
+            distanceUnit = DistanceUnit.CM)
+    }
+
+    fun distanceTo(other: Location) : Distance {
+        val Other: Location = Location(other.x, other.y)
+        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
+            distanceUnit = DistanceUnit.CM)
+    }
 }
 
 class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparable<Distance> {
@@ -204,6 +216,18 @@ class Position(val x: Distance, val y: Distance, val heading: Angle) {
     companion object {
         fun zero() : Position = Position(0.cm, 0.cm, 0.degrees)
     }
+
+    fun distanceTo(other: Position) : Distance {
+        val Other: Location = Location(other.x, other.y)
+        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
+            distanceUnit = DistanceUnit.CM)
+    }
+
+    fun distanceTo(other: Location) : Distance {
+        val Other: Location = Location(other.x, other.y)
+        return Distance(abs(hypot((abs(x.cm()) - abs(Other.x.cm())), (abs(y.cm()) - abs(Other.y.cm())))),
+            distanceUnit = DistanceUnit.CM)
+    }
 }
 
 fun Position.toAbsolute(): Position {
@@ -293,6 +317,9 @@ fun DecodeRobot.clearForShooting(): Boolean{
         return currentPosition.heading > headingToGoal() - maxHeadingDeviation && currentPosition.heading < headingToGoal() + maxHeadingDeviation
     }
 
+    fun correctSpeedOfFlywheel(): Boolean{
+        return true
+    }
     // TODO: add a check if the speed if the flywheel is good
-    return inShootingZone() && headingIsAtGoal()
+    return inShootingZone() && headingIsAtGoal() && correctSpeedOfFlywheel()
 }
