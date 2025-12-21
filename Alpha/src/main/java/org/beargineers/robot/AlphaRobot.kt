@@ -9,13 +9,12 @@ import org.beargineers.platform.Location
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RED_PARK
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.abs
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.degrees
 import org.beargineers.platform.goalDistance
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
-import kotlin.math.abs
 
 @Suppress("unused")
 class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRobot {
@@ -29,12 +28,10 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     val shooter = Shooter(this)
     val intake = Intake(this)
     val parkCoords: Location =
-        (if (opMode.alliance == Alliance.BLUE) BLUE_PARK else RED_PARK).toUnit(DistanceUnit.CM)
+        (if (opMode.alliance == Alliance.BLUE) BLUE_PARK else RED_PARK)
 
     override fun loop() {
         super.loop()
-
-
 
         telemetry.addData("Goal distance", goalDistance())
     }
@@ -71,8 +68,8 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     }
 
     override fun park(){
-        val heading = currentPosition.toAngleUnit(AngleUnit.DEGREES).heading
-        val squareAngles = listOf(-180.0, -90.0, 0.0, 90.0, 180.0)
+        val heading = currentPosition.heading
+        val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
         val parkHeading = squareAngles.minBy { abs(it - heading) }
         driveToTarget(parkCoords.withHeading(parkHeading), 1.0)
     }

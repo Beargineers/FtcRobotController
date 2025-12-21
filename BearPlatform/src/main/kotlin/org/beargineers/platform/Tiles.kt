@@ -1,15 +1,5 @@
 package org.beargineers.platform
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.hypot
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
-
 /*
 Tiles are marked vertically 1 (lowest row) through 6 (highest row)
 and A (leftmost column) through F (rightmost column) horizontally, where A6 holds blue goal and F6 holds red goal.
@@ -38,7 +28,7 @@ fun tileLocation(tileCode: String, tileOffset: TileOffset = TileOffset.CENTER): 
     val xIn = ('6' - rowCode[0] - 3) * 24 + (tileOffset.xoffset + 1) * 12
     val yIn = (columnCode[0] - 'A' - 3) * 24 + (tileOffset.yoffset + 1) * 12
 
-    return Location(xIn.toDouble(), yIn.toDouble(), DistanceUnit.INCH).toUnit(DISTANCE_UNIT)
+    return Location(xIn.inch, yIn.inch)
 }
 
 fun tilePosition(code:String): Position {
@@ -57,5 +47,5 @@ fun tilePosition(code:String): Position {
         else -> TileOffset.CENTER
     }
 
-    return tileLocation(tileCode, tileOffset).withHeading(angle.toDouble(), AngleUnit.DEGREES)
+    return tileLocation(tileCode, tileOffset).withHeading(angle.toDouble().degrees)
 }
