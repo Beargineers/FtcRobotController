@@ -258,7 +258,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
 
     val minimalWheelPower by config(0.12)
-    val maximumSpeed by config(1.0)
 
     // Proportional control gains (tune these values for your robot).
     // Too low values will result in robot moving unnecessarily slow
@@ -273,4 +272,147 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     // Minimum confidence threshold to accept vision measurements
     val MIN_VISION_CONFIDENCE by config(0.3)
+
+    // --- Spline Path Following Parameters ---
+
+    // Pure pursuit lookahead distance (how far ahead to aim)
+    val lookaheadDistance by config(20.0) // cm
+
+    // Maximum acceleration/deceleration for path following (cm/s²)
+    val maxPathAcceleration by config(50.0)
+    val maxPathDeceleration by config(60.0)
+
+    // Speed reduction factor based on curvature
+    val curvatureSpeedFactor by config(30.0) // cm (radius at which to slow to ~60%)
+
+    // Path following state
+    private var currentPath: SplinePath? = null
+    private var pathVelocityProfile: VelocityProfile? = null
+    private var currentPathSpeed: Double = 0.0
+    private var lastPathUpdateNanos: Long = 0L
+
+    override fun followSplinePath(
+        target: Position,
+        waypoints: List<Location>,
+        maxSpeed: Double
+    ): Boolean {
+        // Initialize path on first call or if target changed
+        if (currentPath == null || currentPath?.target != target) {
+            currentPath = SplinePath(
+                waypoints = waypoints,
+                target = target,
+                startPosition = currentPosition,
+                tension = 0.5,
+                resolution = 20
+            )
+
+            pathVelocityProfile = VelocityProfile(
+                path = currentPath!!,
+                maxSpeed = maxSpeed,
+                maxAcceleration = maxPathAcceleration,
+                maxDeceleration = maxPathDeceleration,
+                curvatureSpeedFactor = curvatureSpeedFactor
+            )
+
+            currentPathSpeed = 0.0
+            lastPathUpdateNanos = System.nanoTime()
+        }
+
+        val path = currentPath!!
+        val profile = pathVelocityProfile!!
+
+        // Calculate time delta
+        val currentNanos = System.nanoTime()
+        val deltaTime = (currentNanos - lastPathUpdateNanos) / 1e9
+        lastPathUpdateNanos = currentNanos
+
+        // Get path following state (closest point + lookahead point in one call)
+        val currentLocation = currentPosition.location()
+        val followingState = path.getFollowingState(currentLocation, lookaheadDistance.cm)
+
+        val closestPoint = followingState.closestPoint
+        val lookaheadPoint = followingState.lookaheadPoint
+
+        // Calculate remaining distance to target
+        val remainingDistance = path.totalLength - closestPoint.distanceAlongPath
+
+        telemetry.addData("Path Progress", "%.1f%%".format(
+            100.0 * closestPoint.distanceAlongPath / path.totalLength
+        ))
+        telemetry.addData("Remaining", remainingDistance)
+
+        // Check if we've reached the target
+        val distanceToTarget = currentLocation.distanceTo(target.location())
+        val headingError = (target.heading - currentPosition.heading).normalize()
+
+        if (distanceToTarget.cm() < positionTolerance && abs(headingError).degrees() < headingTolerance) {
+            stopDriving()
+            currentPath = null
+            pathVelocityProfile = null
+            return false
+        }
+
+        // Calculate target speed based on velocity profile
+        val targetSpeed = profile.getTargetSpeed(lookaheadPoint, remainingDistance)
+        currentPathSpeed = profile.calculateSmoothedSpeed(currentPathSpeed, targetSpeed, deltaTime)
+
+        telemetry.addData("Path Speed", "%.2f (target: %.2f)".format(currentPathSpeed, targetSpeed))
+        telemetry.addData("Curvature", "%.4f".format(lookaheadPoint.curvature))
+
+        // Pure pursuit: drive toward lookahead point with current path speed
+        val targetPosition = Position(
+            lookaheadPoint.location.x,
+            lookaheadPoint.location.y,
+            lookaheadPoint.heading
+        )
+
+        // Use existing driveToTarget but scale the speed
+        val cp = currentPosition
+        val tp = targetPosition
+
+        // Calculate position error (field frame)
+        val deltaX = tp.x - cp.x
+        val deltaY = tp.y - cp.y
+
+        // Calculate heading error
+        val headingErr = (tp.heading - cp.heading).normalize()
+
+        // Convert field-frame error to robot-frame error
+        val robotHeadingRad = cp.heading
+        val robotForward = deltaX * cos(robotHeadingRad) + deltaY * sin(robotHeadingRad)
+        val robotRight = deltaX * sin(robotHeadingRad) - deltaY * cos(robotHeadingRad)
+
+        // Calculate drive powers - scale by current path speed
+        val speedScale = currentPathSpeed / maxSpeed
+        val forwardPower = robotForward.cm() * kP_position * speedScale
+        val strafePower = robotRight.cm() * kP_position * speedScale
+        val turnPower = -headingErr.degrees() * kP_heading * speedScale
+
+        val maxPower = listOf(abs(forwardPower), abs(strafePower), abs(turnPower)).maxOf { it }
+        val maxV = when {
+            maxPower > maxSpeed -> maxPower / maxSpeed
+            maxPower < minimalWheelPower && maxPower > 1e-6 -> maxPower / minimalWheelPower
+            else -> 1.0
+        }
+
+        fun clamp(value: Double): Double {
+            return if (maxV > 1e-6) value / maxV else 0.0
+        }
+
+        // Apply drive power
+        drive(
+            forwardPower = clamp(forwardPower),
+            rightPower = clamp(strafePower),
+            turnPower = clamp(turnPower)
+        )
+
+        return true
+    }
+
+    override fun stopFollowingPath() {
+        currentPath = null
+        pathVelocityProfile = null
+        currentPathSpeed = 0.0
+        stopDriving()
+    }
 }
