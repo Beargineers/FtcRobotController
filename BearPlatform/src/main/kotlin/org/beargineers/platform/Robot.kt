@@ -37,6 +37,53 @@ interface Robot {
      */
     fun driveToTarget(target: Position, maxSpeed: Double): Boolean
 
+    /**
+     * Follows a spline path to reach a target position with intermediate waypoints.
+     *
+     * This implements sophisticated path following using:
+     * - Catmull-Rom splines for smooth, speed-optimized curves
+     * - Pure pursuit algorithm for path tracking
+     * - Velocity profiling with acceleration/deceleration
+     * - Curvature-based speed adjustment
+     *
+     * Waypoints serve as guide points rather than strict requirements, allowing
+     * the algorithm to optimize the path for maximum speed while maintaining smoothness.
+     *
+     * @param target Target position (location + heading) to reach
+     * @param waypoints List of intermediate waypoints (treated as guidance, not strict points)
+     * @param maxSpeed Maximum speed (0.0 to 1.0, as fraction of robot max speed)
+     * @return false if target reached, true if still following path
+     *
+     * ## Example Usage
+     * ```kotlin
+     * val waypoints = listOf(
+     *     Location(50.cm, 20.cm),
+     *     Location(80.cm, 60.cm)
+     * )
+     * val target = Location(100.cm, 100.cm).withHeading(90.degrees)
+     *
+     * override fun loop() {
+     *     super.loop()
+     *     if (followSplinePath(target, waypoints, maxSpeed = 0.8)) {
+     *         telemetry.addLine("Following path...")
+     *     } else {
+     *         telemetry.addLine("Target reached!")
+     *         stopDriving()
+     *     }
+     * }
+     * ```
+     */
+    fun followSplinePath(
+        target: Position,
+        waypoints: List<Location> = emptyList(),
+        maxSpeed: Double = 1.0
+    ): Boolean
+
+    /**
+     * Stops following the current path
+     */
+    fun stopFollowingPath()
+
     fun drive(forwardPower: Double, rightPower: Double, turnPower: Double, slow: Boolean = false)
 
     fun stopDriving()

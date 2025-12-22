@@ -10,6 +10,7 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.driveToVia
 import org.beargineers.platform.tilePosition
 
 @PhaseDsl
@@ -28,7 +29,7 @@ fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Position) 
         action {
             enableFlywheel(true)
         }
-        driveTo(launchPose)
+        driveToVia(launchPose, listOf(spike.startPose.location()))
         action {
             launch()
         }
