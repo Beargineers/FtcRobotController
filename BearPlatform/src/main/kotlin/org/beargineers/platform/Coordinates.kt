@@ -145,11 +145,11 @@ class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
         return angle.compareTo(angleUnit.fromUnit(other.angleUnit, other.angle))
     }
 
+    // Normalize angle to [-180, 180] or [-π, π]
     fun normalize(): Angle {
         var answer = this
         val halfCircle = PI.radians
         val fullCircle = halfCircle * 2.0
-        // Normalize heading error to [-180, 180] or [-π, π]
         while (answer > halfCircle) answer -= fullCircle
         while (answer < -halfCircle) answer += fullCircle
 
@@ -199,10 +199,7 @@ class Position(val x: Distance, val y: Distance, val heading: Angle) {
     }
 
     fun normalizeHeading() : Position {
-        var h = heading
-        while (h < -PI.radians) h += (2* PI).radians
-        while (h > PI.radians) h -= (2* PI).radians
-        return Position(x, y, h)
+        return Position(x, y, heading.normalize())
     }
 
     override fun toString(): String {
