@@ -57,8 +57,8 @@ interface Robot {
      * ## Example Usage
      * ```kotlin
      * val waypoints = listOf(
-     *     Location(50.cm, 20.cm),
-     *     Location(80.cm, 60.cm)
+     *     Location(50.cm, 20.cm).withHeading(0.degrees),
+     *     Location(80.cm, 60.cm).withHeading(45.degrees)
      * )
      * val target = Location(100.cm, 100.cm).withHeading(90.degrees)
      *
@@ -75,7 +75,7 @@ interface Robot {
      */
     fun followSplinePath(
         target: Position,
-        waypoints: List<Location> = emptyList(),
+        waypoints: List<Position> = emptyList(),
         maxSpeed: Double = 1.0
     ): Boolean
 
