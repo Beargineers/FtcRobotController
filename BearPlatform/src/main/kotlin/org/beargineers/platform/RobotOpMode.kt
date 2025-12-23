@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime
 
 
 abstract class RobotOpMode<out T : Robot>(val alliance: Alliance) : OpMode() {
-    private val allButtons = mutableListOf<Button<T>>()
+    private val allButtons = mutableListOf<Button>()
 
     val robot by lazy { RobotFactory.newRobot(this) }
     private val allHubs by lazy {
@@ -75,11 +75,11 @@ abstract class RobotOpMode<out T : Robot>(val alliance: Alliance) : OpMode() {
         loopsCount++
     }
 
-    fun button(test: () -> Boolean, callback: T.() -> Unit) {
-        allButtons += Button(robot, test).onRelease(callback)
+    fun button(test: () -> Boolean, callback: () -> Unit) {
+        allButtons += Button(test).onRelease(callback)
     }
 
-    fun toggleButton(name: String, test: () -> Boolean, callback: T.(Boolean) -> Unit) {
-        allButtons += ToggleButton(name, robot, test, callback)
+    fun toggleButton(name: String, test: () -> Boolean, callback: (Boolean) -> Unit) {
+        allButtons += ToggleButton(name, telemetry, test, callback)
     }
 }

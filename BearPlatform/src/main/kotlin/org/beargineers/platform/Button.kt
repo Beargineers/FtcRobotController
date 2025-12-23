@@ -1,10 +1,12 @@
 package org.beargineers.platform
 
-open class Button<T: Robot>(val robot: T, val test: () -> Boolean) {
-    private var pressed: Boolean = false
-    private var callback: T.() -> Unit = {}
+import org.firstinspires.ftc.robotcore.external.Telemetry
 
-    fun onRelease(callback: T.() -> Unit): Button<T> {
+open class Button(val test: () -> Boolean) {
+    private var pressed: Boolean = false
+    private var callback: () -> Unit = {}
+
+    fun onRelease(callback: () -> Unit): Button {
         this.callback = callback
         return this
     }
@@ -16,25 +18,23 @@ open class Button<T: Robot>(val robot: T, val test: () -> Boolean) {
         }
         else if (pressed) {
             pressed = false
-            with(robot) {callback()}
+            callback()
         }
     }
 }
 
-class ToggleButton<T: Robot>(val name: String, robot: T, test: () -> Boolean, val toggleCallback: T.(Boolean) -> Unit): Button<T>(robot, test) {
+class ToggleButton(val name: String, val telemetry: Telemetry, test: () -> Boolean, val toggleCallback: (Boolean) -> Unit): Button(test) {
     var value: Boolean = false
 
     init {
         onRelease {
             value = !value
-            with(robot) {
-                toggleCallback(value)
-            }
+            toggleCallback(value)
         }
     }
 
     override fun update() {
         super.update()
-        robot.telemetry.addData(name, if (value) "ON" else "OFF")
+        telemetry.addData(name, if (value) "ON" else "OFF")
     }
 }

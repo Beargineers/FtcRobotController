@@ -28,11 +28,11 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         super.bearInit()
 /*
         toggleButton("Intake", gamepad1::x) { on ->
-            intakeMode(if (on) IntakeMode.ON else IntakeMode.OFF)
+            robot.intakeMode(if (on) IntakeMode.ON else IntakeMode.OFF)
         }
 */
         toggleButton("Intake Reverse", gamepad1::y) { on ->
-            intakeMode(if (on) IntakeMode.REVERSE else IntakeMode.ON)
+            robot.intakeMode(if (on) IntakeMode.REVERSE else IntakeMode.ON)
         }
 
         toggleButton("FPV Drive", gamepad1::b) {
@@ -40,7 +40,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
 /*
         toggleButton("Shooter", gamepad1::a) { on ->
-            enableFlywheel(on)
+            robot.enableFlywheel(on)
         }
 */
         toggleButton("Look At Goal", gamepad1::right_bumper) {
@@ -48,7 +48,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
 
         button(gamepad1::a) {
-            launch()
+            robot.launch()
         }
     }
 
