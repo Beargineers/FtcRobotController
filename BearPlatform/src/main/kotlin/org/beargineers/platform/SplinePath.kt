@@ -18,15 +18,16 @@ import kotlin.math.sqrt
  *
  * Waypoints are treated as guide points rather than strict requirements, allowing
  * the spline to create a smooth, fast path that generally follows the intended direction.
+ * Each waypoint includes heading, allowing precise control of robot orientation along the path.
  *
- * @param waypoints List of intermediate waypoints (not including start/end)
+ * @param waypoints List of intermediate waypoints with positions and headings
  * @param target Final target position (location + heading)
  * @param startPosition Starting position (defaults to current robot position)
  * @param tension Spline tension (0.0 = tight curves, 1.0 = loose curves). Default 0.5.
  * @param resolution Number of points to generate per segment. Default 20.
  */
 data class SplinePath(
-    val waypoints: List<Location>,
+    val waypoints: List<Position>,
     val target: Position,
     val startPosition: Position? = null,
     val tension: Double = 0.5,
@@ -50,23 +51,23 @@ data class SplinePath(
 
     private fun generateSplinePoints(): List<PathPoint> {
         // Build control points list: start -> waypoints -> target
-        val controlPoints = mutableListOf<Location>()
+        val controlPoints = mutableListOf<Position>()
 
         // Add start point
         if (startPosition != null) {
-            controlPoints.add(startPosition.location())
+            controlPoints.add(startPosition)
         }
 
         // Add waypoints
         controlPoints.addAll(waypoints)
 
         // Add target
-        controlPoints.add(target.location())
+        controlPoints.add(target)
 
         if (controlPoints.size < 2) {
             // Not enough points for a spline, just return straight line
             return listOf(
-                PathPoint(controlPoints[0], 0.cm, target.heading, 0.0)
+                PathPoint(controlPoints[0].location(), 0.cm, controlPoints[0].heading, 0.0)
             )
         }
 
@@ -95,22 +96,17 @@ data class SplinePath(
             // Generate points for this segment
             for (j in 0..resolution) {
                 val t = j.toDouble() / resolution
-                val point = catmullRomPoint(p0, p1, p2, p3, t, tension)
+                val point = catmullRomPoint(p0.location(), p1.location(), p2.location(), p3.location(), t, tension)
 
-                // Calculate heading - interpolate to target heading at end
-                val progressRatio = (i + t) / (controlPoints.size - 1)
-                val heading = if (startPosition != null) {
-                    // Interpolate from start heading to target heading
-                    val startH = startPosition.heading.radians()
-                    val targetH = target.heading.radians()
-                    val headingDiff = normalizeAngle(targetH - startH)
-                    (startH + headingDiff * progressRatio).radians
-                } else {
-                    target.heading
-                }
+                // Calculate heading - interpolate between waypoint headings
+                // We're interpolating between p1 and p2 (the actual segment)
+                val startH = p1.heading.radians()
+                val endH = p2.heading.radians()
+                val headingDiff = normalizeAngle(endH - startH)
+                val heading = (startH + headingDiff * t).radians
 
                 // Calculate curvature for speed optimization
-                val curvature = calculateCurvature(p0, p1, p2, p3, t)
+                val curvature = calculateCurvature(p0.location(), p1.location(), p2.location(), p3.location(), t)
 
                 splinePoints.add(PathPoint(point, cumulativeDistance, heading, curvature))
 

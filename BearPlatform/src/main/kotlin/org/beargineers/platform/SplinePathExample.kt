@@ -15,13 +15,14 @@ package org.beargineers.platform
  * Creates a smooth path through multiple waypoints to reach a target.
  * The robot will accelerate smoothly, navigate through the waypoints,
  * and decelerate to the target position.
+ * Each waypoint specifies both position and heading for precise control.
  */
 fun BaseRobot.exampleSimplePath() {
-    // Define waypoints as guide points
+    // Define waypoints with positions and headings
     val waypoints = listOf(
-        Location(30.cm, 20.cm),
-        Location(60.cm, 50.cm),
-        Location(90.cm, 40.cm)
+        Location(30.cm, 20.cm).withHeading(0.degrees),      // Face forward
+        Location(60.cm, 50.cm).withHeading(45.degrees),     // Start turning
+        Location(90.cm, 40.cm).withHeading(90.degrees)      // Face sideways
     )
 
     // Define target with final heading
@@ -71,7 +72,7 @@ fun BaseRobot.exampleParameterTuning() {
     // maxPathDeceleration = 100.0
 
     val waypoints = listOf(
-        Location(50.cm, 25.cm)
+        Location(50.cm, 25.cm).withHeading(45.degrees)  // Turn while moving
     )
     val target = Location(100.cm, 50.cm).withHeading(0.degrees)
 
@@ -84,7 +85,9 @@ fun BaseRobot.exampleParameterTuning() {
 fun BaseRobot.exampleEmergencyStop() {
     // Start following a path
     val target = Location(100.cm, 100.cm).withHeading(0.degrees)
-    val waypoints = listOf(Location(50.cm, 50.cm))
+    val waypoints = listOf(
+        Location(50.cm, 50.cm).withHeading(45.degrees)
+    )
 
     if (followSplinePath(target, waypoints)) {
         // Check for emergency condition
@@ -92,6 +95,27 @@ fun BaseRobot.exampleEmergencyStop() {
         //     stopFollowingPath()
         //     telemetry.addLine("Emergency stop!")
         // }
+    }
+}
+
+/**
+ * Example 5: Precise heading control along the path
+ *
+ * Demonstrates using waypoint headings to control robot orientation
+ * throughout the path - useful for intake positioning, vision tracking, etc.
+ */
+fun BaseRobot.examplePreciseHeadingControl() {
+    // Robot faces forward, then rotates to face target while moving
+    val waypoints = listOf(
+        Location(30.cm, 10.cm).withHeading(0.degrees),      // Face forward
+        Location(60.cm, 30.cm).withHeading(90.degrees),     // Face right
+        Location(90.cm, 50.cm).withHeading(180.degrees)     // Face backward
+    )
+
+    val target = Location(120.cm, 70.cm).withHeading(270.degrees)  // Face left at end
+
+    if (followSplinePath(target, waypoints, maxSpeed = 0.6)) {
+        telemetry.addLine("Rotating smoothly while following path...")
     }
 }
 

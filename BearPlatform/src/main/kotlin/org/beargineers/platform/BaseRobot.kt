@@ -293,7 +293,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun followSplinePath(
         target: Position,
-        waypoints: List<Location>,
+        waypoints: List<Position>,
         maxSpeed: Double
     ): Boolean {
         // Initialize path on first call or if target changed
