@@ -61,11 +61,11 @@ class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparab
     }
 
     operator fun plus(other: Distance): Distance {
-        return Distance(distance + distanceUnit.fromUnit(other.distanceUnit, other.distance), distanceUnit)
+        return Distance(distance + toMyUnit(other), distanceUnit)
     }
 
     operator fun minus(other: Distance): Distance {
-        return Distance(distance - distanceUnit.fromUnit(other.distanceUnit, other.distance), distanceUnit)
+        return Distance(distance - toMyUnit(other), distanceUnit)
     }
 
     operator fun times(other: Double): Distance {
@@ -77,7 +77,7 @@ class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparab
     }
 
     operator fun div(other: Distance): Double {
-        return distance / distanceUnit.fromUnit(other.distanceUnit, other.distance)
+        return distance / toMyUnit(other)
     }
 
     operator fun unaryMinus(): Distance {
@@ -85,7 +85,11 @@ class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparab
     }
 
     override fun compareTo(other: Distance): Int {
-        return distance.compareTo(distanceUnit.fromUnit(other.distanceUnit, other.distance))
+        return distance.compareTo(toMyUnit(other))
+    }
+
+    private fun toMyUnit(other: Distance): Double {
+        return distanceUnit.fromUnit(other.distanceUnit, other.distance)
     }
 
     fun cm() : Double = DistanceUnit.CM.fromUnit(distanceUnit, distance)
@@ -118,11 +122,11 @@ class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
     }
 
     operator fun plus(other: Angle): Angle {
-        return Angle(angle + angleUnit.fromUnit(other.angleUnit, other.angle), angleUnit)
+        return Angle(angle + toMyUnit(other), angleUnit)
     }
 
     operator fun minus(other: Angle): Angle {
-        return Angle(angle - angleUnit.fromUnit(other.angleUnit, other.angle), angleUnit)
+        return Angle(angle - toMyUnit(other), angleUnit)
     }
 
     operator fun times(other: Double): Angle {
@@ -134,7 +138,7 @@ class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
     }
 
     operator fun div(other: Angle): Double {
-        return angle / angleUnit.fromUnit(other.angleUnit, other.angle)
+        return angle / toMyUnit(other)
     }
 
     operator fun unaryMinus(): Angle {
@@ -142,7 +146,19 @@ class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
     }
 
     override fun compareTo(other: Angle): Int {
-        return angle.compareTo(angleUnit.fromUnit(other.angleUnit, other.angle))
+        return angle.compareTo(toMyUnit(other))
+    }
+
+    private fun toMyUnit(other: Angle): Double {
+        return other.toUnit(angleUnit)
+    }
+
+    private fun toUnit(unit: AngleUnit): Double {
+        return when (unit) {
+            angleUnit -> angle
+            AngleUnit.RADIANS -> Math.toRadians(angle)
+            AngleUnit.DEGREES -> Math.toDegrees(angle)
+        }
     }
 
     // Normalize angle to [-180, 180] or [-π, π]
@@ -156,8 +172,8 @@ class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
         return answer
     }
 
-    fun radians(): Double = AngleUnit.RADIANS.fromUnit(angleUnit, angle)
-    fun degrees(): Double = AngleUnit.DEGREES.fromUnit(angleUnit, angle)
+    fun radians(): Double = toUnit(AngleUnit.RADIANS)
+    fun degrees(): Double = toUnit(AngleUnit.DEGREES)
 }
 
 fun sin(theta: Angle): Double {
