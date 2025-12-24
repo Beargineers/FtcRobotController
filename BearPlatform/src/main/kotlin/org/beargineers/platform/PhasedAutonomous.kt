@@ -227,18 +227,18 @@ fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
     phase(GotoPosePhase(pose, maxSpeed))
 }
 
-class GotoPositionViaPhase(val target: Position, val waypoints: List<Location>, val maxSpeed: Double): AutonomousPhase<Robot> {
+class GotoPositionViaPhase(val waypoints: List<Position>, val maxSpeed: Double): AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return followSplinePath(target, waypoints, maxSpeed)
+        return followPath(Path(waypoints), maxSpeed)
     }
 }
 
 @PhaseDsl
-fun PhaseBuilder<*>.driveToVia(target: Position, waypoints: List<Location>, maxSpeed: Double = 1.0) {
-    phase(GotoPositionViaPhase(target, waypoints, maxSpeed))
+fun PhaseBuilder<*>.followPath(waypoints: List<Position>, maxSpeed: Double = 1.0) {
+    phase(GotoPositionViaPhase(waypoints, maxSpeed))
 }
 
 class DriveRelative<R: Robot>(val movement: RelativePosition,
