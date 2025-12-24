@@ -125,17 +125,16 @@ data class Path(
                 )
 
                 val prev = splinePoints.lastOrNull()
-                val pathPoint = PathPoint(point, cumulativeDistance, heading, curvature)
 
                 if (prev != null) {
                     val distance = prev.location.distanceTo(point)
-                    if (distance > 1.cm) {
-                        cumulativeDistance += distance
-                        splinePoints.add(pathPoint)
+                    cumulativeDistance += distance
+                    if (distance > 0.1.cm) {
+                        splinePoints.add(PathPoint(point, cumulativeDistance, heading, curvature))
                     }
                 }
                 else {
-                    splinePoints.add(pathPoint)
+                    splinePoints.add(PathPoint(point, cumulativeDistance, heading, curvature))
                 }
             }
         }
