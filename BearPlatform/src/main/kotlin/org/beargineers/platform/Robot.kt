@@ -38,7 +38,11 @@ interface Robot {
     fun driveToTarget(target: Position, maxSpeed: Double): Boolean
 
     /**
-     * Follows a spline path to reach a target position with intermediate waypoints.
+     * Follows a Path instance.
+     *
+     * Create a Path object once and pass the same instance to this method in your loop.
+     * The Path maintains its own following state, so you can pause/resume or follow
+     * multiple paths by switching between different Path instances.
      *
      * This implements sophisticated path following using:
      * - Catmull-Rom splines for smooth, speed-optimized curves
@@ -46,36 +50,30 @@ interface Robot {
      * - Velocity profiling with acceleration/deceleration
      * - Curvature-based speed adjustment
      *
-     * Waypoints serve as guide points rather than strict requirements, allowing
-     * the algorithm to optimize the path for maximum speed while maintaining smoothness.
-     *
-     * @param target Target position (location + heading) to reach
-     * @param waypoints List of intermediate waypoints (treated as guidance, not strict points)
+     * @param path Path instance to follow
      * @param maxSpeed Maximum speed (0.0 to 1.0, as fraction of robot max speed)
      * @return false if target reached, true if still following path
      *
      * ## Example Usage
      * ```kotlin
-     * val waypoints = listOf(
+     * // Create path once (e.g., as class property)
+     * val myPath = Path(listOf(
      *     Location(50.cm, 20.cm).withHeading(0.degrees),
-     *     Location(80.cm, 60.cm).withHeading(45.degrees)
-     * )
-     * val target = Location(100.cm, 100.cm).withHeading(90.degrees)
+     *     Location(100.cm, 100.cm).withHeading(90.degrees)
+     * ))
      *
      * override fun loop() {
      *     super.loop()
-     *     if (followSplinePath(target, waypoints, maxSpeed = 0.8)) {
+     *     if (followPath(myPath, maxSpeed = 0.8)) {
      *         telemetry.addLine("Following path...")
      *     } else {
      *         telemetry.addLine("Target reached!")
-     *         stopDriving()
      *     }
      * }
      * ```
      */
-    fun followSplinePath(
-        target: Position,
-        waypoints: List<Position> = emptyList(),
+    fun followPath(
+        path: Path,
         maxSpeed: Double = 1.0
     ): Boolean
 
