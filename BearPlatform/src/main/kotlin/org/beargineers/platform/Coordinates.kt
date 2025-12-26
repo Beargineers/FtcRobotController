@@ -57,7 +57,7 @@ class Location(val x: Distance, val y: Distance) {
 
 class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparable<Distance> {
     override fun toString(): String {
-        return String.format(Locale.US, "%.3f%s", distance, distanceUnit)
+        return String.format(Locale.US, "%.1fcm", DistanceUnit.CM.fromUnit(distanceUnit, distance))
     }
 
     operator fun plus(other: Distance): Distance {
@@ -118,7 +118,7 @@ fun abs(x: Distance): Distance {
 
 class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
     override fun toString(): String {
-        return String.format(Locale.US, "%.3f%s", angle, angleUnit)
+        return String.format(Locale.US, "%.1fº", toUnit(AngleUnit.DEGREES))
     }
 
     operator fun plus(other: Angle): Angle {
