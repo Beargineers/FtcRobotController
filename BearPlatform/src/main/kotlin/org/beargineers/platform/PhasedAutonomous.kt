@@ -228,11 +228,12 @@ fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
 }
 
 class GotoPositionViaPhase(val waypoints: List<Position>, val maxSpeed: Double): AutonomousPhase<Robot> {
+    val path = Path(waypoints)
     override fun Robot.initPhase() {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return followPath(Path(waypoints), maxSpeed)
+        return followPath(path, maxSpeed)
     }
 }
 
