@@ -154,10 +154,10 @@ internal class PathFollower(
         val targetSpeed = velocityProfile.getTargetSpeed(lookaheadPoint, remainingDistance)
         currentSpeed = velocityProfile.calculateSmoothedSpeed(currentSpeed, targetSpeed, deltaTime)
 
-        robot.telemetry.addData("Path Progress", "%.1f%%".format(100.0 * progress))
+        robot.telemetry.addData("Path Progress", "%.1f%%", 100.0 * progress)
         robot.telemetry.addData("Remaining", remainingDistance)
-        robot.telemetry.addData("Path Speed", "%.2f (target: %.2f)".format(currentSpeed, targetSpeed))
-        robot.telemetry.addData("Curvature", "%.4f".format(lookaheadPoint.curvature))
+        robot.telemetry.addData("Path Speed", "%.2f (target: %.2f)", currentSpeed, targetSpeed)
+        robot.telemetry.addData("Curvature", "%.4f", lookaheadPoint.curvature)
 
         if (finished) {
             robot.stopDriving()
