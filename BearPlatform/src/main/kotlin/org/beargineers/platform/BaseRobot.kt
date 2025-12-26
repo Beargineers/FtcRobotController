@@ -34,11 +34,10 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
 
-    private val initialConfigText: String  = opMode.hardwareMap.appContext.resources.openRawResource(configResource).reader().readText()
-    internal var currentConfigText = initialConfigText
+    internal var currentConfigText = ""
     private set
 
-    private var configs = readConfigs()
+    private var configs = Properties()
 
     private fun readConfigs(): Properties {
         val defaults = Properties().apply {
@@ -60,6 +59,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     }
 
     override fun init() {
+        updateConfigText(opMode.hardwareMap.appContext.resources.openRawResource(configResource).reader().readText())
         allHardware.forEach {
             it.init()
         }
@@ -112,7 +112,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             hypot(xStd, yStd),
             Math.toDegrees(headStd)
         ))
-        telemetry.addData("Velocity", "%.2f cm/s", hypot(currentVelocity.forward, currentVelocity.right))
+        telemetry.addData("Velocity", "%s/s", hypot(currentVelocity.forward, currentVelocity.right))
 
         drawRobotOnPanelsField()
     }

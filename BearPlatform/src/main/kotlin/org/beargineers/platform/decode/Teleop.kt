@@ -93,8 +93,8 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val dy = (forward * sin(h) - strafe * cos(h)) * POSITIONAL_GAIN.toDouble()
 
             val rotation =
-                (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * ROTATION_TRIGGER_REDUCTION).normalize().degrees
-            val heading = if (lookAtGoal) robot.headingToGoal() else robot.currentPosition.heading + rotation
+                (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * ROTATION_TRIGGER_REDUCTION).normalize().degrees*90.0
+            val heading = if (lookAtGoal) robot.headingToGoal() else robot.currentPosition.heading - rotation
 
             val deltaPosition = Position(dx, dy, heading - robot.currentPosition.heading)
 
