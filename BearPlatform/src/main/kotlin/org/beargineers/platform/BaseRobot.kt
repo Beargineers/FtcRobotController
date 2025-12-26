@@ -278,7 +278,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         maxSpeed: Double
     ): Boolean {
         // Check if this is a new path (different instance)
-        if (currentFollower?.path !== path) {
+        if (currentFollower?.path != path) {
             // Create new PathFollower for this path
             currentFollower = PathFollower(
                 path = path,
