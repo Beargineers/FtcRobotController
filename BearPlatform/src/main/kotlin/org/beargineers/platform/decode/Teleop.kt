@@ -23,8 +23,9 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     val ROTATIONAL_GAIN by robot.config(50)
     var fpvDrive = false
     var lookAtGoal = false
-    var goToShootZoneMode = false
-
+    var interferenceFromDriver = false
+    var goToShootingZone = false
+    var parkMode = false
     override fun bearInit() {
         super.bearInit()
 /*
@@ -38,24 +39,30 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
 
         toggleButton("FPV Drive", gamepad1::b) {
             fpvDrive = it
-            goToShootZoneMode = false
+            interferenceFromDriver = true
         }
 /*
         toggleButton("Shooter", gamepad1::a) { on ->
             robot.enableFlywheel(on)
         }
 */
-        toggleButton("Look At Goal", gamepad1::right_bumper) {
-            lookAtGoal = it
-            goToShootZoneMode = false
+        button(gamepad1::right_bumper) {
+            lookAtGoal = true
+            interferenceFromDriver = true
         }
 
         button(gamepad1::x){
-            goToShootZoneMode = true
+            goToShootingZone = true
+            interferenceFromDriver = false
         }
 
         button(gamepad1::a) {
             robot.launch()
+        }
+
+        button(gamepad1::left_bumper){
+            parkMode = true
+            interferenceFromDriver = false
         }
     }
 
@@ -71,13 +78,22 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
 
         val slow = gamepad1.left_bumper
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
-        telemetry.addData("Going to goal", if(goToShootZoneMode) "YES" else "NO")
+        telemetry.addData("Going to goal", if(goToShootingZone) "YES" else "NO")
         // check if sticks are being touched
         if ((gamepad1.left_stick_x.toDouble() != 0.0) || (gamepad1.right_stick_x.toDouble() != 0.0) || (gamepad1.left_stick_y.toDouble() != 0.0) || (gamepad1.right_stick_y.toDouble() != 0.0)){
-            goToShootZoneMode = false
+            interferenceFromDriver = true
         }
-        if (goToShootZoneMode){
+        if (gamepad1.right_stick_x.toDouble() != 0.0){
+            lookAtGoal = false
+        }
+        if (interferenceFromDriver){
+            goToShootingZone = false
+            parkMode = false
+        }
+        if (goToShootingZone){
             robot.driveToTarget(robot.closestPointInShootingZone().withHeading(robot.headingToGoal()), 1.0)
+        }else if(parkMode) {
+            robot.park()
         }else {
             if (!fpvDrive) {
                 val sign = if (alliance == Alliance.BLUE) -1 else 1
