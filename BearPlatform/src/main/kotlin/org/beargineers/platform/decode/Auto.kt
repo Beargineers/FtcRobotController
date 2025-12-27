@@ -9,8 +9,8 @@ import org.beargineers.platform.Alliance
 object AutonomousPrograms {
     var RedSouth  = "D1:+180,D1:+160"
     var BlueSouth = "C1:+180,C1:-160"
-    var RedNorth  = "F6BL:0,D4:+135"
-    var BlueNorth = "A6BR:0,C4:-135"
+    var RedNorth  = "F6BL:+135,D4:+135"
+    var BlueNorth = "A6BR:-135,C4:-135"
 }
 
 @Autonomous
