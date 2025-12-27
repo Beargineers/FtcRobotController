@@ -5,7 +5,6 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.BLUE_OPEN_GATE
 import org.beargineers.platform.BLUE_OPEN_GATE_APPROACH
-import org.beargineers.platform.Button
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.PhasedAutonomous
