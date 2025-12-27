@@ -60,6 +60,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun init() {
         updateConfigText(opMode.hardwareMap.appContext.resources.openRawResource(configResource).reader().readText())
+        SettingsWebServer.initRobot(this)
         allHardware.forEach {
             it.init()
         }

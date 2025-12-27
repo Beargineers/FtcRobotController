@@ -2,7 +2,24 @@ package org.beargineers.platform
 
 import fi.iki.elonen.NanoHTTPD
 
-class SettingsWebServer(val robot: Robot, port: Int) : NanoHTTPD(port) {
+object SettingsWebServer : NanoHTTPD(9000) {
+    var configText = ""
+    var robot: BaseRobot? = null
+
+    init {
+        start()
+    }
+
+    fun initRobot(r: BaseRobot) {
+        robot = r
+        if (configText.isBlank()) {
+            configText = robot!!.currentConfigText
+        }
+        else {
+            robot!!.updateConfigText(configText)
+        }
+    }
+
     override fun serve(session: IHTTPSession): Response {
         val uri = session.uri
 
@@ -34,7 +51,7 @@ class SettingsWebServer(val robot: Robot, port: Int) : NanoHTTPD(port) {
             ""
         }
 
-        val configText = escapeHtml((robot as BaseRobot).currentConfigText)
+        val configText = escapeHtml(configText)
         val html = """
             <!DOCTYPE html>
             <html>
@@ -153,8 +170,8 @@ class SettingsWebServer(val robot: Robot, port: Int) : NanoHTTPD(port) {
         }
 
         // Get the settings value from the form
-        val newSettings = session.parameters["settings"]?.firstOrNull() ?: ""
-        (robot as BaseRobot).updateConfigText(newSettings)
+        configText = session.parameters["settings"]?.firstOrNull() ?: ""
+        robot?.updateConfigText(configText)
 
         // Respond with the settings form again, but with success message
         return serveSettingsForm(showSuccessMessage = true)
