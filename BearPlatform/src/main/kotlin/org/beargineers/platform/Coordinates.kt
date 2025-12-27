@@ -8,7 +8,9 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.cosh
 import kotlin.math.hypot
+import kotlin.math.pow
 import kotlin.math.sin
 
 /*
@@ -237,36 +239,21 @@ class Position(val x: Distance, val y: Distance, val heading: Angle) {
     }
 }
 
-fun Position.toAbsolute(): Position {
+fun Location.toAbsolute(cp: Position): Location {
     val magnitude = hypot(x, y)
     val absoluteH = atan2(y,x)
-    val absH = absoluteH + heading
-    val absX = magnitude * cos(absH)
-    val absY = magnitude * sin(absH)
-    return Position(absX, absY, absH)
-}
-
-fun Position.toRelative(): Position {
-    val magnitude = hypot(x, y)
-    val absoluteH = atan2(y,x)
-    val relH = absoluteH - heading
-    val relX = magnitude * cos(relH)
-    val relY = magnitude * sin(relH)
-    return Position(relX, relY, relH)
-}
-fun Location.toAbsolute(heading: Angle): Location {
-    val magnitude = hypot(x, y)
-    val absoluteH = atan2(y,x)
-    val absH = absoluteH + heading
+    val absH = absoluteH + cp.heading
     val absX = cos(absH)*magnitude
     val absY = sin(absH)*magnitude
-    return Location(absX, absY)
+    return Location(absX + cp.x, absY + cp.y)
 }
 
-fun Location.toRelative(heading: Angle): Location {
+fun Location.toRelative(cp: Position): Location {
+    val x = x - cp.x
+    val y = y - cp.y
     val magnitude = hypot(x, y)
     val absoluteH = atan2(y,x)
-    val relH = absoluteH - heading
+    val relH = absoluteH - cp.heading
     val relX = cos(relH)*magnitude
     val relY = sin(relH)*magnitude
     return Location(relX, relY)
@@ -289,8 +276,8 @@ fun DecodeRobot.headingToGoal(): Angle {
     val dy = goal.y - cp.y
     return atan2(dy, dx) + shootingAngleCorrectionForMovement()
 }
+fun DecodeRobot.inShootingZone(): Boolean{
 
-fun DecodeRobot.clearForShooting(): Boolean{
     fun pointInShootingZone(p: Location): Boolean{
         return if (p.x > 0.inch){ // far shooting zones
             if (p.y > 0.inch){ // red far shooting zone
@@ -307,16 +294,16 @@ fun DecodeRobot.clearForShooting(): Boolean{
         }
     }
 
-    fun inShootingZone(): Boolean{
-        val xFromCenter = 7.cm
-        val yFromCenter = 7.cm
-        val fr = Location(xFromCenter,yFromCenter).toAbsolute(currentPosition.heading)
-        val fl = Location(-xFromCenter,yFromCenter).toAbsolute(currentPosition.heading)
-        val br = Location(xFromCenter,-yFromCenter).toAbsolute(currentPosition.heading)
-        val bl = Location(-xFromCenter,-yFromCenter).toAbsolute(currentPosition.heading)
-        return pointInShootingZone(fr) || pointInShootingZone(fl) || pointInShootingZone(br) || pointInShootingZone(bl)
-    }
+    val xFromCenter = 7.cm
+    val yFromCenter = 7.cm
+    val fr = Location(xFromCenter,yFromCenter).toAbsolute(currentPosition)
+    val fl = Location(-xFromCenter,yFromCenter).toAbsolute(currentPosition)
+    val br = Location(xFromCenter,-yFromCenter).toAbsolute(currentPosition)
+    val bl = Location(-xFromCenter,-yFromCenter).toAbsolute(currentPosition )
+    return pointInShootingZone(fr) || pointInShootingZone(fl) || pointInShootingZone(br) || pointInShootingZone(bl)
+}
 
+fun DecodeRobot.clearForShooting(): Boolean{
     fun headingIsAtGoal(): Boolean{
         val sideDistanceDeviation = 15.cm
         val distanceToGoal = goalDistance()
@@ -324,6 +311,42 @@ fun DecodeRobot.clearForShooting(): Boolean{
         return currentPosition.heading > headingToGoal() - maxHeadingDeviation && currentPosition.heading < headingToGoal() + maxHeadingDeviation
     }
 
+    fun flySpeedIsCorrect(): Boolean{
+        return true
+    }
     // TODO: add a check if the speed if the flywheel is good
-    return inShootingZone() && headingIsAtGoal()
+    return inShootingZone() && headingIsAtGoal() && flySpeedIsCorrect()
+}
+
+fun DecodeRobot.closestPointInShootingZone (): Location{
+    if (inShootingZone()){
+        return currentPosition.location()
+    }
+    val alliance = opMode.alliance
+    val far = if (alliance == Alliance.BLUE){
+        Location(55.inch, (-12).inch) // BLUE
+    }
+    else {
+         Location(60.inch, 12.inch) // RED
+    }
+
+    val close = if (currentPosition.y <= 0.cm){ // blue side
+        if (currentPosition.y < -currentPosition.x){
+            Location((currentPosition.x + currentPosition.y)*0.5, (currentPosition.x + currentPosition.y)*0.5)
+        } else {
+            Location(0.cm, 0.cm)
+        }
+    } else { // RED side
+        if (currentPosition.y > currentPosition.x) {
+            Location((currentPosition.y - currentPosition.x)*0.5, -(currentPosition.y - currentPosition.x)*0.5)
+        }else{
+            Location(0.cm, 0.cm)
+        }
+    }
+
+    return if (currentPosition.location().distanceTo(close) < currentPosition.location().distanceTo(far)){
+        close
+    } else {
+        far
+    }
 }
