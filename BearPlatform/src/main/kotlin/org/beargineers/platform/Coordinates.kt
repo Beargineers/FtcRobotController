@@ -8,9 +8,7 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
-import kotlin.math.cosh
 import kotlin.math.hypot
-import kotlin.math.pow
 import kotlin.math.sin
 
 /*
