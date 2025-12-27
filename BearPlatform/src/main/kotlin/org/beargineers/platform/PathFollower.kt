@@ -46,8 +46,6 @@ internal class PathFollower(
 
     // Velocity profile for this path
     private val velocityProfile: VelocityProfile = VelocityProfile(
-        path = path,
-        spline = spline,
         maxSpeed = maxSpeed,
         maxAcceleration = maxPathAcceleration,
         maxDeceleration = maxPathDeceleration,
@@ -243,8 +241,6 @@ internal class PathFollower(
  * Manages velocity profile along a path with smooth acceleration/deceleration.
  */
 internal class VelocityProfile(
-    private val path: Path,
-    private val spline: SplineRepresentation,
     private val maxSpeed: Double,
     private val maxAcceleration: Double,
     private val maxDeceleration: Double,
