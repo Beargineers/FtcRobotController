@@ -27,8 +27,6 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     val aprilTags = AprilTagWebcam(this)
     val shooter = Shooter(this)
     val intake = Intake(this)
-    val parkCoords: Location =
-        (if (opMode.alliance == Alliance.BLUE) BLUE_PARK else RED_PARK)
 
     override fun loop() {
         super.loop()
@@ -68,6 +66,8 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     }
 
     override fun park(){
+        val parkCoords: Location =
+            (if (opMode.alliance == Alliance.BLUE) BLUE_PARK else RED_PARK)
         val heading = currentPosition.heading
         val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
         val parkHeading = squareAngles.minBy { abs(it - heading) }
