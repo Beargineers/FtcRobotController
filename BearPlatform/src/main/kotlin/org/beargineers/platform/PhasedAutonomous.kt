@@ -228,7 +228,7 @@ fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
 }
 
 class GotoPositionViaPhase(val waypoints: List<Position>, val maxSpeed: Double): AutonomousPhase<Robot> {
-    val path = Path(waypoints)
+    val path = Path(waypoints, resolution = 100)
     override fun Robot.initPhase() {
     }
 
@@ -413,7 +413,7 @@ class DoWhilePhase<R: Robot>(
  * ```
  */
 @PhaseDsl
-class DoWhileBuilder<R: Robot> {
+class DoWhileBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
     private var conditionBlock: (R.() -> Boolean)? = null
     private var whilePhases: Phases<R>? = null
     private var thenPhases: Phases<R>? = null
@@ -460,11 +460,11 @@ class DoWhileBuilder<R: Robot> {
         val thenBlock = thenPhases
             ?: throw IllegalStateException("doWhile '$name' requires a then block")
 
-        val whileBuilder = PhaseBuilder<R>()
+        val whileBuilder = PhaseBuilder<R>(opMode)
         whileBuilder.whileBlock()
         val whilePhase = SequentialPhase("$name:while", whileBuilder.build())
 
-        val thenBuilder = PhaseBuilder<R>()
+        val thenBuilder = PhaseBuilder<R>(opMode)
         thenBuilder.thenBlock()
         val thenPhase = SequentialPhase("$name:then", thenBuilder.build())
 
@@ -544,7 +544,7 @@ typealias Phases<Robot> = PhaseBuilder<Robot>.() -> Unit
  * Builder class for constructing phases using a Kotlin DSL.
  */
 @PhaseDsl
-class PhaseBuilder<R: Robot> {
+class PhaseBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
     private val phases = mutableListOf<AutonomousPhase<R>>()
 
     /**
@@ -567,7 +567,7 @@ class PhaseBuilder<R: Robot> {
      * @param phases A lambda that builds the child phases
      */
     fun seq(name: String, phases: Phases<R>) {
-        val builder = PhaseBuilder<R>()
+        val builder = PhaseBuilder<R>(opMode)
         builder.phases()
         this@PhaseBuilder.phases.add(SequentialPhase(name, builder.build()))
     }
@@ -583,7 +583,7 @@ class PhaseBuilder<R: Robot> {
      * @param phases A lambda that builds the child phases
      */
     fun par(name: String, phases: Phases<R>) {
-        val builder = PhaseBuilder<R>()
+        val builder = PhaseBuilder<R>(opMode)
         builder.phases()
         this@PhaseBuilder.phases.add(ParallelPhase(name, builder.build()))
     }
@@ -612,7 +612,7 @@ class PhaseBuilder<R: Robot> {
      * @param block A lambda that configures the condition and phases
      */
     fun doWhile(name: String, block: DoWhileBuilder<R>.() -> Unit) {
-        val builder = DoWhileBuilder<R>()
+        val builder = DoWhileBuilder<R>(opMode)
         builder.block()
         this@PhaseBuilder.phases.add(builder.build(name))
     }
@@ -627,7 +627,7 @@ class PhaseBuilder<R: Robot> {
 
 abstract class PhasedAutonomous<R: Robot>(alliance: Alliance, phases: Phases<R>) : RobotOpMode<R>(alliance) {
     val rootPhase by lazy {
-        val builder = PhaseBuilder<R>()
+        val builder = PhaseBuilder<R>(this)
         with(builder) {
             phases()
         }
