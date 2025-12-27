@@ -67,8 +67,7 @@ internal class PathFollower(
      */
     fun getFollowingState(currentLocation: Location): PathFollowingState {
         // Only search forward from last known position
-        // Allow searching a bit backward (20 points) in case robot got pushed back
-        val searchStart = max(0, lastClosestPointIndex - 20)
+        val searchStart = lastClosestPointIndex
 
         // Limit search window based on lookahead distance to prevent jumping ahead
         // Search 3x lookahead distance worth of path points
@@ -99,10 +98,11 @@ internal class PathFollower(
 
                 val x = curr.location.x + (next.location.x - curr.location.x) * ratio
                 val y = curr.location.y + (next.location.y - curr.location.y) * ratio
+                val distance = curr.distanceAlongPath + (next.distanceAlongPath - curr.distanceAlongPath) * ratio
                 val heading = curr.heading + (next.heading - curr.heading) * ratio
                 val curvature = curr.curvature + (next.curvature - curr.curvature) * ratio
 
-                val lookaheadPoint = PathPoint(Location(x, y), curr.distanceAlongPath, heading, curvature)
+                val lookaheadPoint = PathPoint(Location(x, y), distance, heading, curvature)
                 return PathFollowingState(closestPoint, closestIdx, lookaheadPoint)
             }
 
@@ -123,7 +123,7 @@ internal class PathFollower(
     fun update(): Boolean {
         // Calculate time delta
         val currentNanos = System.nanoTime()
-        val deltaTime = (currentNanos - lastUpdateNanos) / 1e9
+        val deltaTime = (currentNanos - lastUpdateNanos) / 1e6
         lastUpdateNanos = currentNanos
 
         // Get path following state
@@ -138,7 +138,7 @@ internal class PathFollower(
         lastClosestPointIndex = followingState.closestPointIndex
 
         // Calculate remaining distance to target
-        val remainingDistance = spline.totalLength - closestPoint.distanceAlongPath
+        val remainingDistance = spline.totalLength - closestPoint.distanceAlongPath + closestPoint.location.distanceTo(currentLocation)
         val progress = closestPoint.distanceAlongPath / spline.totalLength
 
         // Check if we've reached the target
@@ -146,7 +146,7 @@ internal class PathFollower(
         val distanceToTarget = currentLocation.distanceTo(target.location())
         val headingError = (target.heading - currentPosition.heading).normalize()
 
-        val finished = lastClosestPointIndex == spline.pathPoints.lastIndex &&
+        val finished = progress > 0.9 &&
                 distanceToTarget.cm() < positionTolerance &&
                 abs(headingError).degrees() < headingTolerance
 
@@ -185,9 +185,9 @@ internal class PathFollower(
 
         // Calculate drive powers - scale by current path speed
         val speedScale = currentSpeed / maxSpeed
-        val forwardPower = robotForward.cm() * kP_position * speedScale
-        val strafePower = robotRight.cm() * kP_position * speedScale
-        val turnPower = -headingErr.degrees() * kP_heading * speedScale
+        val forwardPower = robotForward.cm() * kP_position * 2.2 * speedScale
+        val strafePower = robotRight.cm() * kP_position * 2.2 * speedScale
+        val turnPower = -headingErr.degrees() * kP_heading * 2.2 * speedScale
 
         val maxPower = listOf(kotlin.math.abs(forwardPower), kotlin.math.abs(strafePower), kotlin.math.abs(turnPower)).maxOf { it }
         val maxV = when {
@@ -281,10 +281,10 @@ internal class VelocityProfile(
 
         return if (speedDiff > 0) {
             // Accelerating
-            min(currentSpeed + maxAcceleration * deltaTime, targetSpeed)
+           min(maxSpeed, max(currentSpeed + maxAcceleration * deltaTime, targetSpeed))
         } else {
             // Decelerating
-            max(currentSpeed + maxDeceleration * deltaTime, targetSpeed)
+            min(maxSpeed, min(currentSpeed + maxDeceleration * deltaTime, targetSpeed))
         }
     }
 }
