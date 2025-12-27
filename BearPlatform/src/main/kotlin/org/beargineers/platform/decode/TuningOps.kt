@@ -4,17 +4,30 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
+import org.beargineers.platform.CurveToPosePhase
+import org.beargineers.platform.Distance
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Phases
+import org.beargineers.platform.Position
 import org.beargineers.platform.RelativePosition
 import org.beargineers.platform.Robot
 import org.beargineers.platform.assumeRobotPosition
+import org.beargineers.platform.atan2
+import org.beargineers.platform.cm
+import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
 import org.beargineers.platform.driveRelative
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.hypot
 import org.beargineers.platform.inch
+import org.beargineers.platform.radians
+import org.beargineers.platform.sin
 import org.beargineers.platform.tilePosition
+import org.beargineers.platform.times
 import org.beargineers.platform.wait
+import kotlin.math.PI
+import kotlin.math.cosh
+import kotlin.math.pow
 import kotlin.time.Duration.Companion.seconds
 
 open class TestOp(phases: Phases<DecodeRobot>) :
@@ -55,6 +68,12 @@ class Tune_C1ToC6Forward : TestOp({
 class Tune_B1ToB6Left : TestOp({
     assumeRobotPosition(tilePosition("B1:90"))
     driveTo(tilePosition("B6:90"))
+})
+
+@Autonomous(group = "Tune")
+class CurveTest : PhasedAutonomous<DecodeRobot>(Alliance.BLUE, {
+    assumeRobotPosition(tilePosition("B3:-90"))
+    phase(CurveToPosePhase(tilePosition("B5:90"), 70.cm, false, 0.2))
 })
 
 val startTestResults = mutableListOf<Double>()

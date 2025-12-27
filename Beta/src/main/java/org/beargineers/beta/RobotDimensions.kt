@@ -1,7 +1,9 @@
 package org.beargineers.beta
 
-val WHEEL_BASE_LENTH_CM = 24
+import org.beargineers.platform.cm
 
-val WHEEL_BASE_WIDTH_CM = 30
+val WHEEL_BASE_LENTH = 24.cm
 
-val FRONT_POINT_OFFSET_CM = 27
+val WHEEL_BASE_WIDTH = 30.cm
+
+val FRONT_POINT_OFFSET = 27.cm
