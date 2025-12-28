@@ -22,9 +22,9 @@ It says that
 
 val FIELD_CENTER = Location(0.cm, 0.cm).withHeading(0.degrees)
 
-val RED_GOAL = Location(-58.3727.inch, 55.6425.inch)
+val RED_GOAL = tileLocation("F6", TileOffset.TOP_RIGHT)
 
-val BLUE_GOAL = Location(-58.3727.inch, -55.6425.inch)
+val BLUE_GOAL = tileLocation("A6", TileOffset.TOP_LEFT)
 
 val RED_PARK = tileLocation("B2", tileOffset = TileOffset.BOTTOM_RIGHT).shift(-9.inch, -9.inch)
 
