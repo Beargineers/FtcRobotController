@@ -73,7 +73,7 @@ interface Robot {
      * ```
      */
     fun followPath(
-        path: Path,
+        path: List<Position>,
         maxSpeed: Double = 1.0
     ): Boolean
 
