@@ -1,7 +1,8 @@
-package org.beargineers.platform
+package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import org.beargineers.platform.Button
 
 @Autonomous
 class ConstructAuto : OpMode() {
@@ -23,17 +24,17 @@ class ConstructAuto : OpMode() {
                 optionHighlight = 1
             }
         }
-        button(gamepad1::dpad_right){
-            if (optionHighlight<selectCategories[selectStep].size - 1) {
+        button(gamepad1::dpad_right) {
+            if (optionHighlight < selectCategories[selectStep].size - 1) {
                 optionHighlight += 1
             }
         }
-        button(gamepad1::dpad_left){
-            if (optionHighlight>1){
+        button(gamepad1::dpad_left) {
+            if (optionHighlight > 1) {
                 optionHighlight -= 1
             }
         }
-        button(gamepad1::x){
+        button(gamepad1::x) {
             if (runningSelection) {
                 runningSelection = false
             }
@@ -45,14 +46,17 @@ class ConstructAuto : OpMode() {
 
 
     }
-    val autoStepChoice = listOf("Next step",
+
+    val autoStepChoice = listOf(
+        "Next step",
         "shoot close",
         "shoot far",
         "collect 1",
         "collect 2",
         "collect 3",
         "collect from box",
-        "open the gate")
+        "open the gate"
+    )
     var selectCategories = mutableListOf(
         listOf("Alliance", "Blue", "Red"),
         listOf("Starting position", "far", "close")
@@ -85,7 +89,7 @@ class ConstructAuto : OpMode() {
                 }
             }
             telemetry.addData(selectCategories[selectStep][0], selections)
-        }else{
+        } else {
             telemetry.addData("Auto Program", " Saved")
         }
 

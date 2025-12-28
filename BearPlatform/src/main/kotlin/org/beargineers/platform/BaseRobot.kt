@@ -199,7 +199,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         // Calculate drive powers using proportional control
         val forwardPower = robotForward.cm() * kP_position
         val strafePower = robotRight.cm() * kP_position
-        val turnPower = -headingError.degrees() * kP_heading // Positive power to turn CW, but positive delta heating is CCW
+        val turnPower = -headingError.degrees() * kP_heading // Positive power to turn CW, but positive delta heading is CCW
 
         val maxPower = listOf(forwardPower, strafePower, turnPower).maxOf { abs(it) }
         val maxV = when {
@@ -275,7 +275,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     val MIN_VISION_CONFIDENCE by config(0.3)
 
     override fun followPath(
-        path: Path,
+        path: List<Position>,
         maxSpeed: Double
     ): Boolean {
         // Check if this is a new path (different instance)
