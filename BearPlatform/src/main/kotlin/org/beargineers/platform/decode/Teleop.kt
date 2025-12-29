@@ -53,19 +53,24 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
 
         button(gamepad1::dpad_up) {
+            lookAtGoal = false
             auto {
                 openRamp()
             }
         }
 
         button(gamepad1::dpad_down) {
+            lookAtGoal = false
             auto {
                 park()
             }
         }
 
-        button(gamepad1::a) {
-            robot.launch()
+        button(gamepad1::right_bumper) {
+            val position = robot.currentPosition
+            auto {
+                launchAndHoldPosition(position)
+            }
         }
     }
 
@@ -83,7 +88,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         val slow = gamepad1.left_bumper
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
 
-        if (gamepad1.right_stick_x != 0f || gamepad1.right_stick_y != 0f){
+        if (commandedRotation().degrees() > 0.0) {
             if (System.currentTimeMillis() - lookAtGoalBtnClickedAt > 500) {
                 lookAtGoal = false
             }
@@ -122,7 +127,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     private fun commandedHeading(): Angle {
         val heading: Angle = when {
             lookAtGoal -> robot.headingToGoal()
-            else -> robot.currentPosition.heading + commandedRotation()
+            else -> robot.currentPosition.heading - commandedRotation()
         }
         return heading
     }
