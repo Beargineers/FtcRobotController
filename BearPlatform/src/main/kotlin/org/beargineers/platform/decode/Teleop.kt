@@ -5,7 +5,6 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
-import org.beargineers.platform.action
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.cos
@@ -40,20 +39,16 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
 
         button(gamepad1::dpad_left) { // TODO: Go to close or far zone depending on who we're playing for
+            lookAtGoal = true
             auto {
                 goToShootingZone()
-                action {
-                    lookAtGoal = true
-                }
             }
         }
 
         button(gamepad1::dpad_right){  // TODO: Go to close or far zone depending on who we're playing for
+            lookAtGoal = true
             auto {
                 goToShootingZone()
-                action {
-                    lookAtGoal = true
-                }
             }
         }
 
