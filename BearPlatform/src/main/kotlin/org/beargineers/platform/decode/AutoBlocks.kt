@@ -135,9 +135,8 @@ fun PhaseBuilder<DecodeRobot>.park() {
     }
 }
 
-fun PhaseBuilder<DecodeRobot>.launchAndHoldPosition(position: Position) {
+fun PhaseBuilder<DecodeRobot>.holdPosition(position: Position) {
     action {
-        launch()
         driveToTarget(position, 1.0)
         true // Keep this auto active until it is cancelled by touching gamepad controls
     }
