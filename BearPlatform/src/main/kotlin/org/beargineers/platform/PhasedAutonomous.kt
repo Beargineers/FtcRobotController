@@ -195,24 +195,28 @@ fun PhaseBuilder<*>.wait(duration: Duration) {
     phase(WaitPhase(duration.inWholeSeconds.toDouble()))
 }
 
-class SimpleActionPhase<R: Robot>(private val action: R.() -> Unit) : AutonomousPhase<R> {
+class SimpleActionPhase<R: Robot>(private val action: R.() -> Boolean) : AutonomousPhase<R> {
     override fun R.initPhase() {
-        action()
     }
 
     override fun R.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return false
+        return action()
     }
 }
 
 @PhaseDsl
-fun <R: Robot> PhaseBuilder<R>.action(action: R.() -> Unit) {
+fun <R: Robot> PhaseBuilder<R>.action(action: R.() -> Boolean) {
     phase(SimpleActionPhase(action))
 }
 
 @PhaseDsl
+fun <R: Robot> PhaseBuilder<R>.doOnce(action: R.() -> Unit) {
+    phase(SimpleActionPhase({action(); false}))
+}
+
+@PhaseDsl
 fun <R: Robot> PhaseBuilder<R>.assumeRobotPosition(position: Position) {
-    action {
+    doOnce {
         assumePosition(position)
     }
 }

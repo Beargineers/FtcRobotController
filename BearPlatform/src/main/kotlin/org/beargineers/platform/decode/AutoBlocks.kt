@@ -19,6 +19,7 @@ import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.closestPointInShootingZone
 import org.beargineers.platform.degrees
+import org.beargineers.platform.doOnce
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.tilePosition
@@ -43,12 +44,12 @@ private fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Po
 }
 
 private fun PhaseBuilder<DecodeRobot>.shootAt(launchPose: Position) {
-    action {
+    doOnce {
         enableFlywheel(true)
     }
     //  followPath(listOf(spike.startPose, spike.endPose, spike.startPose, launchPose))
     driveTo(launchPose)
-    action {
+    doOnce {
         launch()
     }
     waitForShootingCompletion()
@@ -92,12 +93,12 @@ fun PhaseBuilder<DecodeRobot>.openRamp() {
 
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
-    action {
+    doOnce {
         intakeMode(IntakeMode.ON)
         enableFlywheel(true)
     }
     driveTo(launchPose)
-    action {
+    doOnce {
         launch()
     }
     waitForShootingCompletion()
@@ -131,5 +132,13 @@ fun PhaseBuilder<DecodeRobot>.park() {
         val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
         val parkHeading = squareAngles.minBy { abs(it - heading) }
         driveToTarget(parkCoords.withHeading(parkHeading), 1.0)
+    }
+}
+
+fun PhaseBuilder<DecodeRobot>.launchAndHoldPosition(position: Position) {
+    action {
+        launch()
+        driveToTarget(position, 1.0)
+        true // Keep this auto active until it is cancelled by touching gamepad controls
     }
 }
