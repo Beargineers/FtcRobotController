@@ -40,36 +40,37 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
 
         button(gamepad1::dpad_left) { // TODO: Go to close or far zone depending on who we're playing for
             lookAtGoal = true
-            auto {
+            auto("Going to shooting zone") {
                 goToShootingZone()
             }
         }
 
         button(gamepad1::dpad_right){  // TODO: Go to close or far zone depending on who we're playing for
             lookAtGoal = true
-            auto {
+            auto("Going to shooting zone") {
                 goToShootingZone()
             }
         }
 
         button(gamepad1::dpad_up) {
             lookAtGoal = false
-            auto {
+            auto("Going to open the ramp") {
                 openRamp()
             }
         }
 
         button(gamepad1::dpad_down) {
             lookAtGoal = false
-            auto {
+            auto("Going to the base") {
                 park()
             }
         }
 
         button(gamepad1::right_bumper) {
             val position = robot.currentPosition
-            auto {
-                launchAndHoldPosition(position)
+            robot.launch()
+            auto("Holding position") {
+                holdPosition(position)
             }
         }
     }
