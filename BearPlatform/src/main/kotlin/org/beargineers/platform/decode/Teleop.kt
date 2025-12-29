@@ -89,7 +89,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         val slow = gamepad1.left_bumper
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
 
-        if (commandedRotation().degrees() > 0.0) {
+        if (commandedRotation().degrees() != 0.0) {
             if (System.currentTimeMillis() - lookAtGoalBtnClickedAt > 500) {
                 lookAtGoal = false
             }
