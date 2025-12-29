@@ -7,7 +7,6 @@ import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.Properties
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.cosh
 import kotlin.math.hypot
 import kotlin.math.pow
@@ -95,8 +94,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
         // Step 2: Correction - update position using vision (absolute localizer) if available
         val visionMeasurement = absoluteLocalizer.getRobotPose()
-        if (visionMeasurement != null && visionMeasurement.timestampNano >= lastTimeMovedNanos && visionMeasurement.confidence >= MIN_VISION_CONFIDENCE) {
-            kalmanFilter.correct(visionMeasurement)
+        if (visionMeasurement != null && visionMeasurement.timestampNano >= lastTimeMovedNanos && kalmanFilter.correct(visionMeasurement)) {
             relativeLocalizer.updatePositionEstimate(kalmanFilter.getEstimate())
             telemetry.addData("Vision", "✓ conf=%.2f".format(visionMeasurement.confidence))
         } else {
@@ -168,58 +166,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
      * ```
      */
     override fun driveToTarget(target: Position, maxSpeed: Double): Boolean {
-        val cp = currentPosition
-        val tp = target
-
-        // Calculate position error (field frame)
-        val deltaX = tp.x - cp.x
-        val deltaY = tp.y - cp.y
-
-        // Calculate distance to target
-        val distanceToTarget = hypot(deltaX, deltaY)
-
-        // Calculate heading error (normalized to -180 to 180 degrees equivalent)
-        val headingError = (tp.heading - cp.heading).normalize()
-
-        telemetry.addData("Distance to target", distanceToTarget)
-        telemetry.addData("Heading Error", headingError)
-
-        // Check if we've reached the target
-        if (distanceToTarget.cm() < positionTolerance && abs(headingError).degrees() < headingTolerance) {
-            drive.stop()
-            return false
-        }
-
-        // Convert field-frame error to robot-frame error
-        // We need to rotate the field-frame delta by the negative of the robot's heading
-        val robotHeadingRad = cp.heading
-        val robotForward = deltaX * cos(robotHeadingRad) + deltaY * sin(robotHeadingRad)
-        val robotRight = deltaX * sin(robotHeadingRad) - deltaY * cos(robotHeadingRad)
-
-        // Calculate drive powers using proportional control
-        val forwardPower = robotForward.cm() * kP_position
-        val strafePower = robotRight.cm() * kP_position
-        val turnPower = -headingError.degrees() * kP_heading // Positive power to turn CW, but positive delta heading is CCW
-
-        val maxPower = listOf(forwardPower, strafePower, turnPower).maxOf { abs(it) }
-        val maxV = when {
-            maxPower > maxSpeed -> maxPower / maxSpeed
-            maxPower < minimalWheelPower -> maxPower / minimalWheelPower
-            else -> 1.0
-        }
-
-        fun clamp(value: Double): Double {
-            return value / maxV
-        }
-
-        // Apply drive power
-        drive(
-            forwardPower = clamp(forwardPower),
-            rightPower = clamp(strafePower),
-            turnPower = clamp(turnPower)
-        )
-
-        return true
+        return followPath(listOf(target), maxSpeed)
     }
 
     override fun drive(
@@ -271,8 +218,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     val headingTolerance by config(5.0)
 
 
-    // Minimum confidence threshold to accept vision measurements
-    val MIN_VISION_CONFIDENCE by config(0.3)
 
     override fun followPath(
         path: List<Position>,

@@ -37,41 +37,6 @@ interface Robot {
      */
     fun driveToTarget(target: Position, maxSpeed: Double): Boolean
 
-    /**
-     * Follows a Path instance.
-     *
-     * Create a Path object once and pass the same instance to this method in your loop.
-     * The Path maintains its own following state, so you can pause/resume or follow
-     * multiple paths by switching between different Path instances.
-     *
-     * This implements sophisticated path following using:
-     * - Catmull-Rom splines for smooth, speed-optimized curves
-     * - Pure pursuit algorithm for path tracking
-     * - Velocity profiling with acceleration/deceleration
-     * - Curvature-based speed adjustment
-     *
-     * @param path Path instance to follow
-     * @param maxSpeed Maximum speed (0.0 to 1.0, as fraction of robot max speed)
-     * @return false if target reached, true if still following path
-     *
-     * ## Example Usage
-     * ```kotlin
-     * // Create path once (e.g., as class property)
-     * val myPath = Path(listOf(
-     *     Location(50.cm, 20.cm).withHeading(0.degrees),
-     *     Location(100.cm, 100.cm).withHeading(90.degrees)
-     * ))
-     *
-     * override fun loop() {
-     *     super.loop()
-     *     if (followPath(myPath, maxSpeed = 0.8)) {
-     *         telemetry.addLine("Following path...")
-     *     } else {
-     *         telemetry.addLine("Target reached!")
-     *     }
-     * }
-     * ```
-     */
     fun followPath(
         path: List<Position>,
         maxSpeed: Double = 1.0
