@@ -101,15 +101,11 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
         allButtons += ToggleButton(name, telemetry, test, callback)
     }
 
-    fun auto(b: Phases<T>) {
+    fun auto(name: String, b: Phases<T>) {
         val builder = PhaseBuilder<T>(this)
         builder.b()
         val phases = builder.build()
-        auto = when (phases.size) {
-            1 -> phases.first()
-            0 -> return
-            else -> SequentialPhase("Auto", phases)
-        }.also {
+        auto = SequentialPhase(name, phases).also {
             with(it) {
                 robot.initPhase()
             }
