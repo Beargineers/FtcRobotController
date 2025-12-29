@@ -24,6 +24,9 @@ class KalmanFilter(val robot: BaseRobot) {
     private val processNoiseHeading by robot.config(0.01)  // radians - heading drift per cycle
     private val measurementNoisePosition by robot.config(5.0)  // cm - vision measurement noise
     private val measurementNoiseHeading by robot.config(0.1)    // radians - vision heading noise
+    // Minimum confidence threshold to accept vision measurements
+    private val minVisionConfidence by robot.config(0.3)
+
 
     // State estimate: [x, y, heading]
     private var stateX = 0.cm
@@ -100,6 +103,7 @@ class KalmanFilter(val robot: BaseRobot) {
      * @return true if correction was applied, false if measurement was rejected
      */
     fun correct(measurement: AbsolutePose): Boolean {
+        if (measurement.confidence < minVisionConfidence) return false
         val meas = measurement.pose
 
         // Scale measurement noise by confidence (low confidence = high noise)
