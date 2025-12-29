@@ -5,15 +5,22 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.BLUE_OPEN_GATE
 import org.beargineers.platform.BLUE_OPEN_GATE_APPROACH
+import org.beargineers.platform.BLUE_PARK
+import org.beargineers.platform.Location
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
 import org.beargineers.platform.RED_OPEN_GATE
 import org.beargineers.platform.RED_OPEN_GATE_APPROACH
+import org.beargineers.platform.RED_PARK
+import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
+import org.beargineers.platform.closestPointInShootingZone
+import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -75,7 +82,7 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
     scoopAndShoot(spikes[2], launchPoint)
 }
 
-private fun PhaseBuilder<DecodeRobot>.openRamp() {
+fun PhaseBuilder<DecodeRobot>.openRamp() {
     val red = opMode.alliance == Alliance.RED
 
     driveTo(if (red) RED_OPEN_GATE_APPROACH else BLUE_OPEN_GATE_APPROACH)
@@ -108,4 +115,21 @@ class WaitForShootingCompletion() : AutonomousPhase<DecodeRobot> {
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
     phase(WaitForShootingCompletion())
+}
+
+fun PhaseBuilder<DecodeRobot>.goToShootingZone() {
+    action {
+        driveToTarget(closestPointInShootingZone().withHeading(headingToGoal()), 1.0)
+    }
+}
+
+fun PhaseBuilder<DecodeRobot>.park() {
+    action {
+        val parkCoords: Location =
+            (if (opMode.alliance == Alliance.BLUE) BLUE_PARK else RED_PARK)
+        val heading = currentPosition.heading
+        val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
+        val parkHeading = squareAngles.minBy { abs(it - heading) }
+        driveToTarget(parkCoords.withHeading(parkHeading), 1.0)
+    }
 }
