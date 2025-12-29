@@ -11,11 +11,9 @@ import org.beargineers.platform.config
 import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
 import org.beargineers.platform.headingToGoal
-import org.beargineers.platform.radians
 import org.beargineers.platform.shootingAngleCorrectionForMovement
 import org.beargineers.platform.sin
 import kotlin.math.abs
-import kotlin.math.atan2
 
 open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     val ROTATION_TRIGGER_REDUCTION by robot.config(0.5)
@@ -103,15 +101,8 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
 
             val dx = gamepad1.left_stick_x.toDouble() * POSITIONAL_GAIN * sign
             val dy = gamepad1.left_stick_y.toDouble() * POSITIONAL_GAIN * -sign
-            val rx = gamepad1.right_stick_x * sign
-            val ry = gamepad1.right_stick_y * sign * -1
-            val dh = 0.0 + (gamepad1.left_trigger - gamepad1.right_trigger) * ROTATIONAL_GAIN
 
-            val heading: Angle = when {
-                lookAtGoal -> robot.headingToGoal()
-                abs(ry) + abs(rx) > 0.01 -> atan2(ry.toDouble(), rx.toDouble()).radians
-                else -> robot.currentPosition.heading
-            } + dh.degrees
+            val heading: Angle = commandedHeading()
 
             val deltaPosition = Position(dx.cm, dy.cm, heading - robot.currentPosition.heading)
 
@@ -124,15 +115,21 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN.toDouble()
             val dy = (forward * sin(h) - strafe * cos(h)) * POSITIONAL_GAIN.toDouble()
 
-            val rotation = commandedRotation()
-            val heading =
-                if (lookAtGoal) robot.headingToGoal() else robot.currentPosition.heading - rotation
+            val heading: Angle = commandedHeading()
 
             val deltaPosition = Position(dx, dy, heading - robot.currentPosition.heading)
 
             val targetPosition = robot.currentPosition.plus(deltaPosition)
             robot.driveToTarget(targetPosition, if (slow) 0.4 else 1.0)
         }
+    }
+
+    private fun commandedHeading(): Angle {
+        val heading: Angle = when {
+            lookAtGoal -> robot.headingToGoal()
+            else -> robot.currentPosition.heading + commandedRotation()
+        }
+        return heading
     }
 
     private fun commandedRotation(): Angle =
