@@ -43,15 +43,12 @@ internal class PathFollower(
      * @return true if still following, false if target reached
      */
     fun update(): Boolean {
+        if (lastTargetIndex > path.lastIndex) return false
+
         val headingToTarget = atan2(path[lastTargetIndex].y - robot.currentPosition.y, path[lastTargetIndex].x - robot.currentPosition.x)
-        if (abs((headingToTarget - currentAngle).normalize()) > 100.degrees) {
+        if (abs((headingToTarget - currentAngle).normalize()) > 100.degrees && lastTargetIndex < path.lastIndex) {
             // Angle to the target changes quickly means we're passed the waypoint
             lastTargetIndex++
-            if (lastTargetIndex >= path.size) {
-                // We've reached the end of the path
-                return false
-            }
-
             currentAngle = atan2(path[lastTargetIndex].y - path[lastTargetIndex - 1].y, path[lastTargetIndex].x - path[lastTargetIndex - 1].x)
         }
 
