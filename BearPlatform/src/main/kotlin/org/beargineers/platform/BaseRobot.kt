@@ -118,12 +118,35 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     private fun drawRobotOnPanelsField() {
         val cp = currentPosition
-        panelsField.moveCursor(cp.x.inch(), cp.y.inch())
-        panelsField.circle(2.0)
+        with(panelsField) {
+            fun lineTo(location: Location) {
+                line(location.x.inch(), location.y.inch())
+                moveCursor(location.x.inch(), location.y.inch())
+            }
 
-        panelsField.moveCursor(cp.x.inch() + 3 * cos(cp.heading), cp.y.inch() + 3 * sin(cp.heading))
-        panelsField.circle(1.0)
-        panelsField.update()
+            val xFromCenter = 9.inch // TODO: Real robot dimensions
+            val yFromCenter = 9.inch
+            val fr = Location(xFromCenter,yFromCenter).toAbsolute(cp)
+            val fl = Location(-xFromCenter,yFromCenter).toAbsolute(cp)
+            val br = Location(xFromCenter,-yFromCenter).toAbsolute(cp)
+            val bl = Location(-xFromCenter,-yFromCenter).toAbsolute(cp)
+
+            setStyle("white", "blue", 1.0)
+            moveCursor(fl.x.inch(), fl.y.inch())
+            lineTo(fr)
+            lineTo(br)
+            lineTo(bl)
+            lineTo(fl)
+
+            setStyle("white", "white", 1.0)
+            moveCursor(cp.x.inch(), cp.y.inch())
+            circle(2.0)
+
+            moveCursor(cp.x.inch() + 3 * cos(cp.heading), cp.y.inch() + 3 * sin(cp.heading))
+            circle(1.0)
+
+            update()
+        }
     }
 
     override fun stop() {
