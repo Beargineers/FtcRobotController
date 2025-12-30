@@ -30,10 +30,10 @@ val RED_PARK = tileLocation("B2", tileOffset = TileOffset.BOTTOM_RIGHT).shift(-9
 
 val BLUE_PARK = tileLocation("E2", tileOffset = TileOffset.BOTTOM_LEFT).shift(-9.inch, 9.inch)
 
-val RED_OPEN_GATE = Position(-4.cm, 130.cm, 90.degrees)
+val RED_OPEN_GATE = Position(-4.cm, 133.cm, 90.degrees)
 val RED_OPEN_GATE_APPROACH = Position(-4.cm, 80.cm, 90.degrees)
 
-val BLUE_OPEN_GATE = Position(-4.cm, -130.cm, -90.degrees)
+val BLUE_OPEN_GATE = Position(-4.cm, -133.cm, -90.degrees)
 val BLUE_OPEN_GATE_APPROACH = Position(-4.cm, -80.cm, -90.degrees)
 class Location(val x: Distance, val y: Distance) {
     fun shift(x: Distance, y: Distance): Location {
