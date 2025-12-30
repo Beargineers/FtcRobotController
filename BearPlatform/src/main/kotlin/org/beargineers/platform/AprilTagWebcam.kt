@@ -10,24 +10,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
-import kotlin.math.abs
-import kotlin.math.exp
-import kotlin.math.max
 
 class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
                          
     // Distance parameters (in cm)
-    val optimalDistance by robot.config(100.0)  // Distance with highest confidence
-    val maxUsableDistance by robot.config(300.0)  // Beyond this, confidence drops significantly
-
-    // Angle parameters (in degrees)
-    val optimalAngle by robot.config(0.0)  // Perpendicular view (0° relative to tag normal)
-    val maxUsableAngle by robot.config(60.0)  // Beyond this, confidence drops significantly
-
-    // Weighting factors (should sum to ~1.0)
-    val distanceWeight by robot.config(0.6)  // How much distance affects confidence
-    val angleWeight by robot.config(0.4)  // How much viewing angle affects confidence
-
     val CameraPosition_forward by robot.config(0.0)
     val CameraPosition_up by robot.config(0.0)
     val CameraPosition_right by robot.config(0.0)
@@ -90,66 +76,20 @@ class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
 
     fun addTelemetry(detection: AprilTagDetection?) {
         if (detection != null) {
-            val confidence = calculateConfidence(detection)
             telemetry.addData("Found", "ID %d (%s)", detection.id, detection.metadata.name)
             telemetry.addData("Range", "%5.1f cm", detection.ftcPose.range)
             telemetry.addData("Bearing", "%3.0f degrees", detection.ftcPose.bearing)
             telemetry.addData("Yaw", "%3.0f degrees", detection.ftcPose.yaw)
             telemetry.addData("x,y,z", "%5.1f,%5.1f,%5.1f cm", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z)
-            telemetry.addData("Confidence", "%.2f", confidence)
         } else {
             telemetry.addData("Found","No april tag to be seen here ¯\\_(ツ)_/¯")
         }
     }
 
-    override fun getRobotPose(): AbsolutePose? {
-        // Get robot pose based on any AprilTag with metadata with highest confidence
+    override fun getRobotPose(): Position? {
         return getAprilReadings(-1)
-            .map { AbsolutePose(it.robotPose.robotPose(90.degrees), calculateConfidence(it), it.frameAcquisitionNanoTime) }
-            .maxByOrNull {it.confidence}
-    }
-
-    /**
-     * Calculates confidence score for an AprilTag detection based on:
-     * - Distance to tag (closer = better)
-     * - Viewing angle (perpendicular = better)
-     *
-     * @param detection The AprilTag detection to evaluate
-     * @return Confidence score in range [0.0, 1.0]
-     */
-    private fun calculateConfidence(detection: AprilTagDetection): Double {
-        // Distance factor: exponential decay from optimal distance
-        // Convert range to cm if needed
-        val rangeCm = detection.ftcPose.range
-
-        // Gaussian-like falloff centered at optimal distance
-        val distanceError = abs(rangeCm - optimalDistance)
-        val distanceScale = maxUsableDistance / 2.0
-        val distanceConfidence = exp(-(distanceError * distanceError) / (2 * distanceScale * distanceScale))
-
-        // Angle factor: use bearing (horizontal angle) and yaw (tag rotation)
-        // Both should be close to 0 for best results
-        val bearingDeg = abs(detection.ftcPose.bearing)
-        val yawDeg = abs(detection.ftcPose.yaw)
-
-        // Take the worse of the two angles (most limiting factor)
-        val effectiveAngle = max(bearingDeg, yawDeg)
-
-        // Linear falloff for angle
-        val angleConfidence = when {
-            effectiveAngle <= optimalAngle -> 1.0
-            else -> {
-                val angleFraction = (effectiveAngle - optimalAngle) /
-                        (maxUsableAngle - optimalAngle)
-                (1.0 - angleFraction).coerceIn(0.0, 1.0)
-            }
-        }
-
-        // Weighted combination
-        val confidence = (distanceWeight * distanceConfidence +
-                         angleWeight * angleConfidence)
-
-        return confidence.coerceIn(0.0, 1.0)
+            .map { it.robotPose.robotPose(90.degrees)}
+            .firstOrNull()
     }
 
     override fun stop() {

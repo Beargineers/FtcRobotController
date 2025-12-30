@@ -8,7 +8,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.Properties
 import kotlin.math.PI
 import kotlin.math.cosh
-import kotlin.math.hypot
 import kotlin.math.pow
 
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
@@ -18,8 +17,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     abstract val configResource: Int
 
-    // Kalman filter for sensor fusion
-    private val kalmanFilter = KalmanFilter(this)
     val allHardware = mutableListOf<Hardware>()
 
     override val telemetry: Telemetry get() = opMode.telemetry
@@ -63,20 +60,16 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         allHardware.forEach {
             it.init()
         }
-
-        // Initialize Kalman filter with current position
-        kalmanFilter.initialize(currentPosition)
     }
 
     override fun assumePosition(position: Position) {
         currentPosition = position
-        kalmanFilter.initialize(position)
         relativeLocalizer.updatePositionEstimate(position)
     }
 
     override fun isMoving(): Boolean {
         val vel = currentVelocity
-        return abs(vel.forward).cm() + abs(vel.right).cm() + abs(vel.turn).degrees() > 0.001
+        return abs(vel.forward).cm() + abs(vel.right).cm() + abs(vel.turn).degrees() > 0.1
     }
 
     override fun loop() {
@@ -88,29 +81,18 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             lastTimeMovedNanos = System.nanoTime()
         }
 
-        // Step 1: Prediction - update position using odometry (relative localizer)
-        val basePosition = relativeLocalizer.getPosition()
-        kalmanFilter.predictByAbsolute(basePosition)
-
-        // Step 2: Correction - update position using vision (absolute localizer) if available
+        // Once we get reliable vision result, use it for current position and also update odometry computer
         val visionMeasurement = absoluteLocalizer.getRobotPose()
-        if (visionMeasurement != null && visionMeasurement.timestampNano >= lastTimeMovedNanos && kalmanFilter.correct(visionMeasurement)) {
-            relativeLocalizer.updatePositionEstimate(kalmanFilter.getEstimate())
-            telemetry.addData("Vision", "✓ conf=%.2f".format(visionMeasurement.confidence))
+        if (visionMeasurement != null) {
+            telemetry.addData("Vision", "✓ acquired")
+            relativeLocalizer.updatePositionEstimate(visionMeasurement)
+            currentPosition = visionMeasurement
         } else {
             telemetry.addData("Vision", "✗ odometry only")
+            currentPosition = relativeLocalizer.getPosition()
         }
 
-        // Update current position from Kalman filter estimate
-        currentPosition = kalmanFilter.getEstimate()
-
-        // Display uncertainty for debugging
-        val (xStd, yStd, headStd) = kalmanFilter.getUncertainty()
         telemetry.addData("Position", currentPosition)
-        telemetry.addData("Uncertainty", "±%.1f cm, ±%.1f°".format(
-            hypot(xStd, yStd),
-            Math.toDegrees(headStd)
-        ))
         telemetry.addData("Velocity", "%s/s", hypot(currentVelocity.forward, currentVelocity.right))
 
         drawRobotOnPanelsField()
