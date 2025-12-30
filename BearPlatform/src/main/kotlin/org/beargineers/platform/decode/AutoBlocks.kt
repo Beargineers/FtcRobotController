@@ -21,6 +21,7 @@ import org.beargineers.platform.closestPointInShootingZone
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.followPath
 import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
@@ -86,8 +87,11 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
 fun PhaseBuilder<DecodeRobot>.openRamp() {
     val red = opMode.alliance == Alliance.RED
 
-    driveTo(if (red) RED_OPEN_GATE_APPROACH else BLUE_OPEN_GATE_APPROACH)
-    driveTo(if (red) RED_OPEN_GATE else BLUE_OPEN_GATE, 0.8)
+    followPath(listOf(
+        if (red) RED_OPEN_GATE_APPROACH else BLUE_OPEN_GATE_APPROACH,
+        if (red) RED_OPEN_GATE else BLUE_OPEN_GATE
+    ))
+
     wait(1.seconds)
 }
 
