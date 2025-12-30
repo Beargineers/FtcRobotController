@@ -3,7 +3,7 @@ package org.beargineers.platform
 import com.qualcomm.hardware.limelightvision.Limelight3A
 
 
-class LimelightCam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
+class LimelightCam(robot: BaseRobot): Camera(robot) {
     private val limelight by hardware<Limelight3A>("limelight")
 
     override fun init() {
@@ -20,6 +20,9 @@ class LimelightCam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
 
         if (!latestResult.isValid || latestResult.staleness > 50) return null
 
-        return latestResult.botpose?.robotPose()
+        val position = latestResult.botpose?.robotPose()?.rotate(CameraPosition_yaw.degrees) ?: return null
+        val cameraOffset = Location(CameraPosition_right.cm, CameraPosition_forward.cm)
+
+        return cameraOffset.toAbsolute(position).withHeading(position.heading)
     }
 }

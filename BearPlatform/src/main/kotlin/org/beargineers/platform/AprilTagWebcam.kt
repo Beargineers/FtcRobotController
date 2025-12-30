@@ -11,17 +11,7 @@ import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 
-class AprilTagWebcam(robot: BaseRobot): Hardware(robot), AbsoluteLocalizer {
-                         
-    // Distance parameters (in cm)
-    val CameraPosition_forward by robot.config(0.0)
-    val CameraPosition_up by robot.config(0.0)
-    val CameraPosition_right by robot.config(0.0)
-    val CameraPosition_pitch by robot.config(0.0)
-    val CameraPosition_yaw by robot.config(0.0)
-    val CameraPosition_roll by robot.config(0.0)
-
-
+class AprilTagWebcam(robot: BaseRobot): Camera(robot) {
     private val camera: WebcamName by hardware("Webcam 1")
 
     private lateinit var aprilTag: AprilTagProcessor
