@@ -36,11 +36,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     private var configs = Properties()
 
     private fun readConfigs(): Properties {
-        val defaults = Properties().apply {
-            load(opMode.hardwareMap.appContext.resources.openRawResource(R.raw.config))
-        }
-
-        return Properties(defaults).apply {
+        return Properties().apply {
             load(currentConfigText.reader())
         }
     }
