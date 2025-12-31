@@ -11,7 +11,7 @@ import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
 import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.shootingAngleCorrectionForMovement
-import org.beargineers.platform.shootingZones
+import org.beargineers.platform.ShootingZones
 import org.beargineers.platform.sin
 import kotlin.math.abs
 
@@ -42,14 +42,14 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         button(gamepad1::dpad_left) { // TODO: Go to close or far zone depending on who we're playing for
             lookAtGoal = true
             auto("Going to shooting zone") {
-                goToShootingZone(shootingZones.FRONT)
+                goToShootingZone(ShootingZones.FRONT)
             }
         }
 
         button(gamepad1::dpad_right){  // TODO: Go to close or far zone depending on who we're playing for
             lookAtGoal = true
             auto("Going to shooting zone") {
-                goToShootingZone(shootingZones.BACK)
+                goToShootingZone(ShootingZones.BACK)
             }
         }
 

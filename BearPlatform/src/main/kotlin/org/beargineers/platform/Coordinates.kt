@@ -274,20 +274,39 @@ fun DecodeRobot.headingToGoal(): Angle {
     val dy = goal.y - cp.y
     return atan2(dy, dx) + shootingAngleCorrectionForMovement()
 }
-fun DecodeRobot.inShootingZone(): Boolean{
+
+enum class ShootingZones {
+    CLOSEST, FRONT, BACK
+}
+fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSEST): Boolean{
 
     fun pointInShootingZone(p: Location): Boolean{
-        return if (p.x > 0.inch){ // far shooting zones
-            if (p.y > 0.inch){ // red far shooting zone
-                p.y < p.x - 48.inch
-            }else{ // Blue far shooting zone
-                -p.y < p.x -48.inch
+        if (shootingZone == ShootingZones.CLOSEST) {
+            return if (p.x > 0.inch) { // far shooting zones
+                if (p.y > 0.inch) { // red far shooting zone
+                    p.y < p.x - 48.inch
+                } else { // Blue far shooting zone
+                    -p.y < p.x - 48.inch
+                }
+            } else { // close shooting zone
+                if (p.y > 0.inch) {// red
+                    p.y < -p.x
+                } else { // blue
+                    -p.y < -p.x
+                }
             }
-        }else{ // close shooting zone
-            if (p.y > 0.inch){// red
-                p.y < -p.x
-            }else{ // blue
-                -p.y < -p.x
+        }else if (shootingZone == ShootingZones.FRONT){// close shooting zone
+            return  if (p.y > 0.inch) {// red
+                    p.y < -p.x
+                } else { // blue
+                    -p.y < -p.x
+
+            }
+        }else{ // far shooting zone
+            return if (p.y > 0.inch) { // red far shooting zone
+                p.y < p.x - 48.inch
+            } else { // Blue far shooting zone
+                -p.y < p.x - 48.inch
             }
         }
     }
@@ -317,11 +336,9 @@ fun DecodeRobot.clearForShooting(): Boolean{
 }
 
 
-enum class shootingZones {
-    CLOSEST, FRONT, BACK
-}
-fun DecodeRobot.closestPointInShootingZone(shootingZone: shootingZones): Location{
-    if (inShootingZone()){
+fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones): Location{
+    if ((inShootingZone() && shootingZone == ShootingZones.CLOSEST) || (shootingZone == ShootingZones.FRONT && inShootingZone(ShootingZones.FRONT)) || (shootingZone == ShootingZones.BACK && inShootingZone(
+            ShootingZones.BACK))){
         return currentPosition.location()
     }
     val alliance = opMode.alliance
@@ -345,13 +362,13 @@ fun DecodeRobot.closestPointInShootingZone(shootingZone: shootingZones): Locatio
             Location(0.cm, 0.cm)
         }
     }
-    return if (shootingZone == shootingZones.CLOSEST){
+    return if (shootingZone == ShootingZones.CLOSEST){
          if (currentPosition.location().distanceTo(close) < currentPosition.location().distanceTo(far)){
             close
         } else {
             far
         }
-    }else if(shootingZone == shootingZones.FRONT){
+    }else if(shootingZone == ShootingZones.FRONT){
         close
     }else{
         far
