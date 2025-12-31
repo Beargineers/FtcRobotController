@@ -316,7 +316,11 @@ fun DecodeRobot.clearForShooting(): Boolean{
     return inShootingZone() && headingIsAtGoal() && flySpeedIsCorrect()
 }
 
-fun DecodeRobot.closestPointInShootingZone (): Location{
+
+enum class shootingZones {
+    CLOSEST, FRONT, BACK
+}
+fun DecodeRobot.closestPointInShootingZone(shootingZone: shootingZones): Location{
     if (inShootingZone()){
         return currentPosition.location()
     }
@@ -341,10 +345,15 @@ fun DecodeRobot.closestPointInShootingZone (): Location{
             Location(0.cm, 0.cm)
         }
     }
-
-    return if (currentPosition.location().distanceTo(close) < currentPosition.location().distanceTo(far)){
+    return if (shootingZone == shootingZones.CLOSEST){
+         if (currentPosition.location().distanceTo(close) < currentPosition.location().distanceTo(far)){
+            close
+        } else {
+            far
+        }
+    }else if(shootingZone == shootingZones.FRONT){
         close
-    } else {
+    }else{
         far
     }
 }
