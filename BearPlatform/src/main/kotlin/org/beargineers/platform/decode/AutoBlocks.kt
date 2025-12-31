@@ -23,6 +23,7 @@ import org.beargineers.platform.doOnce
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.followPath
 import org.beargineers.platform.headingToGoal
+import org.beargineers.platform.shootingZones
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -122,9 +123,9 @@ fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
     phase(WaitForShootingCompletion())
 }
 
-fun PhaseBuilder<DecodeRobot>.goToShootingZone() {
+fun PhaseBuilder<DecodeRobot>.goToShootingZone(shootingZone: shootingZones) {
     action {
-        driveToTarget(closestPointInShootingZone().withHeading(headingToGoal()), 1.0)
+        driveToTarget(closestPointInShootingZone(shootingZone).withHeading(headingToGoal()), 1.0)
     }
 }
 
