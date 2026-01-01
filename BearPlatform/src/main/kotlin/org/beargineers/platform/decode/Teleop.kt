@@ -12,6 +12,7 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.shootingAngleCorrectionForMovement
 import org.beargineers.platform.ShootingZones
+import org.beargineers.platform.clearForShooting
 import org.beargineers.platform.sin
 import kotlin.math.abs
 
@@ -88,7 +89,11 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
 
     override fun bearLoop() {
         super.bearLoop()
-
+        if (robot.clearForShooting()) {
+            telemetry.addData("", "Can shoot")
+        }else{
+            telemetry.addData("", "NOT READY FOR SHOOTING")
+        }
         val slow = gamepad1.left_bumper
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
 
