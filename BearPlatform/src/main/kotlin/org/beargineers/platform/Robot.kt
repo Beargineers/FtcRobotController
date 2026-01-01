@@ -67,4 +67,11 @@ interface Robot {
     fun configValue(name: String): String?
 
     val opMode: RobotOpMode<*>
+
+    val dimensions: RobotDimensions
+}
+
+class RobotDimensions(val robot: Robot) {
+    val ROBOT_WHEELBASE_WIDTH by robot.config(0.0)
+    val ROBOT_WHEELBASE_LENTH by robot.config(0.0)
 }

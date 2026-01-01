@@ -28,6 +28,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override var currentPosition: Position = FIELD_CENTER
 
+    override val dimensions =  RobotDimensions(this)
     val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
 
     internal var currentConfigText = ""
