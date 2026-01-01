@@ -67,20 +67,3 @@ interface AbsoluteLocalizer {
      */
     fun getRobotPose(): Position?
 }
-
-class NormalizingAbsoluteLocalizer(val localizer: AbsoluteLocalizer, val robot: Robot): AbsoluteLocalizer {
-    private val normalizer: PositionNormalDistribution = PositionNormalDistribution(1.cm, 1.degrees, 30)
-
-    override fun getRobotPose(): Position? {
-        if (robot.isMoving()) {
-            normalizer.reset()
-        }
-
-        val pose = localizer.getRobotPose()
-        if (pose != null) {
-            normalizer.update(pose)
-            return normalizer.result()
-        }
-        return null
-    }
-}
