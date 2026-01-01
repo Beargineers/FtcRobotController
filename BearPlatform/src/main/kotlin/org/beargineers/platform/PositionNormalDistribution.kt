@@ -3,7 +3,7 @@ package org.beargineers.platform
 import kotlin.math.min
 import kotlin.math.sqrt
 
-private val N = 300
+private val N = 150
 
 private class DoubleNormalDistribution {
     private val data = DoubleArray(N)
