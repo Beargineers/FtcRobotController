@@ -73,5 +73,5 @@ interface Robot {
 
 class RobotDimensions(val robot: Robot) {
     val ROBOT_WHEELBASE_WIDTH by robot.config(0.0)
-    val ROBOT_WHEELBASE_LENTH by robot.config(0.0)
+    val ROBOT_WHEELBASE_LENGTH by robot.config(0.0)
 }
