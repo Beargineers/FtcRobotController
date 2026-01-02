@@ -311,12 +311,12 @@ fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSE
         }
     }
 
-    val xFromCenter = 7.cm
-    val yFromCenter = 7.cm
+    val xFromCenter = dimensions.ROBOT_WHEELBASE_WIDTH/2.cm
+    val yFromCenter = dimensions.ROBOT_WHEELBASE_LENGTH/2.cm
     val fr = Location(xFromCenter,yFromCenter).toAbsolute(currentPosition)
     val fl = Location(-xFromCenter,yFromCenter).toAbsolute(currentPosition)
     val br = Location(xFromCenter,-yFromCenter).toAbsolute(currentPosition)
-    val bl = Location(-xFromCenter,-yFromCenter).toAbsolute(currentPosition )
+    val bl = Location(-xFromCenter,-yFromCenter).toAbsolute(currentPosition)
     return pointInShootingZone(fr) || pointInShootingZone(fl) || pointInShootingZone(br) || pointInShootingZone(bl)
 }
 
