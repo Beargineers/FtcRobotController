@@ -26,7 +26,8 @@ fun Robot.config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMot
         configValue(property.name)?.let {
             when(it) {
                 "forward", "FORWARD", "F" -> DcMotorSimple.Direction.FORWARD
-                "reverse", "REVERSE", "R" -> DcMotorSimple.Direction.REVERSE
+                "reverse", "REVERSE",
+                "reversed", "REVERSED", "R" -> DcMotorSimple.Direction.REVERSE
                 else -> null
             }
         } ?: default
