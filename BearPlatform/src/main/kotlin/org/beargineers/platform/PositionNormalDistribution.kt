@@ -38,7 +38,7 @@ private class DoubleNormalDistribution {
     }
 }
 
-class PositionNormalDistribution(val positionTolerance: Distance, val headingTolerance: Angle, val minSamples: Int) {
+class PositionNormalDistribution(val minSamples: Int) {
     private val x = DoubleNormalDistribution()
     private val y = DoubleNormalDistribution()
     private val heading = DoubleNormalDistribution()
@@ -49,7 +49,7 @@ class PositionNormalDistribution(val positionTolerance: Distance, val headingTol
         heading.update(p.heading.degrees())
     }
 
-    fun result(): Position? {
+    fun result(positionTolerance: Distance, headingTolerance: Angle): Position? {
         if (n < minSamples) return null
 
         val (xm, xstd) = x.result()

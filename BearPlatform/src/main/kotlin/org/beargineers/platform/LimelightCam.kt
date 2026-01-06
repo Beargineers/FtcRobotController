@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 private val executor = Executors.newSingleThreadScheduledExecutor()
 
 class LimelightCam(robot: BaseRobot): Camera(robot) {
-    private val normalizer: PositionNormalDistribution = PositionNormalDistribution(1.cm, 1.degrees, 5)
+    private val normalizer: PositionNormalDistribution = PositionNormalDistribution(5)
 
     private var lastUpdated = 0.0
     private val limelight by hardware<Limelight3A>("limelight")
@@ -38,12 +38,14 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
     }
 
     override fun getRobotPose(): Position? {
-        if (robot.isMoving()) {
+        val shift = robot.currentVelocity
+        val velocity = hypot(shift.right, shift.forward)
+        if (velocity > Camera_positionTolerance.cm) {
             normalizer.reset()
             return null
         }
 
-        return normalizer.result()
+        return normalizer.result(Camera_positionTolerance.cm, Camera_headingTolerance.degrees)
     }
 
     private fun position(latestResult: LLResult): Position? {
