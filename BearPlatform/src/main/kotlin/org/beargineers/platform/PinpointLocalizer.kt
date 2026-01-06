@@ -8,8 +8,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
     private val pinpoint by hardware<GoBildaPinpointDriver>()
 
-    private val pinpoint_xOffset by robot.config(-8.4)
-    private val pinpoint_yOffset by robot.config(-16.8)
+    private val pinpoint_xOffset by robot.config(8.1)
+    private val pinpoint_yOffset by robot.config(6.0)
 
     override fun init() {
         pinpoint.setOffsets(
@@ -21,7 +21,7 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
         pinpoint.setEncoderDirections(
             GoBildaPinpointDriver.EncoderDirection.FORWARD,
-            GoBildaPinpointDriver.EncoderDirection.FORWARD
+            GoBildaPinpointDriver.EncoderDirection.REVERSED
         )
         pinpoint.resetPosAndIMU()
     }
