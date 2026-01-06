@@ -6,6 +6,7 @@ import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.BLUE_OPEN_GATE
 import org.beargineers.platform.BLUE_OPEN_GATE_APPROACH
 import org.beargineers.platform.BLUE_PARK
+import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Location
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
@@ -14,6 +15,7 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.RED_OPEN_GATE
 import org.beargineers.platform.RED_OPEN_GATE_APPROACH
 import org.beargineers.platform.RED_PARK
+import org.beargineers.platform.Robot
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
@@ -24,6 +26,7 @@ import org.beargineers.platform.driveTo
 import org.beargineers.platform.followPath
 import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.ShootingZones
+import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -126,6 +129,12 @@ fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
 fun PhaseBuilder<DecodeRobot>.goToShootingZone(shootingZone: ShootingZones) {
     action {
         driveToTarget(closestPointInShootingZone(shootingZone).withHeading(headingToGoal()), 1.0)
+    }
+}
+
+fun PhaseBuilder<DecodeRobot>.goToCursorLocation(){
+    action{
+        driveToTarget(cursorLocation().withHeading(currentPosition.heading), 1.0)
     }
 }
 

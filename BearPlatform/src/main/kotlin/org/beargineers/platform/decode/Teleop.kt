@@ -13,6 +13,7 @@ import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.shootingAngleCorrectionForMovement
 import org.beargineers.platform.ShootingZones
 import org.beargineers.platform.clearForShooting
+import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.sin
 import kotlin.math.abs
 
@@ -20,19 +21,30 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     val ROTATION_TRIGGER_REDUCTION by robot.config(0.5)
     val POSITIONAL_GAIN by robot.config(60)
     val ROTATIONAL_GAIN by robot.config(50)
-    private var fpvDrive = false
+
+    val slowCoeff by robot.config(0.4)
+    private var fpvDrive = true
     private var lookAtGoal = false
     private var lookAtGoalBtnClickedAt = 0L
+    private var intakeON = true
 
     override fun bearInit() {
         super.bearInit()
 
         toggleButton("Intake Reverse", gamepad1::y) { on ->
-            robot.intakeMode(if (on) IntakeMode.REVERSE else IntakeMode.ON)
+            robot.intakeMode(if (intakeON && on) IntakeMode.REVERSE else if (intakeON)IntakeMode.ON else IntakeMode.OFF)
         }
 
         toggleButton("FPV Drive", gamepad1::b) {
             fpvDrive = it
+        }
+
+        toggleButton("Intake", gamepad1::x){
+            intakeON = it
+        }
+
+        toggleButton("Shooter", gamepad1::a){
+            robot.enableFlywheel(it)
         }
 
         button(gamepad1::right_stick_button) {
@@ -77,6 +89,13 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
                 holdPosition(position)
             }
         }
+
+        button( gamepad2::a){
+            lookAtGoal = false
+            auto("Going to cursor"){
+                goToCursorLocation()
+            }
+        }
     }
 
     override fun bearStart() {
@@ -95,6 +114,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             telemetry.addData("", "NOT READY FOR SHOOTING")
         }
         val slow = gamepad1.left_bumper
+
         telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
 
         if (commandedRotation().degrees() != 0.0) {
@@ -116,7 +136,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val deltaPosition = Position(dx.cm, dy.cm, heading - robot.currentPosition.heading)
 
             val targetPosition = robot.currentPosition.plus(deltaPosition)
-            robot.driveToTarget(targetPosition, if (slow) 0.4 else 1.0)
+            robot.driveToTarget(targetPosition, if (slow) slowCoeff else 1.0)
         } else {
             val h = robot.currentPosition.heading - robot.shootingAngleCorrectionForMovement()
             val forward = -gamepad1.left_stick_y.normalize().cm
@@ -129,7 +149,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val deltaPosition = Position(dx, dy, heading - robot.currentPosition.heading)
 
             val targetPosition = robot.currentPosition.plus(deltaPosition)
-            robot.driveToTarget(targetPosition, if (slow) 0.4 else 1.0)
+            robot.driveToTarget(targetPosition, if (slow) slowCoeff else 1.0)
         }
     }
 

@@ -29,8 +29,8 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         super.init()
 
         val launchMotors = listOf(fly1, fly2)
-        fly1.direction = DcMotorSimple.Direction.REVERSE
-        fly2.direction = DcMotorSimple.Direction.FORWARD
+        fly1.direction = DcMotorSimple.Direction.FORWARD
+        fly2.direction = DcMotorSimple.Direction.REVERSE
         launchMotors.forEach {
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
         }
