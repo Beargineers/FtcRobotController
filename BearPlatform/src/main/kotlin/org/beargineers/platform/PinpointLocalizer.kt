@@ -1,6 +1,7 @@
 package org.beargineers.platform
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
@@ -11,6 +12,9 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
     private val pinpoint_xOffset by robot.config(8.1)
     private val pinpoint_yOffset by robot.config(6.0)
 
+    private val pinpoint_xEncoderDirection by robot.config(DcMotorSimple.Direction.FORWARD)
+    private val pinpoint_yEncoderDirection by robot.config(DcMotorSimple.Direction.FORWARD)
+
     override fun init() {
         pinpoint.setOffsets(
             pinpoint_xOffset,
@@ -20,10 +24,14 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
 
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
         pinpoint.setEncoderDirections(
-            GoBildaPinpointDriver.EncoderDirection.FORWARD,
-            GoBildaPinpointDriver.EncoderDirection.REVERSED
+            pinpoint_xEncoderDirection.direction(),
+            pinpoint_yEncoderDirection.direction()
         )
         pinpoint.resetPosAndIMU()
+    }
+
+    private fun DcMotorSimple.Direction.direction(): GoBildaPinpointDriver.EncoderDirection {
+        return if (this == DcMotorSimple.Direction.FORWARD) GoBildaPinpointDriver.EncoderDirection.FORWARD else GoBildaPinpointDriver.EncoderDirection.REVERSED
     }
 
     override fun loop() {
