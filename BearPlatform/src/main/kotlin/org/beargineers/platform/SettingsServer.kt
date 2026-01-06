@@ -30,6 +30,12 @@ object SettingsWebServer : NanoHTTPD(9000) {
             uri == "/" && session.method == Method.POST -> {
                 handleSettingsUpdate(session)
             }
+            uri == "/config" && session.method == Method.GET -> {
+                handleConfigGet()
+            }
+            uri == "/config" && session.method == Method.POST -> {
+                handleConfigPost(session)
+            }
             else -> {
                 newFixedLengthResponse(
                     Response.Status.NOT_FOUND,
@@ -184,5 +190,48 @@ object SettingsWebServer : NanoHTTPD(9000) {
             .replace(">", "&gt;")
             .replace("\"", "&quot;")
             .replace("'", "&#39;")
+    }
+
+    private fun handleConfigGet(): Response {
+        return newFixedLengthResponse(
+            Response.Status.OK,
+            "text/plain",
+            configText
+        )
+    }
+
+    private fun handleConfigPost(session: IHTTPSession): Response {
+        // Read the request body
+        val contentLength = session.headers["content-length"]?.toIntOrNull() ?: 0
+
+        if (contentLength == 0) {
+            return newFixedLengthResponse(
+                Response.Status.BAD_REQUEST,
+                "application/json",
+                """{"status":"error","message":"Empty request body"}"""
+            )
+        }
+
+        val body = ByteArray(contentLength)
+        try {
+            session.inputStream.read(body, 0, contentLength)
+            val newConfigText = String(body, Charsets.UTF_8)
+
+            // Update the config
+            configText = newConfigText
+            robot?.updateConfigText(configText)
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                """{"status":"success","message":"Config updated successfully"}"""
+            )
+        } catch (e: Exception) {
+            return newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "application/json",
+                """{"status":"error","message":"Error updating config: ${e.message}"}"""
+            )
+        }
     }
 }
