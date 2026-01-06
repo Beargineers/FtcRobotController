@@ -64,6 +64,8 @@ interface Robot {
 
     val currentPosition: Position
 
+    val currentVelocity: RelativePosition
+
     fun configValue(name: String): String?
 
     val opMode: RobotOpMode<*>
