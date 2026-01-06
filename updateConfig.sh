@@ -6,7 +6,7 @@ if [ -z "$cfg_path" ]; then
   echo "No changed config file found, nothing to update from"
 else
   echo "Updating $cfg_path"
-  out=$(curl -X POST "http://192.168.43.1:9000/" -F "settings=@$cfg_path" -m 3 2>&1 >/dev/null )
+  out=$(curl -X POST "http://192.168.43.1:9000/" -F "settings=<$cfg_path" -m 3 2>&1 >/dev/null )
 
   rc=$?
   if [ $rc -ne 0 ]; then
