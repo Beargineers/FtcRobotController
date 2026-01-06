@@ -10,6 +10,9 @@ import kotlin.math.PI
 import kotlin.math.cosh
 import kotlin.math.pow
 
+fun cursorLocation(): Location{
+    return Location(PanelsField.field.cursorX.inch,PanelsField.field.cursorY.inch)
+}
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
     abstract val relativeLocalizer: RelativeLocalizer
