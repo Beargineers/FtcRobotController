@@ -7,14 +7,17 @@ import org.beargineers.platform.Hardware
 import org.beargineers.platform.decode.IntakeMode
 
 class Intake(robot: BaseRobot): Hardware(robot) {
-    val intake: DcMotor by hardware("intake")
+    private val intake: DcMotor by hardware("intake")
+
+    var mode: IntakeMode = IntakeMode.OFF
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
     }
 
-    fun enable(on: IntakeMode) {
-        when(on) {
+    override fun loop() {
+        telemetry.addData("Intake", mode.name)
+        when(mode) {
             IntakeMode.ON -> {
                 setMotorPower(intake, 1.0)
             }
@@ -28,6 +31,6 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     }
 
     override fun stop() {
-        enable(IntakeMode.OFF)
+        mode = IntakeMode.OFF
     }
 }

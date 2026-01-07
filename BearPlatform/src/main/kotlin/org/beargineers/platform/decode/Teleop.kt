@@ -5,15 +5,14 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.ShootingZones
+import org.beargineers.platform.clearForShooting
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
 import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.shootingAngleCorrectionForMovement
-import org.beargineers.platform.ShootingZones
-import org.beargineers.platform.clearForShooting
-import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.sin
 import kotlin.math.abs
 
@@ -26,21 +25,22 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     private var fpvDrive = true
     private var lookAtGoal = false
     private var lookAtGoalBtnClickedAt = 0L
-    private var intakeON = true
 
     override fun bearInit() {
         super.bearInit()
 
-        toggleButton("Intake Reverse", gamepad1::y) { on ->
-            robot.intakeMode(if (intakeON && on) IntakeMode.REVERSE else if (intakeON)IntakeMode.ON else IntakeMode.OFF)
+        button(gamepad1::y) {
+            robot.intakeMode(when (robot.intakeMode) {
+                IntakeMode.OFF -> IntakeMode.ON
+                IntakeMode.ON -> IntakeMode.OFF
+                IntakeMode.REVERSE -> IntakeMode.ON
+            })
+        }.onHold {
+            robot.intakeMode(IntakeMode.REVERSE)
         }
 
         toggleButton("FPV Drive", gamepad1::b) {
             fpvDrive = it
-        }
-
-        toggleButton("Intake", gamepad1::x){
-            intakeON = it
         }
 
         toggleButton("Shooter", gamepad1::a){
@@ -101,8 +101,10 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     override fun bearStart() {
         super.bearStart()
 
+/*
         robot.intakeMode(IntakeMode.ON)
         robot.enableFlywheel(true)
+*/
     }
 
 
