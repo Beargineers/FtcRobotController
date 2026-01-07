@@ -21,9 +21,9 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val shooter = Shooter(this)
 
     val intake = Intake(this)
-
+    override val intakeMode: IntakeMode get() = intake.mode
     override fun intakeMode(mode: IntakeMode) {
-        intake.enable(mode)
+        intake.mode = mode
     }
 
     override fun launch() {

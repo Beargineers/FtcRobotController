@@ -3,22 +3,33 @@ package org.beargineers.platform
 import org.firstinspires.ftc.robotcore.external.Telemetry
 
 open class Button(val test: () -> Boolean) {
-    private var pressed: Boolean = false
-    private var callback: () -> Unit = {}
+    private var pressedAt: Long? = null
+    private var onRelease: () -> Unit = {}
+    private var onHold: () -> Unit = {}
 
     fun onRelease(callback: () -> Unit): Button {
-        this.callback = callback
+        this.onRelease = callback
+        return this
+    }
+
+    fun onHold(callback: () -> Unit): Button {
+        this.onHold = callback
         return this
     }
 
     open fun update() {
-        val reading = test()
-        if (reading) {
-            pressed = true
+        val pressed = test()
+        if (pressed) {
+            if (pressedAt == null) {
+                pressedAt = System.currentTimeMillis()
+            }
+            else if (System.currentTimeMillis() - pressedAt!! > 300){
+                onHold()
+            }
         }
-        else if (pressed) {
-            pressed = false
-            callback()
+        else if (pressedAt != null) {
+            onRelease()
+            pressedAt = null
         }
     }
 }

@@ -93,8 +93,10 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
         bearLoop()
     }
 
-    fun button(test: () -> Boolean, callback: () -> Unit) {
-        allButtons += Button(test).onRelease(callback)
+    fun button(test: () -> Boolean, callback: () -> Unit): Button {
+        val button = Button(test).onRelease(callback)
+        allButtons += button
+        return button
     }
 
     fun toggleButton(name: String, test: () -> Boolean, callback: (Boolean) -> Unit) {
