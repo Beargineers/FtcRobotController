@@ -17,6 +17,7 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val relativeLocalizer: RelativeLocalizer = PinpointLocalizer(this)
 
     override val configResource: Int = R.raw.config
+    override val intakeMode: IntakeMode get() = IntakeMode.OFF
 
     override fun intakeMode(mode: IntakeMode) {
         // TODO("Not yet implemented")

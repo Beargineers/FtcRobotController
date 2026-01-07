@@ -45,8 +45,10 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     }
 
     override fun intakeMode(mode: IntakeMode) {
-        intake.enable(mode)
+        intake.mode = mode
     }
+
+    override val intakeMode: IntakeMode get() = intake.mode
 
     override fun launch() {
         shooter.launch()
