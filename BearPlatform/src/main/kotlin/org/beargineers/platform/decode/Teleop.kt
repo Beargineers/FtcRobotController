@@ -17,9 +17,8 @@ import org.beargineers.platform.sin
 import kotlin.math.abs
 
 open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
-    val ROTATION_TRIGGER_REDUCTION by robot.config(0.5)
     val POSITIONAL_GAIN by robot.config(60)
-    val ROTATIONAL_GAIN by robot.config(50)
+    val ROTATIONAL_GAIN by robot.config(20)
 
     val slowCoeff by robot.config(0.4)
     private var fpvDrive = true
@@ -163,8 +162,10 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         return heading
     }
 
-    private fun commandedRotation(): Angle =
-        (gamepad1.right_stick_x + (gamepad1.right_trigger - gamepad1.left_trigger) * ROTATION_TRIGGER_REDUCTION).normalize().degrees * 90.0
+    private fun commandedRotation(): Angle {
+        return (ROTATIONAL_GAIN * (gamepad1.right_stick_x +
+                (gamepad1.right_trigger - gamepad1.left_trigger) * 0.5).normalize()).degrees
+    }
 
 
     fun Float.normalize(): Double = deadband(toDouble())
