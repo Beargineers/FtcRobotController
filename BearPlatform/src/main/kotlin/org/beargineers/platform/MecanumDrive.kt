@@ -32,7 +32,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
         allMotors.forEach {
             it.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-            it.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            it.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
 
         (localizerByMotorEncoders as MecanumEncodersLocalizers).init()
