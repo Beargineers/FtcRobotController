@@ -30,11 +30,11 @@ val RED_PARK = tileLocation("B2", tileOffset = TileOffset.BOTTOM_RIGHT).shift(-9
 
 val BLUE_PARK = tileLocation("E2", tileOffset = TileOffset.BOTTOM_LEFT).shift(-9.inch, 9.inch)
 
-val RED_OPEN_GATE = Position(-4.cm, 133.cm, 90.degrees)
-val RED_OPEN_GATE_APPROACH = Position(-4.cm, 80.cm, 90.degrees)
+val RED_OPEN_GATE = Position(-6.cm, 129.cm, 90.degrees)
+val RED_OPEN_GATE_APPROACH = Position(-6.cm, 80.cm, 90.degrees)
 
-val BLUE_OPEN_GATE = Position(-4.cm, -133.cm, -90.degrees)
-val BLUE_OPEN_GATE_APPROACH = Position(-4.cm, -80.cm, -90.degrees)
+val BLUE_OPEN_GATE = Position(-6.cm, -129.cm, -90.degrees)
+val BLUE_OPEN_GATE_APPROACH = Position(-6.cm, -80.cm, -90.degrees)
 class Location(val x: Distance, val y: Distance) {
     fun shift(x: Distance, y: Distance): Location {
         return Location(this.x + x, this.y + y)
@@ -240,7 +240,7 @@ class Position(val x: Distance, val y: Distance, val heading: Angle) {
 fun Location.toAbsolute(cp: Position): Location {
     val magnitude = hypot(x, y)
     val absoluteH = atan2(y,x)
-    val absH = absoluteH + cp.heading
+    val absH = absoluteH + cp.heading - 90.degrees
     val absX = cos(absH)*magnitude
     val absY = sin(absH)*magnitude
     return Location(absX + cp.x, absY + cp.y)
@@ -311,13 +311,10 @@ fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSE
         }
     }
 
-    val xFromCenter = dimensions.ROBOT_WHEELBASE_WIDTH/2.cm
-    val yFromCenter = dimensions.ROBOT_WHEELBASE_LENGTH/2.cm
-    val fr = Location(xFromCenter,yFromCenter).toAbsolute(currentPosition)
-    val fl = Location(-xFromCenter,yFromCenter).toAbsolute(currentPosition)
-    val br = Location(xFromCenter,-yFromCenter).toAbsolute(currentPosition)
-    val bl = Location(-xFromCenter,-yFromCenter).toAbsolute(currentPosition)
-    return pointInShootingZone(fr) || pointInShootingZone(fl) || pointInShootingZone(br) || pointInShootingZone(bl)
+    return pointInShootingZone(rf_wheel) ||
+            pointInShootingZone(lf_wheel) ||
+            pointInShootingZone(rb_wheel) ||
+            pointInShootingZone(lb_wheel)
 }
 
 fun DecodeRobot.clearForShooting(): Boolean{

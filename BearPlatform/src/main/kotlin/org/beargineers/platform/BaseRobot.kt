@@ -105,20 +105,16 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
                 line(location.x.inch(), location.y.inch())
                 moveCursor(location.x.inch(), location.y.inch())
             }
-
-            val xFromCenter = 9.inch // TODO: Real robot dimensions
-            val yFromCenter = 9.inch
-            val fr = Location(xFromCenter,yFromCenter).toAbsolute(cp)
-            val fl = Location(-xFromCenter,yFromCenter).toAbsolute(cp)
-            val br = Location(xFromCenter,-yFromCenter).toAbsolute(cp)
-            val bl = Location(-xFromCenter,-yFromCenter).toAbsolute(cp)
+            fun moveCursor(location: Location) {
+                moveCursor(location.x.inch(), location.y.inch())
+            }
 
             setStyle("white", "blue", 1.0)
-            moveCursor(fl.x.inch(), fl.y.inch())
-            lineTo(fr)
-            lineTo(br)
-            lineTo(bl)
-            lineTo(fl)
+            moveCursor(lf_corner)
+            lineTo(rf_corner)
+            lineTo(rb_corner)
+            lineTo(lb_corner)
+            lineTo(lf_corner)
 
             setStyle("white", "white", 1.0)
             moveCursor(cp.x.inch(), cp.y.inch())
