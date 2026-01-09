@@ -1,9 +1,11 @@
 package org.beargineers.beta
 
 import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
+import org.beargineers.platform.PID
 import org.beargineers.platform.config
 import org.beargineers.platform.goalDistance
 
@@ -14,6 +16,12 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_FREE_QUOTIENT by robot.config(0.556)
     val SHOOTING_TIME_SECONDS by robot.config(4.5)
 
+    val SHOOTER_P by robot.config(0.0)
+    val SHOOTER_I by robot.config(0.0)
+    val SHOOTER_D by robot.config(0.0)
+
+    val pid = PID()
+
     val fly1 by hardware<DcMotor>()
     val fly2 by hardware<DcMotor>()
 
@@ -22,21 +30,25 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     var feederStartedAt: Long = 0
 
     var flywheelEnabled = false
-    var frozenFlywheelPower: Double? = null
+
+    var maxTicks = 0
 
 
     override fun init() {
         super.init()
 
         val launchMotors = listOf(fly1, fly2)
-        fly1.direction = DcMotorSimple.Direction.FORWARD
-        fly2.direction = DcMotorSimple.Direction.REVERSE
+        fly1.direction = DcMotorSimple.Direction.REVERSE
+        fly2.direction = DcMotorSimple.Direction.FORWARD
         launchMotors.forEach {
+            it.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
         }
 
         feeder.direction = DcMotorSimple.Direction.REVERSE
         feeder.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+
+        maxTicks = fly1.motorType.achieveableMaxTicksPerSecondRounded
     }
 
     fun enableFlywheel(on: Boolean) {
@@ -44,13 +56,16 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     }
 
     private fun powerFlywheel(p: Double) {
-        setMotorPower(fly1, p)
-        setMotorPower(fly2, p)
+        pid.setTarget(p, SHOOTER_P, SHOOTER_I, SHOOTER_D)
+        pid.update((fly1 as DcMotorEx).velocity / (maxTicks))
+        telemetry.addData("Shooter error", pid.error())
+
+        val v = pid.result() + p
+        fly1.power = v
+        fly2.power = v
     }
 
     fun launch() {
-        frozenFlywheelPower = recommendedFlywheelPower()
-
         feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         setMotorPower(feeder, 1.0)
         feederStartedAt = System.currentTimeMillis()
@@ -62,11 +77,10 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > SHOOTING_TIME_SECONDS * 1000) {
             setMotorPower(feeder, 0.0)
             feederStartedAt = 0L
-            frozenFlywheelPower = null
         }
 
         val nominalPower = when {
-            flywheelEnabled -> frozenFlywheelPower ?: recommendedFlywheelPower()
+            flywheelEnabled -> recommendedFlywheelPower()
             else -> 0.0
         }
         powerFlywheel(nominalPower)
