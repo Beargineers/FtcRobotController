@@ -71,9 +71,24 @@ interface Robot {
     val opMode: RobotOpMode<*>
 
     val dimensions: RobotDimensions
+
+    val lf_wheel: Location get() = Location(-dimensions.ROBOT_WHEELBASE_WIDTH/2.cm, dimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(currentPosition)
+    val rf_wheel: Location get() = Location(dimensions.ROBOT_WHEELBASE_WIDTH/2.cm, dimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(currentPosition)
+    val lb_wheel: Location get() = Location(-dimensions.ROBOT_WHEELBASE_WIDTH/2.cm, -dimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(currentPosition)
+    val rb_wheel: Location get() = Location(dimensions.ROBOT_WHEELBASE_WIDTH/2.cm, -dimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(currentPosition)
+
+    val lf_corner: Location get() = Location((dimensions.ROBOT_WIDTH / 2).cm, dimensions.ROBOT_FRONT_OFFSET.cm).toAbsolute(currentPosition)
+    val rf_corner: Location get() = Location(-(dimensions.ROBOT_WIDTH / 2).cm, dimensions.ROBOT_FRONT_OFFSET.cm).toAbsolute(currentPosition)
+    val lb_corner: Location get() = Location((dimensions.ROBOT_WIDTH / 2).cm, -dimensions.ROBOT_BACK_OFFSET.cm).toAbsolute(currentPosition)
+    val rb_corner: Location get() = Location(-(dimensions.ROBOT_WIDTH / 2).cm, -dimensions.ROBOT_BACK_OFFSET.cm).toAbsolute(currentPosition)
 }
 
 class RobotDimensions(val robot: Robot) {
     val ROBOT_WHEELBASE_WIDTH by robot.config(0.0)
     val ROBOT_WHEELBASE_LENGTH by robot.config(0.0)
+
+    val ROBOT_LENGTH by robot.config(0.0)
+    val ROBOT_WIDTH by robot.config(0.0)
+    val ROBOT_FRONT_OFFSET by robot.config(0.0)
+    val ROBOT_BACK_OFFSET by robot.config(0.0)
 }

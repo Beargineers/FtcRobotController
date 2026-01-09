@@ -9,6 +9,7 @@ import org.beargineers.platform.RelativeLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.goalDistance
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val drive = MecanumDrive(this)
@@ -36,5 +37,10 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun isShooting(): Boolean {
         return shooter.feederStartedAt != 0L
+    }
+
+    override fun loop() {
+        super.loop()
+        telemetry.addData("Distance to goal", goalDistance())
     }
 }
