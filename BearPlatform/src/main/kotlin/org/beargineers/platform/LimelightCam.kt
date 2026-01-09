@@ -50,7 +50,7 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
 
     private fun position(latestResult: LLResult): Position? {
         val position = latestResult.botpose?.robotPose()?.rotate(CameraPosition_yaw.degrees) ?: return null
-        val cameraOffset = Location(CameraPosition_right.cm, CameraPosition_forward.cm)
+        val cameraOffset = Location(-CameraPosition_right.cm, -CameraPosition_forward.cm)
 
         return cameraOffset.toAbsolute(position).withHeading(position.heading)
     }
