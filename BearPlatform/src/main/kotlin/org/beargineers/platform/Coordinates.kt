@@ -272,7 +272,7 @@ fun DecodeRobot.headingToGoal(): Angle {
     val cp = currentPosition
     val dx = goal.x - cp.x
     val dy = goal.y - cp.y
-    return atan2(dy, dx) + shootingAngleCorrectionForMovement()
+    return atan2(dy, dx) + shootingAngleCorrectionForMovement() + shootingAngleCorrection
 }
 
 enum class ShootingZones {
