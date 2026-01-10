@@ -24,7 +24,6 @@ internal class PathFollower(
     val path: List<Position>,
     private val robot: Robot,
     startPosition: Position,
-    private val maxSpeed: Double,
     private val kP_position: Double,
     private val kP_heading: Double,
     private val minimalWheelPower: Double,
@@ -100,7 +99,7 @@ internal class PathFollower(
 
         val maxPower = listOf(kotlin.math.abs(forwardPower), kotlin.math.abs(strafePower), kotlin.math.abs(turnPower)).maxOf { it }
         val maxV = when {
-            maxPower > maxSpeed -> maxPower / maxSpeed
+            maxPower > 1.0 -> maxPower
             maxPower < minimalWheelPower && maxPower > 1e-6 -> maxPower / minimalWheelPower
             else -> 1.0
         }
