@@ -35,12 +35,9 @@ interface Robot {
      * }
      * ```
      */
-    fun driveToTarget(target: Position, maxSpeed: Double): Boolean
+    fun driveToTarget(target: Position): Boolean
 
-    fun followPath(
-        path: List<Position>,
-        maxSpeed: Double = 1.0
-    ): Boolean
+    fun followPath(path: List<Position>): Boolean
 
     /**
      * Stops following the current path
@@ -65,6 +62,8 @@ interface Robot {
     val currentPosition: Position
 
     val currentVelocity: RelativePosition
+
+    var targetSpeed: Double
 
     fun configValue(name: String): String?
 

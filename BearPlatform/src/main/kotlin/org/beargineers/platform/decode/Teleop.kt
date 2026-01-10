@@ -137,7 +137,8 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val deltaPosition = Position(dx.cm, dy.cm, heading - robot.currentPosition.heading)
 
             val targetPosition = robot.currentPosition.plus(deltaPosition)
-            robot.driveToTarget(targetPosition, if (slow) slowCoeff else 1.0)
+            robot.targetSpeed = if (slow) slowCoeff else 1.0
+            robot.driveToTarget(targetPosition)
         } else {
             val h = robot.currentPosition.heading - robot.shootingAngleCorrectionForMovement()
             val forward = -gamepad1.left_stick_y.normalize().cm
@@ -150,7 +151,8 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val deltaPosition = Position(dx, dy, heading - robot.currentPosition.heading)
 
             val targetPosition = robot.currentPosition.plus(deltaPosition)
-            robot.driveToTarget(targetPosition, if (slow) slowCoeff else 1.0)
+            robot.targetSpeed = if (slow) slowCoeff else 1.0
+            robot.driveToTarget(targetPosition)
         }
     }
 

@@ -19,6 +19,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_P by robot.config(0.0)
     val SHOOTER_I by robot.config(0.0)
     val SHOOTER_D by robot.config(0.0)
+    val SHOOTER_ANGLE_CORRECTION by robot.config(0.0)
 
     val pid = PID()
 

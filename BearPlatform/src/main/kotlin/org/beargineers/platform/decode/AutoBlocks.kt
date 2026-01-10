@@ -6,7 +6,6 @@ import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.BLUE_OPEN_GATE
 import org.beargineers.platform.BLUE_OPEN_GATE_APPROACH
 import org.beargineers.platform.BLUE_PARK
-import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Location
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
@@ -15,18 +14,17 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.RED_OPEN_GATE
 import org.beargineers.platform.RED_OPEN_GATE_APPROACH
 import org.beargineers.platform.RED_PARK
-import org.beargineers.platform.Robot
+import org.beargineers.platform.ShootingZones
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.closestPointInShootingZone
+import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.followPath
 import org.beargineers.platform.headingToGoal
-import org.beargineers.platform.ShootingZones
-import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -128,13 +126,13 @@ fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
 
 fun PhaseBuilder<DecodeRobot>.goToShootingZone(shootingZone: ShootingZones) {
     action {
-        driveToTarget(closestPointInShootingZone(shootingZone).withHeading(headingToGoal()), 1.0)
+        driveToTarget(closestPointInShootingZone(shootingZone).withHeading(headingToGoal()))
     }
 }
 
 fun PhaseBuilder<DecodeRobot>.goToCursorLocation(){
     action{
-        driveToTarget(cursorLocation().withHeading(currentPosition.heading), 1.0)
+        driveToTarget(cursorLocation().withHeading(currentPosition.heading))
     }
 }
 
@@ -145,13 +143,13 @@ fun PhaseBuilder<DecodeRobot>.park() {
         val heading = currentPosition.heading
         val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
         val parkHeading = squareAngles.minBy { abs(it - heading) }
-        driveToTarget(parkCoords.withHeading(parkHeading), 1.0)
+        driveToTarget(parkCoords.withHeading(parkHeading))
     }
 }
 
 fun PhaseBuilder<DecodeRobot>.holdPosition(position: Position) {
     action {
-        driveToTarget(position, 1.0)
+        driveToTarget(position)
         true // Keep this auto active until it is cancelled by touching gamepad controls
     }
 }

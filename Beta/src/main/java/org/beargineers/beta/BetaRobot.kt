@@ -1,6 +1,7 @@
 package org.beargineers.beta
 
 import org.beargineers.platform.AbsoluteLocalizer
+import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.MecanumDrive
@@ -9,7 +10,9 @@ import org.beargineers.platform.RelativeLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.degrees
 import org.beargineers.platform.goalDistance
+import org.beargineers.platform.headingToGoal
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val drive = MecanumDrive(this)
@@ -39,8 +42,12 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         return shooter.feederStartedAt != 0L
     }
 
+    override val shootingAngleCorrection: Angle
+        get() = shooter.SHOOTER_ANGLE_CORRECTION.degrees
+
     override fun loop() {
         super.loop()
         telemetry.addData("Distance to goal", goalDistance())
+        telemetry.addData("Heading to goal error", headingToGoal() - currentPosition.heading)
     }
 }
