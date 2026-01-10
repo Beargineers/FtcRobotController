@@ -33,6 +33,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override val dimensions =  RobotDimensions(this)
     override val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
+    override var targetSpeed: Double = 1.0
 
     internal var currentConfigText = ""
     private set
@@ -166,8 +167,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
      * }
      * ```
      */
-    override fun driveToTarget(target: Position, maxSpeed: Double): Boolean {
-        return followPath(listOf(target), maxSpeed)
+    override fun driveToTarget(target: Position): Boolean {
+        return followPath(listOf(target))
     }
 
     override fun drive(
@@ -183,7 +184,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         drive.stop()
     }
 
-    fun curveToTarget(target: Position, radius: Distance, clockwise: Boolean, maxSpeed: Double){
+    fun curveToTarget(target: Position, radius: Distance, clockwise: Boolean){
         val r = radius
         val cp = currentPosition
 
@@ -202,7 +203,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             curvedDistanceToTarget * sin(vectorHeading),
             target.heading)
 
-        driveToTarget(driveTo, maxSpeed)
+        driveToTarget(driveTo)
     }
 
 
@@ -220,10 +221,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
 
 
-    override fun followPath(
-        path: List<Position>,
-        maxSpeed: Double
-    ): Boolean {
+    override fun followPath(path: List<Position>): Boolean {
         // Check if this is a new path (different instance)
         if (currentFollower?.path != path) {
             // Create new PathFollower for this path
@@ -231,7 +229,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
                 path = path,
                 robot = this,
                 startPosition = currentPosition,
-                maxSpeed = maxSpeed,
                 kP_position = kP_position,
                 kP_heading = kP_heading,
                 minimalWheelPower = minimalWheelPower,

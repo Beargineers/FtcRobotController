@@ -1,5 +1,6 @@
 package org.beargineers.platform.decode
 
+import org.beargineers.platform.Angle
 import org.beargineers.platform.Robot
 
 interface DecodeRobot : Robot {
@@ -9,4 +10,6 @@ interface DecodeRobot : Robot {
     fun enableFlywheel(on: Boolean)
 
     fun isShooting(): Boolean
+
+    val shootingAngleCorrection: Angle
 }

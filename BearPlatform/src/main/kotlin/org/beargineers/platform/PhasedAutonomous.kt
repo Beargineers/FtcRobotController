@@ -221,19 +221,19 @@ fun <R: Robot> PhaseBuilder<R>.assumeRobotPosition(position: Position) {
     }
 }
 
-class GotoPosePhase(val pose: Position, val maxSpeed: Double) : AutonomousPhase<Robot> {
+class GotoPosePhase(val pose: Position) : AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return driveToTarget(pose, maxSpeed)
+        return driveToTarget(pose)
     }
 }
 
-class CurveToPosePhase(val pose: Position, val radius: Distance, val clockwise: Boolean, val maxSpeed: Double) : AutonomousPhase<DecodeRobot> {
+class CurveToPosePhase(val pose: Position, val radius: Distance, val clockwise: Boolean) : AutonomousPhase<DecodeRobot> {
     override fun DecodeRobot.initPhase() {
     }
-    fun DecodeRobot.curveToTarget(target: Position, radius: Distance, clockwise: Boolean, maxSpeed: Double): Boolean {
+    fun DecodeRobot.curveToTarget(target: Position, radius: Distance, clockwise: Boolean): Boolean {
         val r = radius
         val cp = currentPosition
 
@@ -266,34 +266,33 @@ class CurveToPosePhase(val pose: Position, val radius: Distance, val clockwise: 
             cp.y + curvedDistanceToTarget * sin(vectorHeading),
             target.heading)
 
-        driveToTarget(driveTo, maxSpeed)
+        driveToTarget(driveTo)
         return true
     }
     override fun DecodeRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return curveToTarget(pose, radius, clockwise, maxSpeed)
+        return curveToTarget(pose, radius, clockwise)
     }
 }
 @PhaseDsl
-fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
-    phase(GotoPosePhase(pose, maxSpeed))
+fun PhaseBuilder<*>.driveTo(pose: Position) {
+    phase(GotoPosePhase(pose))
 }
 
-class GotoPositionViaPhase(val waypoints: List<Position>, val maxSpeed: Double): AutonomousPhase<Robot> {
+class GotoPositionViaPhase(val waypoints: List<Position>): AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return followPath(waypoints, maxSpeed)
+        return followPath(waypoints)
     }
 }
 
 @PhaseDsl
-fun PhaseBuilder<*>.followPath(waypoints: List<Position>, maxSpeed: Double = 1.0) {
-    phase(GotoPositionViaPhase(waypoints, maxSpeed))
+fun PhaseBuilder<*>.followPath(waypoints: List<Position>) {
+    phase(GotoPositionViaPhase(waypoints))
 }
 
-class DriveRelative<R: Robot>(val movement: RelativePosition,
-                              val maxSpeed: Double) : AutonomousPhase<R> {
+class DriveRelative<R: Robot>(val movement: RelativePosition) : AutonomousPhase<R> {
     lateinit var targetPosition: Position
 
     override fun R.initPhase() {
@@ -307,13 +306,13 @@ class DriveRelative<R: Robot>(val movement: RelativePosition,
     }
 
     override fun R.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return driveToTarget(targetPosition, maxSpeed)
+        return driveToTarget(targetPosition)
     }
 }
 
 @PhaseDsl
-fun <R: Robot> PhaseBuilder<R>.driveRelative(movement: RelativePosition, maxSpeed: Double = 0.5) {
-    phase(DriveRelative(movement, maxSpeed))
+fun <R: Robot> PhaseBuilder<R>.driveRelative(movement: RelativePosition) {
+    phase(DriveRelative(movement))
 }
 
 /**

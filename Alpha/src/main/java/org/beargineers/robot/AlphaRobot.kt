@@ -2,12 +2,14 @@ package org.beargineers.robot
 
 import org.beargineers.R
 import org.beargineers.platform.Alliance
+import org.beargineers.platform.Angle
 import org.beargineers.platform.AprilTagWebcam
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.degrees
 import org.beargineers.platform.goalDistance
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 
@@ -49,6 +51,8 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     }
 
     override val intakeMode: IntakeMode get() = intake.mode
+    override val shootingAngleCorrection: Angle
+        get() = 0.degrees
 
     override fun launch() {
         shooter.launch()

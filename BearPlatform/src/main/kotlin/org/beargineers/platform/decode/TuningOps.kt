@@ -62,7 +62,7 @@ class Tune_B1ToB6Left : TestOp({
 @Autonomous(group = "Tune")
 class CurveTest : PhasedAutonomous<DecodeRobot>(Alliance.BLUE, {
     assumeRobotPosition(tilePosition("B3:-90"))
-    phase(CurveToPosePhase(tilePosition("B5:90"), 70.cm, false, 0.2))
+    phase(CurveToPosePhase(tilePosition("B5:90"), 70.cm, false))
 })
 
 val startTestResults = mutableListOf<Double>()

@@ -53,7 +53,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
 
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
-        val limit = if (slow) 0.4 else 1.0
+        val limit = robot.targetSpeed * config.topSpeed
         fun normalize(v: Double) = (v / maxMag) * limit
 
         val lfpn = normalize(lfP * config.lf_correction)
@@ -225,6 +225,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
     }
 
     inner class WheelsConfig {
+        val topSpeed by robot.config(1.0)
         val lf_direction by robot.config(DcMotorSimple.Direction.REVERSE)
         val rf_direction by robot.config(DcMotorSimple.Direction.FORWARD)
         val lb_direction by robot.config( DcMotorSimple.Direction.REVERSE)
