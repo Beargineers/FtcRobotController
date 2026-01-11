@@ -5,7 +5,6 @@ import org.beargineers.platform.Angle
 import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
 import org.beargineers.platform.Robot
-import org.beargineers.platform.TileOffset
 import org.beargineers.platform.atan2
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
@@ -29,15 +28,15 @@ interface DecodeRobot : Robot {
 
 class Locations(val robot: DecodeRobot) {
     val GOAL get() = if (robot.opMode.alliance == Alliance.RED) RED_GOAL else BLUE_GOAL
-    private val RED_GOAL by robot.config(tileLocation("F6", TileOffset.TOP_RIGHT))
-    private val BLUE_GOAL by robot.config(tileLocation("A6", TileOffset.TOP_LEFT))
-
     val PARK get() = if (robot.opMode.alliance == Alliance.RED) RED_PARK else BLUE_PARK
-    private val RED_PARK by robot.config(tileLocation("B2", tileOffset = TileOffset.BOTTOM_RIGHT).shift(-9.inch, -9.inch))
-    private val BLUE_PARK by robot.config(tileLocation("E2", tileOffset = TileOffset.BOTTOM_LEFT).shift(-9.inch, 9.inch))
-
     val OPEN_GATE get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_GATE else BLUE_OPEN_GATE
     val OPEN_GATE_APPROACH get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_GATE_APPROACH else BLUE_OPEN_GATE_APPROACH
+
+    private val RED_GOAL by robot.config(tileLocation("F6TR"))
+    private val BLUE_GOAL by robot.config(tileLocation("A6TL"))
+
+    private val RED_PARK by robot.config(tileLocation("B2BR").shift(-9.inch, -9.inch))
+    private val BLUE_PARK by robot.config(tileLocation("E2BL").shift(-9.inch, 9.inch))
 
     private val RED_OPEN_GATE by robot.config(-6.cm, 129.cm, 90.degrees)
     private val RED_OPEN_GATE_APPROACH by robot.config(-6.cm, 80.cm, 90.degrees)
