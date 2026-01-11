@@ -47,7 +47,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             lookAtGoalBtnClickedAt = System.currentTimeMillis()
         }
 
-        button(gamepad1::dpad_right) { // TODO: Go to close or far zone depending on who we're playing for
+        button(gamepad1::dpad_right) {
             lookAtGoal = true
             auto("Going to shooting zone") {
                 goToShootingZone(if (opMode.alliance == Alliance.BLUE){ShootingZones.FRONT} else {
@@ -55,7 +55,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             }
         }
 
-        button(gamepad1::dpad_left){  // TODO: Go to close or far zone depending on who we're playing for
+        button(gamepad1::dpad_left){
             lookAtGoal = true
             auto("Going to shooting zone") {
                 goToShootingZone(if (opMode.alliance == Alliance.BLUE){ShootingZones.BACK} else {
