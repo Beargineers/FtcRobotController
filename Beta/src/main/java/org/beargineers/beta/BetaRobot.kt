@@ -10,9 +10,9 @@ import org.beargineers.platform.RelativeLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.goalDistance
+import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
-import org.beargineers.platform.goalDistance
-import org.beargineers.platform.headingToGoal
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val drive = MecanumDrive(this)

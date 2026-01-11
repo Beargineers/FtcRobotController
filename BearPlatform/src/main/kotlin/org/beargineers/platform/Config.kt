@@ -33,3 +33,29 @@ fun Robot.config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMot
         } ?: default
     }
 }
+
+fun Robot.config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any, Position> {
+    return config(Position(dx, dy, dh))
+}
+
+fun Robot.config(default: Position): ReadOnlyProperty<Any, Position> {
+    return ReadOnlyProperty { _, property ->
+        configValue(property.name)?.let {
+            val (x, y, heading) = it.split(",").map { it.trim().toDouble() }
+            Position(x.cm, y.cm, heading.degrees)
+        } ?: default
+    }
+}
+
+fun Robot.config(dx: Distance, dy: Distance): ReadOnlyProperty<Any, Location> {
+    return config(Location(dx, dy))
+}
+
+fun Robot.config(default: Location): ReadOnlyProperty<Any, Location> {
+    return ReadOnlyProperty { _, property ->
+        configValue(property.name)?.let {
+            val (x, y) = it.split(",").map { it.trim().toDouble() }
+            Location(x.cm, y.cm)
+        } ?: default
+    }
+}

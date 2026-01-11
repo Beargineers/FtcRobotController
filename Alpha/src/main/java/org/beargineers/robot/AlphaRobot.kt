@@ -9,8 +9,8 @@ import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.degrees
-import org.beargineers.platform.goalDistance
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 
 @Suppress("unused")

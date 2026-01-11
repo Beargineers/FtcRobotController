@@ -5,14 +5,10 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
-import org.beargineers.platform.ShootingZones
-import org.beargineers.platform.clearForShooting
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
-import org.beargineers.platform.headingToGoal
-import org.beargineers.platform.shootingAngleCorrectionForMovement
 import org.beargineers.platform.sin
 import kotlin.math.abs
 
