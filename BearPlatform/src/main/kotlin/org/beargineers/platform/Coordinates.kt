@@ -1,6 +1,5 @@
 package org.beargineers.platform
 
-import org.beargineers.platform.decode.DecodeRobot
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import java.util.Locale
@@ -22,19 +21,6 @@ It says that
 
 val FIELD_CENTER = Location(0.cm, 0.cm).withHeading(0.degrees)
 
-val RED_GOAL = tileLocation("F6", TileOffset.TOP_RIGHT)
-
-val BLUE_GOAL = tileLocation("A6", TileOffset.TOP_LEFT)
-
-val RED_PARK = tileLocation("B2", tileOffset = TileOffset.BOTTOM_RIGHT).shift(-9.inch, -9.inch)
-
-val BLUE_PARK = tileLocation("E2", tileOffset = TileOffset.BOTTOM_LEFT).shift(-9.inch, 9.inch)
-
-val RED_OPEN_GATE = Position(-6.cm, 129.cm, 90.degrees)
-val RED_OPEN_GATE_APPROACH = Position(-6.cm, 80.cm, 90.degrees)
-
-val BLUE_OPEN_GATE = Position(-6.cm, -129.cm, -90.degrees)
-val BLUE_OPEN_GATE_APPROACH = Position(-6.cm, -80.cm, -90.degrees)
 class Location(val x: Distance, val y: Distance) {
     fun shift(x: Distance, y: Distance): Location {
         return Location(this.x + x, this.y + y)
@@ -255,119 +241,4 @@ fun Location.toRelative(cp: Position): Location {
     val relX = cos(relH)*magnitude
     val relY = sin(relH)*magnitude
     return Location(relX, relY)
-}
-
-fun DecodeRobot.goalDistance(): Distance {
-    val goalCords = if (opMode.alliance == Alliance.BLUE) BLUE_GOAL else RED_GOAL
-    val cp = currentPosition
-    return hypot(cp.x - goalCords.x, cp.y - goalCords.y)
-}
-
-fun DecodeRobot.shootingAngleCorrectionForMovement() : Angle {
-    return 0.degrees
-}
-
-fun DecodeRobot.headingToGoal(): Angle {
-    val goal = (if (opMode.alliance == Alliance.BLUE) BLUE_GOAL else RED_GOAL)
-    val cp = currentPosition
-    val dx = goal.x - cp.x
-    val dy = goal.y - cp.y
-    return atan2(dy, dx) + shootingAngleCorrectionForMovement() + shootingAngleCorrection
-}
-
-enum class ShootingZones {
-    CLOSEST, FRONT, BACK
-}
-fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSEST): Boolean{
-
-    fun pointInShootingZone(p: Location): Boolean{
-        if (shootingZone == ShootingZones.CLOSEST) {
-            return if (p.x > 0.inch) { // far shooting zones
-                if (p.y > 0.inch) { // red far shooting zone
-                    p.y < p.x - 48.inch
-                } else { // Blue far shooting zone
-                    -p.y < p.x - 48.inch
-                }
-            } else { // close shooting zone
-                if (p.y > 0.inch) {// red
-                    p.y < -p.x
-                } else { // blue
-                    -p.y < -p.x
-                }
-            }
-        }else if (shootingZone == ShootingZones.FRONT){// close shooting zone
-            return  if (p.y > 0.inch) {// red
-                    p.y < -p.x
-                } else { // blue
-                    -p.y < -p.x
-
-            }
-        }else{ // far shooting zone
-            return if (p.y > 0.inch) { // red far shooting zone
-                p.y < p.x - 48.inch
-            } else { // Blue far shooting zone
-                -p.y < p.x - 48.inch
-            }
-        }
-    }
-
-    return pointInShootingZone(rf_wheel) ||
-            pointInShootingZone(lf_wheel) ||
-            pointInShootingZone(rb_wheel) ||
-            pointInShootingZone(lb_wheel)
-}
-
-fun DecodeRobot.clearForShooting(): Boolean{
-    fun headingIsAtGoal(): Boolean{
-        val sideDistanceDeviation = 15.cm
-        val distanceToGoal = goalDistance()
-        val maxHeadingDeviation = atan2(sideDistanceDeviation, distanceToGoal)
-        return currentPosition.heading > headingToGoal() - maxHeadingDeviation && currentPosition.heading < headingToGoal() + maxHeadingDeviation
-    }
-
-    fun flySpeedIsCorrect(): Boolean{
-        return true
-    }
-    // TODO: add a check if the speed if the flywheel is good
-    return inShootingZone() && headingIsAtGoal() && flySpeedIsCorrect()
-}
-
-
-fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones): Location{
-    if ((inShootingZone() && shootingZone == ShootingZones.CLOSEST) || (shootingZone == ShootingZones.FRONT && inShootingZone(ShootingZones.FRONT)) || (shootingZone == ShootingZones.BACK && inShootingZone(
-            ShootingZones.BACK))){
-        return currentPosition.location()
-    }
-    val alliance = opMode.alliance
-    val far = if (alliance == Alliance.BLUE){
-        Location(55.inch, (-12).inch) // BLUE
-    }
-    else {
-         Location(60.inch, 12.inch) // RED
-    }
-
-    val close = if (currentPosition.y <= 0.cm){ // blue side
-        if (currentPosition.y < -currentPosition.x){
-            Location((currentPosition.x + currentPosition.y)*0.5, (currentPosition.x + currentPosition.y)*0.5)
-        } else {
-            Location(0.cm, 0.cm)
-        }
-    } else { // RED side
-        if (currentPosition.y > currentPosition.x) {
-            Location((currentPosition.y - currentPosition.x)*0.5, -(currentPosition.y - currentPosition.x)*0.5)
-        }else{
-            Location(0.cm, 0.cm)
-        }
-    }
-    return if (shootingZone == ShootingZones.CLOSEST){
-         if (currentPosition.location().distanceTo(close) < currentPosition.location().distanceTo(far)){
-            close
-        } else {
-            far
-        }
-    }else if(shootingZone == ShootingZones.FRONT){
-        close
-    }else{
-        far
-    }
 }
