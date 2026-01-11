@@ -1,6 +1,5 @@
 package org.beargineers.platform.decode
 
-import org.beargineers.platform.TileOffset
 import org.beargineers.platform.degrees
 import org.beargineers.platform.tileLocation
 
@@ -15,9 +14,6 @@ enum class Spike(start: String, end: String) {
 
     val left = name.startsWith("LEFT")
     val heading = (if (left) -90.0 else 90.0).degrees
-    val startPose = tileLocation(
-        start,
-        if (left) TileOffset.CENTER_RIGHT else TileOffset.CENTER_LEFT
-    ).withHeading(heading)
-    val endPose = tileLocation(end, if (left) TileOffset.CENTER_RIGHT else TileOffset.CENTER_LEFT).withHeading(heading)
+    val startPose = tileLocation(start + if (left) "CR" else "CL").withHeading(heading)
+    val endPose = tileLocation(end + if (left) "CR" else "CL").withHeading(heading)
 }

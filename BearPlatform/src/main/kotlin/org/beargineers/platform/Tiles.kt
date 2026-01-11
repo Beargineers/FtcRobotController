@@ -22,18 +22,7 @@ enum class TileOffset(val yoffset: Int, val xoffset: Int) {
     BOTTOM_CENTER(0, +1)
 }
 
-fun tileLocation(tileCode: String, tileOffset: TileOffset = TileOffset.CENTER): Location {
-    val (rowCode, columnCode) = tileCode.partition { it.isDigit() }
-
-    val xIn = ('6' - rowCode[0] - 3) * 24 + (tileOffset.xoffset + 1) * 12
-    val yIn = (columnCode[0] - 'A' - 3) * 24 + (tileOffset.yoffset + 1) * 12
-
-    return Location(xIn.inch, yIn.inch)
-}
-
-fun tilePosition(code:String): Position {
-    val (tileCodeAndOffset, angle) = code.split(':').map { it.trim() }
-
+fun tileLocation(tileCodeAndOffset: String): Location {
     val tileCode = tileCodeAndOffset.take(2)
     val tileOffset = when(tileCodeAndOffset.drop(2)) {
         "TL" -> TileOffset.TOP_LEFT
@@ -47,5 +36,15 @@ fun tilePosition(code:String): Position {
         else -> TileOffset.CENTER
     }
 
-    return tileLocation(tileCode, tileOffset).withHeading(angle.toDouble().degrees)
+    val (rowCode, columnCode) = tileCode.partition { it.isDigit() }
+
+    val xIn = ('6' - rowCode[0] - 3) * 24 + (tileOffset.xoffset + 1) * 12
+    val yIn = (columnCode[0] - 'A' - 3) * 24 + (tileOffset.yoffset + 1) * 12
+
+    return Location(xIn.inch, yIn.inch)
+}
+
+fun tilePosition(code:String): Position {
+    val (tileCodeAndOffset, angle) = code.split(':').map { it.trim() }
+    return tileLocation(tileCodeAndOffset).withHeading(angle.toDouble().degrees)
 }
