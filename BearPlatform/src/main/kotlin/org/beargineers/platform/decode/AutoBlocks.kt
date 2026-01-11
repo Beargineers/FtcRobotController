@@ -3,28 +3,19 @@ package org.beargineers.platform.decode
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
-import org.beargineers.platform.BLUE_OPEN_GATE
-import org.beargineers.platform.BLUE_OPEN_GATE_APPROACH
-import org.beargineers.platform.BLUE_PARK
 import org.beargineers.platform.Location
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
-import org.beargineers.platform.RED_OPEN_GATE
-import org.beargineers.platform.RED_OPEN_GATE_APPROACH
-import org.beargineers.platform.RED_PARK
-import org.beargineers.platform.ShootingZones
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
-import org.beargineers.platform.closestPointInShootingZone
 import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.followPath
-import org.beargineers.platform.headingToGoal
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -87,14 +78,10 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
 }
 
 fun PhaseBuilder<DecodeRobot>.openRamp() {
-    val red = opMode.alliance == Alliance.RED
-
-    followPath(listOf(
-        if (red) RED_OPEN_GATE_APPROACH else BLUE_OPEN_GATE_APPROACH,
-        if (red) RED_OPEN_GATE else BLUE_OPEN_GATE
-    ))
-
-    wait(1.seconds)
+    with(opMode.robot.locations) {
+        followPath(listOf(OPEN_GATE_APPROACH, OPEN_GATE))
+        wait(1.seconds)
+    }
 }
 
 @PhaseDsl
@@ -138,8 +125,7 @@ fun PhaseBuilder<DecodeRobot>.goToCursorLocation(){
 
 fun PhaseBuilder<DecodeRobot>.park() {
     action {
-        val parkCoords: Location =
-            (if (opMode.alliance == Alliance.BLUE) BLUE_PARK else RED_PARK)
+        val parkCoords: Location = locations.PARK
         val heading = currentPosition.heading
         val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
         val parkHeading = squareAngles.minBy { abs(it - heading) }
