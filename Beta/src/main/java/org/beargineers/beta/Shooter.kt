@@ -9,6 +9,7 @@ import org.beargineers.platform.PID
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.goalDistance
+import org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1
 
 class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_POWER_ADJUST by robot.config(1.0)
@@ -73,6 +74,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         setMotorPower(feeder, 1.0)
         feederStartedAt = System.currentTimeMillis()
         (robot as BetaRobot).intake.onShoot()
+        gamepad1.rumble(2000)
     }
 
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
