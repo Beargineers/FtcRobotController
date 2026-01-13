@@ -25,13 +25,13 @@ internal class PathFollower(
     private var currentSpeed: Double = 0.0
     private var lastUpdateNanos: Long = System.nanoTime()
     private val distancePID = PID(
-        integralZone = 10.0,
-        integralMax = 10000.0,
+        integralZone = 5.0,
+        integralMax = 3000.0,
         outputMin = -1.0, outputMax = 1.0
     )
     private val headingPID = PID(
-        integralZone = 10.0,
-        integralMax = 10000.0,
+        integralZone = 5.0,
+        integralMax = 3000.0,
         outputMin = -1.0, outputMax = 1.0
     )
 
