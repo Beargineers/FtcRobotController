@@ -32,5 +32,6 @@ data class RelativePosition(val forward: Distance, val right: Distance, val turn
 
 interface Drivetrain {
     fun stop()
-    fun drive(forwardPower: Double, rightPower: Double, turnPower: Double, slow: Boolean = false)
+    fun drive(forwardPower: Double, rightPower: Double, turnPower: Double)
+    fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double)
 }

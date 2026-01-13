@@ -58,8 +58,9 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     }
 
     private fun powerFlywheel(p: Double) {
-        pid.setTarget(p, SHOOTER_P, SHOOTER_I, SHOOTER_D)
-        pid.update((fly1 as DcMotorEx).velocity / (maxTicks))
+        pid.updateCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D)
+        pid.setTarget(p)
+        pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
         telemetry.addData("Shooter error", pid.error())
 
         val v = pid.result() + p
