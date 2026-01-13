@@ -434,9 +434,20 @@ class DoWhilePhase<R: Robot>(
         }
 
         // Delegate to the current phase
-        return with(currentPhase) {
+        val continuePhase = with(currentPhase) {
             loopPhase(childPhaseTime)
         }
+
+        // If whilePhase completes, switch to thenPhase instead of ending
+        if (!continuePhase && !switchedToThen) {
+            switchedToThen = true
+            currentPhaseInitialized = false
+            telemetry.addLine("'$_name': while phase complete -> ${thenPhase.name()}")
+            return true  // Continue with thenPhase
+        }
+
+        // Return the result from the current phase
+        return continuePhase
     }
 }
 
