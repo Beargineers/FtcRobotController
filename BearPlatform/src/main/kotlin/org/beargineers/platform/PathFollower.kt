@@ -2,6 +2,8 @@
 
 package org.beargineers.platform
 
+import kotlin.math.abs
+
 /**
  * Manages the state and execution of following a specific Path.
  *
@@ -10,30 +12,33 @@ package org.beargineers.platform
  *
  * Each PathFollower is bound to a specific Path and starting position.
  *
- * @param path The immutable Path definition to follow
  * @param robot The robot instance to control
+ * @param path The immutable Path definition to follow
  * @param startPosition Where the robot starts following this path
- * @param maxSpeed Maximum speed for this path execution
- * @param kP_position Proportional gain for position control
- * @param kP_heading Proportional gain for heading control
- * @param minimalWheelPower Minimum wheel power threshold
- * @param positionTolerance Position tolerance for target reached (cm)
- * @param headingTolerance Heading tolerance for target reached (degrees)
  */
 internal class PathFollower(
+    private val robot: BaseRobot,
     val path: List<Position>,
-    private val robot: Robot,
-    startPosition: Position,
-    private val kP_position: Double,
-    private val kP_heading: Double,
-    private val minimalWheelPower: Double,
-    private val positionTolerance: Double,
-    private val headingTolerance: Double
+    startPosition: Position
 ) {
     private var lastTargetIndex: Int = 0
-    private var currentAngle = atan2(path.first().y - startPosition.y, path.first().x - startPosition.x)
     private var currentSpeed: Double = 0.0
     private var lastUpdateNanos: Long = System.nanoTime()
+    private val distancePID = PID(
+        integralZone = 10.0,
+        integralMax = 10000.0,
+        outputMin = -1.0, outputMax = 1.0
+    )
+    private val headingPID = PID(
+        integralZone = 10.0,
+        integralMax = 10000.0,
+        outputMin = -1.0, outputMax = 1.0
+    )
+
+    init {
+        distancePID.updateCoefficients(robot.position_P, robot.position_I, robot.position_D)
+        headingPID.updateCoefficients(robot.heading_P, robot.heading_I, robot.heading_D)
+    }
 
     /**
      * Execute one update cycle of path following.
@@ -43,77 +48,55 @@ internal class PathFollower(
      */
     fun update(): Boolean {
         if (lastTargetIndex > path.lastIndex) return false
+        val currentPosition = robot.currentPosition
 
-        val headingToTarget = atan2(path[lastTargetIndex].y - robot.currentPosition.y, path[lastTargetIndex].x - robot.currentPosition.x)
-        if (abs((headingToTarget - currentAngle).normalize()) > 100.degrees && lastTargetIndex < path.lastIndex) {
-            // Angle to the target changes quickly means we're passed the waypoint
-            lastTargetIndex++
-            currentAngle = atan2(path[lastTargetIndex].y - path[lastTargetIndex - 1].y, path[lastTargetIndex].x - path[lastTargetIndex - 1].x)
+        val headingToTarget = atan2(
+            path[lastTargetIndex].y - robot.currentPosition.y,
+            path[lastTargetIndex].x - robot.currentPosition.x)
+
+        if (lastTargetIndex < path.lastIndex &&  currentPosition.distanceTo(path[lastTargetIndex]) < 8.cm) {
+
+             lastTargetIndex++
         }
 
-        // Calculate time delta
         val currentNanos = System.nanoTime()
-        val deltaTime = (currentNanos - lastUpdateNanos) / 1e6
         lastUpdateNanos = currentNanos
-
-        // Get path following state
-        val currentPosition = robot.currentPosition
-        val currentLocation = currentPosition.location()
 
         val currentTarget = path[lastTargetIndex]
 
-        val distanceToTarget = currentLocation.distanceTo(currentTarget.location())
-        val headingError = (currentTarget.heading - currentPosition.heading).normalize()
+        val positionError = currentPosition.distanceTo(currentTarget).cm()
+        val headingError = (currentTarget.heading - currentPosition.heading).normalize().degrees()
+
+        distancePID.updateCoefficients(robot.position_P, robot.position_I, robot.position_D)
+        headingPID.updateCoefficients(robot.heading_P, robot.heading_I, robot.heading_D)
+
+        distancePID.updateError(positionError)
+        headingPID.updateError(headingError)
+
+        robot.telemetry.addData("Position E", positionError)
+        robot.telemetry.addData("Heading E", abs(headingError))
 
         val finished = lastTargetIndex == path.lastIndex &&
-                distanceToTarget.cm() < positionTolerance &&
-                abs(headingError).degrees() < headingTolerance
-
+                currentPosition.distanceTo(path.last()).cm() < robot.positionTolerance &&
+                abs(currentPosition.heading - path.last().heading).degrees() < robot.headingTolerance
 
         if (finished) {
             robot.stopDriving()
             return false
         }
 
-        // Calculate position error (field frame)
-        val deltaX = currentTarget.x - currentPosition.x
-        val deltaY = currentTarget.y - currentPosition.y
-
-        // Convert field-frame error to robot-frame error
-        val robotHeadingRad = currentPosition.heading
-        val robotForward = deltaX * cos(robotHeadingRad) + deltaY * sin(robotHeadingRad)
-        val robotRight = deltaX * sin(robotHeadingRad) - deltaY * cos(robotHeadingRad)
-
-        // Calculate drive powers - scale by current path speed
-        val speedScale = if (lastTargetIndex == path.lastIndex) {
-            1.0
-        }
-        else {
-            val headingDiff = abs(atan2(path[lastTargetIndex + 1].y - currentTarget.y, path[lastTargetIndex + 1].x - currentTarget.x) - currentAngle).degrees()
-            (2 - headingDiff/180)
+        fun Double.dezeroify(): Double {
+            val min = robot.minimalWheelPower
+            return if (abs(this) > 0.0001 && abs(this) < min) min else this
         }
 
-        val forwardPower = robotForward.cm() * kP_position * speedScale
-        val strafePower = robotRight.cm() * kP_position * speedScale
-        val turnPower = -headingError.degrees() * kP_heading * speedScale
+        val movePower = distancePID.result().coerceIn(-1.0, 1.0).dezeroify()
+        val turnPower = -headingPID.result().coerceIn(-1.0, 1.0).dezeroify()
 
-        val maxPower = listOf(kotlin.math.abs(forwardPower), kotlin.math.abs(strafePower), kotlin.math.abs(turnPower)).maxOf { it }
-        val maxV = when {
-            maxPower > 1.0 -> maxPower
-            maxPower < minimalWheelPower && maxPower > 1e-6 -> maxPower / minimalWheelPower
-            else -> 1.0
-        }
-
-        fun clamp(value: Double): Double {
-            return if (maxV > 1e-6) value / maxV else 0.0
-        }
+//        headingPID.logOscillation(robot.telemetry)
 
         // Apply drive power to robot
-        robot.drive(
-            forwardPower = clamp(forwardPower),
-            rightPower = clamp(strafePower),
-            turnPower = clamp(turnPower)
-        )
+        robot.driveByPowerAndAngle((headingToTarget - currentPosition.heading).normalize().radians(), movePower, turnPower)
 
         return true
     }

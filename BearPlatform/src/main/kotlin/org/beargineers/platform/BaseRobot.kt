@@ -171,13 +171,16 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         return followPath(listOf(target))
     }
 
+    override fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
+        drive.driveByPowerAndAngle(theta, power, turn)
+    }
+
     override fun drive(
         forwardPower: Double,
         rightPower: Double,
-        turnPower: Double,
-        slow: Boolean
+        turnPower: Double
     ) {
-        drive.drive(forwardPower, rightPower, turnPower, slow)
+        drive.drive(forwardPower, rightPower, turnPower)
     }
 
     override fun stopDriving() {
@@ -213,8 +216,12 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     // Too low values will result in robot moving unnecessarily slow
     // Too high values will result in robot driving past destination and maybe even oscillating around it
 
-    val kP_position by config(0.035) // Position gain (power per distance unit)
-    val kP_heading by config(0.01) // Heading gain (power per angle unit)
+    val position_P by config(0.035) // Position gain (power per distance unit)
+    val position_I by config(0.0)
+    val position_D by config(0.0)
+    val heading_P by config(0.01) // Heading gain (power per angle unit)
+    val heading_I by config(0.0)
+    val heading_D by config(0.0)
 
     val positionTolerance by config(2.0)
     val headingTolerance by config(5.0)
@@ -226,14 +233,9 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         if (currentFollower?.path != path) {
             // Create new PathFollower for this path
             currentFollower = PathFollower(
-                path = path,
                 robot = this,
-                startPosition = currentPosition,
-                kP_position = kP_position,
-                kP_heading = kP_heading,
-                minimalWheelPower = minimalWheelPower,
-                positionTolerance = positionTolerance,
-                headingTolerance = headingTolerance
+                path = path,
+                startPosition = currentPosition
             )
         }
 

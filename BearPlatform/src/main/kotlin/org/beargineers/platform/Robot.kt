@@ -16,8 +16,6 @@ interface Robot {
      * - Power is clamped to safe limits
      *
      * @param target Target pose (position and heading) to drive to
-     * @param positionTolerance Distance threshold in the pose's distance units (default 2.0)
-     * @param headingTolerance Angle threshold in the pose's angle units (default 5.0)
      * @return true if robot has reached the target within tolerances, false otherwise
      *
      * ## Example Usage
@@ -44,7 +42,8 @@ interface Robot {
      */
     fun stopFollowingPath()
 
-    fun drive(forwardPower: Double, rightPower: Double, turnPower: Double, slow: Boolean = false)
+    fun drive(forwardPower: Double, rightPower: Double, turnPower: Double)
+    fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double)
 
     fun stopDriving()
 
