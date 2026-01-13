@@ -14,6 +14,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     private val ballDetector: DistanceSensor by hardware("ball")
 
     val sensorDistanceTreshold by robot.config(10.0)
+    val sensorFramesCount by robot.config(3)
 
     var mode: IntakeMode = IntakeMode.OFF
 
@@ -47,7 +48,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
             sensorSee && !ballInIntake -> {
                 ballInIntake = true
                 artifacts += 1
-                isHole = 5
+                isHole = sensorFramesCount
                 if (artifacts == 3) {
                     mode = IntakeMode.OFF
                 }
@@ -59,7 +60,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
                 ballInIntake = false
             }
             else -> {
-                isHole = 5
+                isHole = sensorFramesCount
             }
         }
 
