@@ -7,6 +7,7 @@ import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
+import org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
 class Intake(robot: BaseRobot): Hardware(robot) {
@@ -51,6 +52,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
                 isHole = sensorFramesCount
                 if (artifacts == 3) {
                     mode = IntakeMode.OFF
+                    gamepad1.rumble(2000)
                 }
             }
             isHole > 0 && !sensorSee -> {
