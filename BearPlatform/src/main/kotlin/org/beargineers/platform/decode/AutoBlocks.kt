@@ -132,9 +132,9 @@ fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
     phase(WaitForShootingCompletion())
 }
 
-fun PhaseBuilder<DecodeRobot>.goToShootingZone(shootingZone: ShootingZones) {
+fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZones) {
     val waypoints = mutableListOf<Position>()
-    action {
+    doOnce {
         waypoints.clear()
 
         if (currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
@@ -143,11 +143,14 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZone(shootingZone: ShootingZones) {
 
         val targetLocation = closestPointInShootingZone(shootingZone)
         waypoints.add(targetLocation.withHeading(headingToGoalFrom(targetLocation)))
-        false
     }
 
     action {
         followPath(waypoints)
+    }
+
+    doOnce {
+        launch()
     }
 }
 
