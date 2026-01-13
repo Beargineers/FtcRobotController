@@ -53,9 +53,28 @@ private fun PhaseBuilder<DecodeRobot>.shootAt(launchPose: Position) {
 
 open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg spikes: Spike) :
     PhasedAutonomous<DecodeRobot>(alliance, {
+
         val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }
 
-        autoStrategy(tilePosition(startingPoint), tilePosition(shootingPoint), *spikes)
+        doWhile("AUTO") {
+            condition {
+                opMode.elapsedTime.seconds() < 29
+            }
+
+            looping {
+                autoStrategy(tilePosition(startingPoint), tilePosition(shootingPoint), *spikes)
+            }
+
+            then {
+                doOnce {
+                    intakeMode(IntakeMode.OFF)
+                    enableFlywheel(false)
+                }
+                action {
+                    driveToTarget(locations.OPEN_RAMP_APPROACH)
+                }
+            }
+        }
     }) {
 
     override fun bearInit() {
