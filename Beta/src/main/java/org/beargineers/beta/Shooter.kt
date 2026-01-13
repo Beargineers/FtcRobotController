@@ -72,6 +72,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         setMotorPower(feeder, 1.0)
         feederStartedAt = System.currentTimeMillis()
+        (robot as BetaRobot).intake.onShoot()
     }
 
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
