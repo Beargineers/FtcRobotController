@@ -81,7 +81,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             val position = robot.currentPosition
             robot.launch()
             auto("Holding position") {
-                holdPosition(position)
+                holdPositionLookAtGoal(position.location())
             }
         }
 
