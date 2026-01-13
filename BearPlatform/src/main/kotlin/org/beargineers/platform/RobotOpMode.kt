@@ -21,11 +21,13 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
 
     private var auto: AutonomousPhase<T>? = null
     private val autoTimer = ElapsedTime()
+    val elapsedTime = ElapsedTime()
 
 
     open fun bearInit() {}
 
     final override fun init() {
+        elapsedTime.reset()
 
         // Make sure we read all of the sensor and motor data in one bulk read.
         // This is much faster than reading each of them individually.
@@ -46,6 +48,7 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
         loopsCount = 0
 
         bearStart()
+        elapsedTime.reset()
     }
 
     override fun stop() {
