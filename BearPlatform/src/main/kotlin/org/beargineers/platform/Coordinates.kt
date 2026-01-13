@@ -202,6 +202,14 @@ class Position(val x: Distance, val y: Distance, val heading: Angle) {
         return Position(x - other.x, y - other.y, heading - other.heading).normalizeHeading()
     }
 
+    operator fun plus(other: RelativePosition): Position {
+        return Position(
+            x = x + other.forward * cos(heading) + other.right * sin(heading),
+            y = y + other.forward * sin(heading) - other.right * cos(heading),
+            heading = heading + other.turn
+        )
+    }
+
     fun normalizeHeading() : Position {
         return Position(x, y, heading.normalize())
     }

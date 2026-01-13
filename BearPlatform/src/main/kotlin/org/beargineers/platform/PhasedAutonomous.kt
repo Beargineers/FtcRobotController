@@ -221,12 +221,15 @@ fun <R: Robot> PhaseBuilder<R>.assumeRobotPosition(position: Position) {
     }
 }
 
-class GotoPosePhase(val pose: Position) : AutonomousPhase<Robot> {
+class GotoPosePhase(val pose: Position, val maxSpeed: Double) : AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return driveToTarget(pose)
+        targetSpeed = maxSpeed
+        return driveToTarget(pose).also {
+            targetSpeed = 1.0
+        }
     }
 }
 
@@ -274,35 +277,30 @@ class CurveToPosePhase(val pose: Position, val radius: Distance, val clockwise: 
     }
 }
 @PhaseDsl
-fun PhaseBuilder<*>.driveTo(pose: Position) {
-    phase(GotoPosePhase(pose))
+fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
+    phase(GotoPosePhase(pose, maxSpeed))
 }
 
-class GotoPositionViaPhase(val waypoints: List<Position>): AutonomousPhase<Robot> {
+class GotoPositionViaPhase(val waypoints: List<Position>, val maxSpeed: Double): AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return followPath(waypoints)
+        targetSpeed = maxSpeed
+        return followPath(waypoints).also { targetSpeed = 1.0 }
     }
 }
 
 @PhaseDsl
-fun PhaseBuilder<*>.followPath(waypoints: List<Position>) {
-    phase(GotoPositionViaPhase(waypoints))
+fun PhaseBuilder<*>.followPath(waypoints: List<Position>, maxSpeed: Double = 1.0) {
+    phase(GotoPositionViaPhase(waypoints, maxSpeed))
 }
 
 class DriveRelative<R: Robot>(val movement: RelativePosition) : AutonomousPhase<R> {
     lateinit var targetPosition: Position
 
     override fun R.initPhase() {
-        val cp = currentPosition
-        val t = movement.turn
-        targetPosition = Position(
-            x = cp.x + movement.forward * cos(cp.heading) + movement.right * sin(cp.heading),
-            y = cp.y + movement.forward * sin(cp.heading) - movement.right * cos(cp.heading),
-            heading = cp.heading + t
-        )
+        targetPosition = currentPosition + movement
     }
 
     override fun R.loopPhase(phaseTime: ElapsedTime): Boolean {

@@ -8,9 +8,11 @@ import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
+import org.beargineers.platform.RelativePosition
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
+import org.beargineers.platform.cm
 import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
@@ -79,7 +81,7 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
 
 fun PhaseBuilder<DecodeRobot>.openRamp() {
     with(opMode.robot.locations) {
-        followPath(listOf(OPEN_GATE_APPROACH, OPEN_GATE))
+        followPath(listOf(OPEN_RAMP_APPROACH, OPEN_RAMP), OPEN_RAMP_SPEED)
         wait(1.seconds)
     }
 }
@@ -112,8 +114,21 @@ fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
 }
 
 fun PhaseBuilder<DecodeRobot>.goToShootingZone(shootingZone: ShootingZones) {
+    val waypoints = mutableListOf<Position>()
     action {
-        driveToTarget(closestPointInShootingZone(shootingZone).withHeading(headingToGoal()))
+        waypoints.clear()
+
+        if (currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
+            waypoints.add(currentPosition + RelativePosition(-15.cm, 0.cm, 0.degrees))
+        }
+
+        val targetLocation = closestPointInShootingZone(shootingZone)
+        waypoints.add(targetLocation.withHeading(headingToGoalFrom(targetLocation)))
+        false
+    }
+
+    action {
+        followPath(waypoints)
     }
 }
 

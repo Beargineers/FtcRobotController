@@ -29,8 +29,10 @@ interface DecodeRobot : Robot {
 class Locations(val robot: DecodeRobot) {
     val GOAL get() = if (robot.opMode.alliance == Alliance.RED) RED_GOAL else BLUE_GOAL
     val PARK get() = if (robot.opMode.alliance == Alliance.RED) RED_PARK else BLUE_PARK
-    val OPEN_GATE get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_GATE else BLUE_OPEN_GATE
-    val OPEN_GATE_APPROACH get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_GATE_APPROACH else BLUE_OPEN_GATE_APPROACH
+    val OPEN_RAMP get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP else BLUE_OPEN_RAMP
+    val OPEN_RAMP_APPROACH get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP_APPROACH else BLUE_OPEN_RAMP_APPROACH
+
+    val OPEN_RAMP_SPEED by robot.config(0.6)
 
     private val RED_GOAL by robot.config(tileLocation("F6TR"))
     private val BLUE_GOAL by robot.config(tileLocation("A6TL"))
@@ -38,11 +40,11 @@ class Locations(val robot: DecodeRobot) {
     private val RED_PARK by robot.config(tileLocation("B2BR").shift(-9.inch, -9.inch))
     private val BLUE_PARK by robot.config(tileLocation("E2BL").shift(-9.inch, 9.inch))
 
-    private val RED_OPEN_GATE by robot.config(-6.cm, 129.cm, 90.degrees)
-    private val RED_OPEN_GATE_APPROACH by robot.config(-6.cm, 80.cm, 90.degrees)
+    private val RED_OPEN_RAMP by robot.config(-6.cm, 129.cm, 90.degrees)
+    private val RED_OPEN_RAMP_APPROACH by robot.config(-6.cm, 80.cm, 90.degrees)
 
-    private val BLUE_OPEN_GATE by robot.config(-6.cm, -129.cm, -90.degrees)
-    private val BLUE_OPEN_GATE_APPROACH by robot.config(-6.cm, -80.cm, -90.degrees)
+    private val BLUE_OPEN_RAMP by robot.config(-6.cm, -129.cm, -90.degrees)
+    private val BLUE_OPEN_RAMP_APPROACH by robot.config(-6.cm, -80.cm, -90.degrees)
 }
 
 fun DecodeRobot.goalDistance(): Distance {
@@ -56,10 +58,13 @@ fun DecodeRobot.shootingAngleCorrectionForMovement() : Angle {
 }
 
 fun DecodeRobot.headingToGoal(): Angle {
+    return headingToGoalFrom(currentPosition.location())
+}
+
+fun DecodeRobot.headingToGoalFrom(position: Location): Angle {
     val goal = locations.GOAL
-    val cp = currentPosition
-    val dx = goal.x - cp.x
-    val dy = goal.y - cp.y
+    val dx = goal.x - position.x
+    val dy = goal.y - position.y
     return atan2(dy, dx) + shootingAngleCorrectionForMovement() + shootingAngleCorrection
 }
 

@@ -6,6 +6,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.IMU
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 
@@ -43,7 +46,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
         (localizerByMotorEncoders as MecanumEncodersLocalizers).loop()
     }
 
-    override fun drive(forwardPower: Double, rightPower: Double, turnPower: Double, slow: Boolean) {
+    override fun drive(forwardPower: Double, rightPower: Double, turnPower: Double) {
         val strafe = rightPower * sqrt(2.0) // strafe is less effective than forward movement with same power applied
 
         val lfP = forwardPower + strafe + turnPower
@@ -56,34 +59,38 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
         val limit = robot.targetSpeed * config.topSpeed
         fun normalize(v: Double) = (v / maxMag) * limit
 
-        val lfpn = normalize(lfP * config.lf_correction)
-        setMotorPower(lf, lfpn)
-        val rfpn = normalize(rfP * config.rf_correction)
-        setMotorPower(rf, rfpn)
-        val lbpn = normalize(lbP * config.lb_correction)
-        setMotorPower(lb, lbpn)
-        val rbpn = normalize(rbP * config.rb_correction)
-        setMotorPower(rb, rbpn)
-
-        telemetry.addData(
-            "Motor power",
-            "lf=%.2f, rf=%.2f, lb=%.2f, rb=%.2f",
-            lfpn,
-            rfpn,
-            lbpn,
-            rbpn
-        )
-
-        telemetry.addData(
-            "Encoders", "lf=%d, rf=%d, lb=%d, rb=%d",
-            lf.currentPosition,
-            rf.currentPosition,
-            lb.currentPosition,
-            rb.currentPosition
-        )
+        lf.power = normalize(lfP * config.lf_correction)
+        rf.power = normalize(rfP * config.rf_correction)
+        lb.power = normalize(lbP * config.lb_correction)
+        rb.power = normalize(rbP * config.rb_correction)
     }
 
-    override fun stop() = drive(0.0, 0.0, 0.0)
+    override fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
+        val power = power * robot.targetSpeed * config.topSpeed
+        val turn = turn * robot.targetSpeed * config.topSpeed
+
+        val sin = sin(theta + Math.PI / 4)
+        val cos = cos(theta + Math.PI / 4)
+        val max = max(abs(sin), abs(cos))
+
+        val scale = max(1.0, abs(power) + abs(turn))
+
+        val lfP = (power * cos / max + turn) / scale
+        val rfP = (power * sin / max - turn) / scale
+        val lrp = (power * sin / max + turn) / scale
+        val rbp = (power * cos / max - turn) / scale
+
+        setMotorPowers(lfP, rfP, lrp, rbp)
+    }
+
+    private fun setMotorPowers(lfP: Double, rfP: Double, lrp: Double, rbp: Double) {
+        lf.power = lfP * config.lf_correction
+        rf.power = rfP * config.rf_correction
+        lb.power = lrp * config.lb_correction
+        rb.power = rbp * config.rb_correction
+    }
+
+    override fun stop() = setMotorPowers(0.0, 0.0, 0.0, 0.0)
 
     inner class MecanumEncodersLocalizers() : RelativeLocalizer {
         private var currentPositionEstimate: Position = Position.zero()
