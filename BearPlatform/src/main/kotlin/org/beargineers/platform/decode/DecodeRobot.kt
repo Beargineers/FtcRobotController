@@ -4,6 +4,7 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
+import org.beargineers.platform.Position
 import org.beargineers.platform.Robot
 import org.beargineers.platform.atan2
 import org.beargineers.platform.cm
@@ -27,24 +28,29 @@ interface DecodeRobot : Robot {
 }
 
 class Locations(val robot: DecodeRobot) {
-    val GOAL get() = if (robot.opMode.alliance == Alliance.RED) RED_GOAL else BLUE_GOAL
-    val PARK get() = if (robot.opMode.alliance == Alliance.RED) RED_PARK else BLUE_PARK
-    val OPEN_RAMP get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP else BLUE_OPEN_RAMP
-    val OPEN_RAMP_APPROACH get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP_APPROACH else BLUE_OPEN_RAMP_APPROACH
+    val GOAL get() = if (robot.opMode.alliance == Alliance.RED) RED_GOAL else RED_GOAL.mirrorAlliance()
+    val PARK get() = if (robot.opMode.alliance == Alliance.RED) RED_PARK else RED_PARK.mirrorAlliance()
+    val OPEN_RAMP get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP else RED_OPEN_RAMP.mirrorAlliance()
+    val OPEN_RAMP_APPROACH get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP_APPROACH else RED_OPEN_RAMP_APPROACH.mirrorAlliance()
 
     val OPEN_RAMP_SPEED by robot.config(0.6)
 
     private val RED_GOAL by robot.config(tileLocation("F6TR"))
-    private val BLUE_GOAL by robot.config(tileLocation("A6TL"))
-
     private val RED_PARK by robot.config(tileLocation("B2BR").shift(-9.inch, -9.inch))
-    private val BLUE_PARK by robot.config(tileLocation("E2BL").shift(-9.inch, 9.inch))
-
     private val RED_OPEN_RAMP by robot.config(-6.cm, 129.cm, 90.degrees)
     private val RED_OPEN_RAMP_APPROACH by robot.config(-6.cm, 80.cm, 90.degrees)
 
-    private val BLUE_OPEN_RAMP by robot.config(-6.cm, -129.cm, -90.degrees)
-    private val BLUE_OPEN_RAMP_APPROACH by robot.config(-6.cm, -80.cm, -90.degrees)
+    val RED_SPIKE1_FINAL_Y by robot.config(0.0)
+    val RED_SPIKE2_FINAL_Y by robot.config(0.0)
+    val RED_SPIKE3_FINAL_Y by robot.config(0.0)
+}
+
+fun Position.mirrorAlliance(): Position {
+    return Position(x, -y, -heading)
+}
+
+fun Location.mirrorAlliance(): Location {
+    return Location(x, -y)
 }
 
 fun DecodeRobot.goalDistance(): Distance {

@@ -26,8 +26,17 @@ import kotlin.time.Duration.Companion.seconds
 private fun PhaseBuilder<DecodeRobot>.scoopSpike(spike: Spike) {
     seq("Scoop spike ${spike.name}") {
         driveTo(spike.startPose)
-        driveTo(spike.endPose) // Drive in slowly, so we can carefully scoop the artifacts
-     //   driveTo(spike.startPose) // Drive out carefully so we don't disturb other artifacts
+        action {
+            val end = spike.endPose
+            val sign = if (opMode.alliance == Alliance.RED) +1 else -1
+            val targetY = sign * if (spike.name.contains('3')) locations.RED_SPIKE3_FINAL_Y else locations.RED_SPIKE2_FINAL_Y
+            driveToTarget(Position(end.x, targetY.cm, end.heading))
+        }
+
+        // when collecting spike #2 we have to back off a bit up or otherwise we hit the ramp on the way to a shooting point
+        if (spike.name.contains('2')) {
+            driveTo(spike.startPose)
+        }
     }
 }
 
