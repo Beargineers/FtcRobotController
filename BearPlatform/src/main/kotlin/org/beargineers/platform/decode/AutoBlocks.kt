@@ -91,9 +91,12 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
 ) {
     assumeRobotPosition(startingPoint)
     shootInitialLoad(launchPoint)
+/*
     scoopSpike(spikes[0])
     openRamp()
     shootAt(launchPoint)
+*/
+    scoopAndShoot(spikes[0], launchPoint)
     scoopAndShoot(spikes[1], launchPoint)
     scoopAndShoot(spikes[2], launchPoint)
 }
