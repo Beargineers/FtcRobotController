@@ -25,7 +25,7 @@ internal class PathFollower(
     private var currentSpeed: Double = 0.0
     private var lastUpdateNanos: Long = System.nanoTime()
     private val distancePID = PID(
-        integralZone = 5.0,
+        integralZone = 20.0,
         integralMax = 3000.0,
         outputMin = -1.0, outputMax = 1.0
     )
@@ -50,12 +50,8 @@ internal class PathFollower(
         if (lastTargetIndex > path.lastIndex) return false
         val currentPosition = robot.currentPosition
 
-        val headingToTarget = atan2(
-            path[lastTargetIndex].y - robot.currentPosition.y,
-            path[lastTargetIndex].x - robot.currentPosition.x)
 
         if (lastTargetIndex < path.lastIndex &&  currentPosition.distanceTo(path[lastTargetIndex]) < 8.cm) {
-
              lastTargetIndex++
         }
 
@@ -70,11 +66,15 @@ internal class PathFollower(
         distancePID.updateCoefficients(robot.position_P, robot.position_I, robot.position_D)
         headingPID.updateCoefficients(robot.heading_P, robot.heading_I, robot.heading_D)
 
+        println("Position error: $positionError")
+
         distancePID.updateError(positionError)
         headingPID.updateError(headingError)
 
-        robot.telemetry.addData("Position E", positionError)
-        robot.telemetry.addData("Heading E", abs(headingError))
+        robot.panelsTelemetry.addData("PosE", positionError)
+        robot.panelsTelemetry.addData("HeadE", abs(headingError))
+
+        distancePID.logErrors(robot.panelsTelemetry)
 
         val finished = lastTargetIndex == path.lastIndex &&
                 currentPosition.distanceTo(path.last()).cm() < robot.positionTolerance &&
@@ -96,7 +96,11 @@ internal class PathFollower(
 //        headingPID.logOscillation(robot.telemetry)
 
         // Apply drive power to robot
-        robot.driveByPowerAndAngle((headingToTarget - currentPosition.heading).normalize().radians(), movePower, turnPower)
+        val theta = (atan2(
+            path[lastTargetIndex].y - robot.currentPosition.y,
+            path[lastTargetIndex].x - robot.currentPosition.x) - currentPosition.heading).normalize()
+
+        robot.driveByPowerAndAngle(theta.radians(), movePower, turnPower)
 
         return true
     }

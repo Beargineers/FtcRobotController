@@ -97,6 +97,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         telemetry.addData("Velocity", "%s/s", hypot(currentVelocity.forward, currentVelocity.right))
 
         drawRobotOnPanelsField()
+        panelsTelemetry.update()
     }
 
     private fun drawRobotOnPanelsField() {
