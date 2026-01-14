@@ -1,5 +1,6 @@
 package org.beargineers.platform
 
+import com.bylazar.telemetry.TelemetryManager
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.concurrent.TimeUnit
 
@@ -153,6 +154,13 @@ class PID(
 
         // Clamp output
         return output.coerceIn(outputMin, outputMax)
+    }
+
+    fun logErrors(telemetry: TelemetryManager) {
+        telemetry.addData("PE", error * p)
+        telemetry.addData("DE", derivativeError * d)
+        telemetry.addData("IE", integralError * i)
+        telemetry.addData("E", result())
     }
 
     fun logOscillation(telemetry: Telemetry) {
