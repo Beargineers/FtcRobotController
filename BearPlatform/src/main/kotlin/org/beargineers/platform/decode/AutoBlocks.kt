@@ -49,9 +49,6 @@ private fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Po
 }
 
 private fun PhaseBuilder<DecodeRobot>.shootAt(launchPose: Position) {
-    doOnce {
-        enableFlywheel(true)
-    }
     //  followPath(listOf(spike.startPose, spike.endPose, spike.startPose, launchPose))
     driveTo(launchPose)
     doOnce {
@@ -99,6 +96,10 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
                                                    vararg spikes: Spike
 ) {
     assumeRobotPosition(startingPoint)
+    doOnce {
+        enableFlywheel(true)
+    }
+
     shootInitialLoad(launchPoint)
 /*
     scoopSpike(spikes[0])
