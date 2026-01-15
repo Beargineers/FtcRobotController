@@ -227,6 +227,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     val positionTolerance by config(2.0)
     val headingTolerance by config(5.0)
 
+    val stalledPathAbortTimeoutMillis by config(100)
+
 
 
     override fun followPath(path: List<Position>): Boolean {

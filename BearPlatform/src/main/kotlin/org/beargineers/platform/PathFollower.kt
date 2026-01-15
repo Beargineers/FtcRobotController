@@ -2,6 +2,7 @@
 
 package org.beargineers.platform
 
+import com.qualcomm.robotcore.util.ElapsedTime
 import kotlin.math.abs
 
 /**
@@ -23,7 +24,7 @@ internal class PathFollower(
 ) {
     private var lastTargetIndex: Int = 0
     private var currentSpeed: Double = 0.0
-    private var lastUpdateNanos: Long = System.nanoTime()
+    private var lastTimeMoved = ElapsedTime()
     private val distancePID = PID(
         integralZone = 20.0,
         integralMax = 3000.0,
@@ -55,8 +56,12 @@ internal class PathFollower(
              lastTargetIndex++
         }
 
-        val currentNanos = System.nanoTime()
-        lastUpdateNanos = currentNanos
+        if (robot.isMoving()) {
+            lastTimeMoved.reset()
+        }
+        else if (lastTimeMoved.milliseconds() > robot.stalledPathAbortTimeoutMillis) {
+            return false
+        }
 
         val currentTarget = path[lastTargetIndex]
 
