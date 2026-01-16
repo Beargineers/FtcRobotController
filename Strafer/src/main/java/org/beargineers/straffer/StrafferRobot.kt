@@ -31,6 +31,9 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val relativeLocalizer: RelativeLocalizer = PinpointLocalizer(this)
 
     val sensors = Sensors(this)
+    override fun adjustShooting(distance: Double, angle: Double) {
+
+    }
 
     override val configResource: Int = R.raw.config
     override val intakeMode: IntakeMode get() = IntakeMode.OFF

@@ -98,6 +98,22 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
                 goToCursorLocation()
             }
         }
+
+        button(gamepad2::dpad_up) {
+            robot.adjustShooting(+0.01, 0.0)
+        }
+
+        button(gamepad2::dpad_down) {
+            robot.adjustShooting(-0.01, 0.0)
+        }
+
+        button(gamepad2::dpad_left) {
+            robot.adjustShooting(+0.0, 0.33)
+        }
+
+        button(gamepad2::dpad_right) {
+            robot.adjustShooting(+0.0, -0.33)
+        }
     }
 
     override fun bearStart() {

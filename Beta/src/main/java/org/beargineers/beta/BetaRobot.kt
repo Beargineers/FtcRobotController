@@ -15,7 +15,12 @@ import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
+    private var manualAngleCorrection = 0.0
     override val drive = MecanumDrive(this)
+    override fun adjustShooting(distance: Double, angle: Double) {
+        shooter.manualPowerAdjustment += distance
+        manualAngleCorrection += angle
+    }
 
     override val absoluteLocalizer: AbsoluteLocalizer = LimelightCam(this)
     override val relativeLocalizer: RelativeLocalizer = PinpointLocalizer(this)
@@ -43,7 +48,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     override val shootingAngleCorrection: Angle
-        get() = shooter.SHOOTER_ANGLE_CORRECTION.degrees
+        get() = (shooter.SHOOTER_ANGLE_CORRECTION + manualAngleCorrection).degrees
 
     override fun loop() {
         super.loop()
