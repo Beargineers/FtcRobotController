@@ -4,7 +4,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 
 open class Button(val test: () -> Boolean) {
     private var pressedAt: Long? = null
-    private var onHoldExecuted = false
     private var onRelease: () -> Unit = {}
     private var onHold: () -> Unit = {}
 
@@ -26,12 +25,10 @@ open class Button(val test: () -> Boolean) {
             }
             else if (System.currentTimeMillis() - pressedAt!! > 200){
                 onHold()
-                onHoldExecuted = true
             }
         }
         else if (pressedAt != null) {
-            if (!onHoldExecuted) onRelease()
-            onHoldExecuted = false
+            onRelease()
             pressedAt = null
         }
     }
