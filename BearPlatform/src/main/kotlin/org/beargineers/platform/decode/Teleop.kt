@@ -17,7 +17,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     val ROTATIONAL_GAIN by robot.config(20)
 
     val slowCoeff by robot.config(0.4)
-    private var fpvDrive = false
+    private var fpvDrive = true
     private var lookAtGoal = false
     private var lookAtGoalBtnClickedAt = 0L
 
