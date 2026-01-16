@@ -28,10 +28,10 @@ interface DecodeRobot : Robot {
 }
 
 class Locations(val robot: DecodeRobot) {
-    val GOAL get() = if (robot.opMode.alliance == Alliance.RED) RED_GOAL else RED_GOAL.mirrorAlliance()
-    val PARK get() = if (robot.opMode.alliance == Alliance.RED) RED_PARK else RED_PARK.mirrorAlliance()
-    val OPEN_RAMP get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP else RED_OPEN_RAMP.mirrorAlliance()
-    val OPEN_RAMP_APPROACH get() = if (robot.opMode.alliance == Alliance.RED) RED_OPEN_RAMP_APPROACH else RED_OPEN_RAMP_APPROACH.mirrorAlliance()
+    val GOAL get() = RED_GOAL.mirrorForAlliance(robot)
+    val PARK get() = RED_PARK.mirrorForAlliance(robot)
+    val OPEN_RAMP get() = RED_OPEN_RAMP.mirrorForAlliance(robot)
+    val OPEN_RAMP_APPROACH get() = RED_OPEN_RAMP_APPROACH.mirrorForAlliance(robot)
 
     val OPEN_RAMP_SPEED by robot.config(0.6)
 
@@ -40,17 +40,16 @@ class Locations(val robot: DecodeRobot) {
     private val RED_OPEN_RAMP by robot.config(-6.cm, 129.cm, 90.degrees)
     private val RED_OPEN_RAMP_APPROACH by robot.config(-6.cm, 80.cm, 90.degrees)
 
-    val RED_SPIKE1_FINAL_Y by robot.config(0.0)
-    val RED_SPIKE2_FINAL_Y by robot.config(0.0)
-    val RED_SPIKE3_FINAL_Y by robot.config(0.0)
+    val SPIKE_APPROACH_Y by robot.config(61.0)
+    val SPIKE_FINAL_Y by robot.config(143.0) // 20cm less for Spike#3
 }
 
-fun Position.mirrorAlliance(): Position {
-    return Position(x, -y, -heading)
+fun Position.mirrorForAlliance(robot: DecodeRobot): Position {
+    return if (robot.alliance == Alliance.RED) this else Position(x, -y, -heading)
 }
 
-fun Location.mirrorAlliance(): Location {
-    return Location(x, -y)
+fun Location.mirrorForAlliance(robot: DecodeRobot): Location {
+    return if (robot.alliance == Alliance.RED) this else Location(x, -y)
 }
 
 fun DecodeRobot.goalDistance(): Distance {
@@ -169,4 +168,18 @@ fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones): Locatio
     }else{
         far
     }
+}
+
+fun DecodeRobot.spikeStart(n: Int): Position {
+    val x = ((2 - n)*24).inch + 12.inch
+    val y = locations.SPIKE_APPROACH_Y
+
+    return Position(x, y.cm, 90.degrees).mirrorForAlliance(this)
+}
+
+fun DecodeRobot.spikeEnd(n: Int): Position {
+    val x = ((2 - n)*24).inch + 12.inch
+    val y = if (n == 3) (locations.SPIKE_FINAL_Y - 20) else locations.SPIKE_FINAL_Y
+
+    return Position(x, y.cm, 90.degrees).mirrorForAlliance(this)
 }

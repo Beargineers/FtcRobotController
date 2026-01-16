@@ -38,8 +38,10 @@ fun tileLocation(tileCodeAndOffset: String): Location {
 
     val (rowCode, columnCode) = tileCode.partition { it.isDigit() }
 
-    val xIn = ('6' - rowCode[0] - 3) * 24 + (tileOffset.xoffset + 1) * 12
-    val yIn = (columnCode[0] - 'A' - 3) * 24 + (tileOffset.yoffset + 1) * 12
+    val rowN = '6' - rowCode[0]
+    val columnN = columnCode[0] - 'A'
+    val xIn = (rowN - 3) * 24 + (tileOffset.xoffset + 1) * 12
+    val yIn = (columnN - 3) * 24 + (tileOffset.yoffset + 1) * 12
 
     return Location(xIn.inch, yIn.inch)
 }

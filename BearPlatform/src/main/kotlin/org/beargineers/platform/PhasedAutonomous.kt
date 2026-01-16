@@ -281,19 +281,18 @@ fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
     phase(GotoPosePhase(pose, maxSpeed))
 }
 
-class GotoPositionViaPhase(val waypoints: List<Position>, val maxSpeed: Double): AutonomousPhase<Robot> {
+class GotoPositionViaPhase(val waypoints: List<Waypoint>): AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        targetSpeed = maxSpeed
         return followPath(waypoints).also { targetSpeed = 1.0 }
     }
 }
 
 @PhaseDsl
-fun PhaseBuilder<*>.followPath(waypoints: List<Position>, maxSpeed: Double = 1.0) {
-    phase(GotoPositionViaPhase(waypoints, maxSpeed))
+fun PhaseBuilder<*>.drive(waypoints: List<Waypoint>) {
+    phase(GotoPositionViaPhase(waypoints))
 }
 
 class DriveRelative<R: Robot>(val movement: RelativePosition) : AutonomousPhase<R> {
@@ -604,6 +603,8 @@ typealias Phases<Robot> = PhaseBuilder<Robot>.() -> Unit
 @PhaseDsl
 class PhaseBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
     private val phases = mutableListOf<AutonomousPhase<R>>()
+
+    val robot: R get() = opMode.robot
 
     /**
      * Adds a single phase to the sequence.

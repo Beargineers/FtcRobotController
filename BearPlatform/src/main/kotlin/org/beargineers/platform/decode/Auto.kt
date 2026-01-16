@@ -16,25 +16,25 @@ object AutonomousPrograms {
 @Autonomous
 class RedSouth : DecodeAutoStrategy(
     Alliance.RED,
-    AutonomousPrograms.RedSouth,
-    Spike.RIGHT1, Spike.RIGHT2, Spike.RIGHT3)
+    AutonomousPrograms.RedSouth
+)
 
 @Autonomous
 class RedNorth : DecodeAutoStrategy(
     Alliance.RED,
-    AutonomousPrograms.RedNorth,
-    Spike.RIGHT3, Spike.RIGHT2, Spike.RIGHT1)
+    AutonomousPrograms.RedNorth
+)
 
 @Autonomous
 class BlueSouth : DecodeAutoStrategy(
     Alliance.BLUE,
-    AutonomousPrograms.BlueSouth,
-    Spike.LEFT1, Spike.LEFT2, Spike.LEFT3)
+    AutonomousPrograms.BlueSouth
+)
 
 @Autonomous
 class BlueNorth : DecodeAutoStrategy(
     Alliance.BLUE,
-    AutonomousPrograms.BlueNorth,
-    Spike.LEFT3, Spike.LEFT2, Spike.LEFT1)
+    AutonomousPrograms.BlueNorth
+)
 
 
