@@ -95,28 +95,50 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, laun
     shootAt(launchPoint)
 */
 
-    if (launchPoint.x.cm() > 0) {
+    if (launchPoint.x.cm() < 0) {
+        // Near shooting zone
+        val secondScoop = robot.scoopSpikePath(2)
+        drive(secondScoop.take(2) + robot.openRampPath())
+        wait(1.seconds)
+        followPathAndShoot(listOf(secondScoop.last(), Waypoint(launchPoint)))
+        // Far shooting zone
+        scoopAndShoot(3, launchPoint)
+        scoopAndShoot(1, launchPoint)
+    }
+    else {
         // Far shooting zone
         scoopAndShoot(1, launchPoint)
         scoopAndShoot(2, launchPoint)
         scoopAndShoot(3, launchPoint)
     }
-    else {
-        // Near shooting zone
-        scoopAndShoot(3, launchPoint)
-        scoopAndShoot(2, launchPoint)
-        scoopAndShoot(1, launchPoint)
+}
+
+fun DecodeRobot.openRampPath(): List<Waypoint> {
+    return buildList {
+        with(locations) {
+            add(Waypoint(OPEN_RAMP_APPROACH))
+            add(Waypoint(OPEN_RAMP, OPEN_RAMP_SPEED))
+        }
+    }
+}
+
+fun DecodeRobot.openRampCollectPath(): List<Waypoint> {
+    return buildList {
+        with(locations) {
+            add(Waypoint(OPEN_RAMP_COLLECT_APPROACH))
+            add(Waypoint(OPEN_RAMP_COLLECT, OPEN_RAMP_SPEED))
+        }
     }
 }
 
 fun PhaseBuilder<DecodeRobot>.openRamp() {
-    with(robot.locations) {
-        drive(listOf(
-            Waypoint(OPEN_RAMP_APPROACH),
-            Waypoint(OPEN_RAMP, OPEN_RAMP_SPEED)
-        ))
-        wait(1.seconds)
-    }
+    drive(robot.openRampPath())
+    wait(1.seconds)
+}
+
+fun PhaseBuilder<DecodeRobot>.openRampAndCollect() {
+    drive(robot.openRampCollectPath())
+    wait(1.seconds)
 }
 
 @PhaseDsl
@@ -143,7 +165,8 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
     doOnce {
         waypoints.clear()
 
-        if (currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
+        if (currentPosition.distanceTo(locations.OPEN_RAMP_COLLECT) < 10.cm ||
+            currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
             waypoints.add(Waypoint(currentPosition + RelativePosition(-15.cm, 0.cm, 0.degrees)))
         }
 
