@@ -48,9 +48,8 @@ private fun PhaseBuilder<DecodeRobot>.shoot() {
     waitForShootingCompletion()
 }
 
-open class DecodeAutoStrategy(alliance: Alliance, val positions: String) :
-    PhasedAutonomous<DecodeRobot>(alliance, {
-
+open class DecodeAutoStrategy(alliance: Alliance, val positions: String) : PhasedAutonomous<DecodeRobot>(alliance) {
+    override fun PhaseBuilder<DecodeRobot>.phases() {
         val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }
 
         doWhile("AUTO") {
@@ -72,7 +71,7 @@ open class DecodeAutoStrategy(alliance: Alliance, val positions: String) :
                 }
             }
         }
-    }) {
+    }
 
     override fun bearInit() {
         super.bearInit()
