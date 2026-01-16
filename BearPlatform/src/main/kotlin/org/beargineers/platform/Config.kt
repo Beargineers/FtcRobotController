@@ -41,7 +41,8 @@ fun Robot.config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any, P
 fun Robot.config(default: Position): ReadOnlyProperty<Any, Position> {
     return ReadOnlyProperty { _, property ->
         configValue(property.name)?.let {
-            if (it.first().isDigit()) {
+            val first = it.first()
+            if (first.isDigit() || first=='-') {
                 val (x, y, heading) = it.split(",").map { it.trim().toDouble() }
                 Position(x.cm, y.cm, heading.degrees)
             }
@@ -59,7 +60,8 @@ fun Robot.config(dx: Distance, dy: Distance): ReadOnlyProperty<Any, Location> {
 fun Robot.config(default: Location): ReadOnlyProperty<Any, Location> {
     return ReadOnlyProperty { _, property ->
         configValue(property.name)?.let {
-            if (it.first().isDigit()) {
+            val first = it.first()
+            if (first.isDigit() || first=='-') {
                 val (x, y) = it.split(",").map { it.trim().toDouble() }
                 Location(x.cm, y.cm)
             }

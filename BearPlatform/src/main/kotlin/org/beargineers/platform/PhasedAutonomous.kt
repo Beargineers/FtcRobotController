@@ -227,9 +227,7 @@ class GotoPosePhase(val pose: Position, val maxSpeed: Double) : AutonomousPhase<
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
         targetSpeed = maxSpeed
-        return driveToTarget(pose).also {
-            targetSpeed = 1.0
-        }
+        return driveToTarget(pose)
     }
 }
 

@@ -18,7 +18,6 @@ import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
 import org.beargineers.platform.drive
-import org.beargineers.platform.driveTo
 import org.beargineers.platform.followPath
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
@@ -122,8 +121,7 @@ fun PhaseBuilder<DecodeRobot>.openRamp() {
 
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
-    driveTo(launchPose, robot.locations.INITIAL_SHOT_SPEED)
-    shoot()
+    followPathAndShoot(listOf(Waypoint(launchPose, robot.locations.INITIAL_SHOT_SPEED)))
 }
 
 class WaitForShootingCompletion() : AutonomousPhase<DecodeRobot> {
