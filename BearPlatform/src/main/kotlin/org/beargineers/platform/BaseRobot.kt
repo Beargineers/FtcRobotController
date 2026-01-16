@@ -70,7 +70,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun isMoving(): Boolean {
         val vel = currentVelocity
-        return abs(vel.forward).cm() + abs(vel.right).cm() + abs(vel.turn).degrees() > 0.1
+        return abs(vel.forward).cm() + abs(vel.right).cm() + abs(vel.turn).degrees() > 0.2
     }
 
     override fun loop() {
