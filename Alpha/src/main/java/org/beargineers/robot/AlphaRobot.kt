@@ -66,4 +66,8 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
         return shooter.feederStartedAt != 0L
     }
 
+    override fun adjustShooting(distance: Double, angle: Double) {
+
+    }
+
 }

@@ -12,7 +12,7 @@ import org.beargineers.platform.decode.goalDistance
 
 class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_POWER_ADJUST by robot.config(1.0)
-    // TODO: Find proper quotients for Beta
+    var manualPowerAdjustment = 1.0
     val SHOOTER_DISTANCE_QUOTIENT by robot.config(0.00101)
     val SHOOTER_FREE_QUOTIENT by robot.config(0.556)
     val SHOOTING_TIME_SECONDS by robot.config(4.5)
@@ -92,7 +92,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
 
     // According to the experimental data this linear approximation gives coefficient of determination of 0.95. Also, voltage degradation seem to be handled quite well
     fun flywheelPowerAdjustedToDistance(distanceCm: Double): Double {
-        return (SHOOTER_DISTANCE_QUOTIENT *distanceCm+ SHOOTER_FREE_QUOTIENT) * SHOOTER_POWER_ADJUST
+        return (SHOOTER_DISTANCE_QUOTIENT *distanceCm+ SHOOTER_FREE_QUOTIENT) * SHOOTER_POWER_ADJUST * manualPowerAdjustment
     }
 
     override fun stop() {

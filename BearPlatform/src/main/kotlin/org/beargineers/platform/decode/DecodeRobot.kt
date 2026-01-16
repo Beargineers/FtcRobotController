@@ -22,6 +22,8 @@ interface DecodeRobot : Robot {
 
     fun isShooting(): Boolean
 
+    fun adjustShooting(distance: Double, angle: Double)
+
     val shootingAngleCorrection: Angle
 
     val locations : Locations get() = Locations(this)
