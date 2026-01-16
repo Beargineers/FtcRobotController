@@ -122,7 +122,7 @@ fun PhaseBuilder<DecodeRobot>.openRamp() {
 
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
-    driveTo(launchPose)
+    driveTo(launchPose, robot.locations.INITIAL_SHOT_SPEED)
     shoot()
 }
 
