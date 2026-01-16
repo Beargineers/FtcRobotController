@@ -24,16 +24,13 @@ import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
 
-@PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.scoopSpike(spike: Int) {
+private fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
+    return buildList {
+        add(Waypoint(spikeStart(spike)))
+        add(Waypoint(spikeEnd(spike), locations.SPIKE_SCOOPING_SPEED))
 
-    seq("Scoop spike #$spike") {
-        driveTo(robot.spikeStart(spike))
-        driveTo(robot.spikeEnd(spike))
-
-        // when collecting spike #2 we have to back off a bit up or otherwise we hit the ramp on the way to a shooting point
         if (spike == 2) {
-            driveTo(robot.spikeEnd(spike))
+            add(Waypoint(spikeStart(spike)))
         }
     }
 }
@@ -41,14 +38,11 @@ private fun PhaseBuilder<DecodeRobot>.scoopSpike(spike: Int) {
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
     seq("Scoop and shoot #$spike") {
-        scoopSpike(spike)
-        shootAt(launchPose)
+        followPathAndShoot(robot.scoopSpikePath(spike) + Waypoint(launchPose))
     }
 }
 
-private fun PhaseBuilder<DecodeRobot>.shootAt(launchPose: Position) {
-    //  followPath(listOf(spike.startPose, spike.endPose, spike.startPose, launchPose))
-    driveTo(launchPose)
+private fun PhaseBuilder<DecodeRobot>.shoot() {
     doOnce {
         launch()
     }
@@ -102,13 +96,14 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, laun
     shootAt(launchPoint)
 */
 
-    if (startingPoint.x.cm() > 0) {
+    if (launchPoint.x.cm() > 0) {
         // Far shooting zone
         scoopAndShoot(1, launchPoint)
         scoopAndShoot(2, launchPoint)
         scoopAndShoot(3, launchPoint)
     }
     else {
+        // Near shooting zone
         scoopAndShoot(3, launchPoint)
         scoopAndShoot(2, launchPoint)
         scoopAndShoot(1, launchPoint)
@@ -128,10 +123,7 @@ fun PhaseBuilder<DecodeRobot>.openRamp() {
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
     driveTo(launchPose)
-    doOnce {
-        launch()
-    }
-    waitForShootingCompletion()
+    shoot()
 }
 
 class WaitForShootingCompletion() : AutonomousPhase<DecodeRobot> {
@@ -161,13 +153,16 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
         waypoints.add(Waypoint(targetLocation.withHeading(headingToGoalFrom(targetLocation))))
     }
 
+    followPathAndShoot(waypoints)
+}
+
+@PhaseDsl
+private fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoint>) {
     action {
         followPath(waypoints)
     }
 
-    doOnce {
-        launch()
-    }
+    shoot()
 }
 
 fun PhaseBuilder<DecodeRobot>.goToCursorLocation(){

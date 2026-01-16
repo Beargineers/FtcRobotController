@@ -42,6 +42,8 @@ class Locations(val robot: DecodeRobot) {
 
     val SPIKE_APPROACH_Y by robot.config(61.0)
     val SPIKE_FINAL_Y by robot.config(143.0) // 20cm less for Spike#3
+
+    val SPIKE_SCOOPING_SPEED by robot.config(1.0)
 }
 
 fun Position.mirrorForAlliance(robot: DecodeRobot): Position {
