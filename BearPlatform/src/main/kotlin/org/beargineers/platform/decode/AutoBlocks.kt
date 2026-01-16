@@ -44,9 +44,14 @@ fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.scoopFromBoxAndShoot(launchPose: Position) {
     seq("Scoop from BOX and shoot") {
-        followPathAndShoot(robot.scoopSpikePath(0).map {
-            Waypoint(it.target.shift(11.cm, 0.cm), it.speed, it.onArrival)
-        } + Waypoint(launchPose))
+        val boxCollectionPath = robot.scoopSpikePath(0).map {
+            Waypoint(
+                it.target.shift(11.cm, if (robot.alliance == Alliance.RED) 5.cm else -5.cm),
+                it.speed,
+                it.onArrival
+            )
+        }
+        followPathAndShoot(boxCollectionPath + boxCollectionPath + boxCollectionPath +  Waypoint(launchPose))
     }
 }
 
@@ -97,11 +102,6 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, laun
     }
 
     shootInitialLoad(launchPoint)
-/*
-    scoopSpike(spikes[0])
-    openRamp()
-    shootAt(launchPoint)
-*/
 
     if (launchPoint.x.cm() < 0) {
         // Near shooting zone
@@ -115,9 +115,9 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, laun
     }
     else {
         // Far shooting zone
-        scoopAndShoot(1, launchPoint)
-        scoopAndShoot(2, launchPoint)
-        scoopAndShoot(3, launchPoint)
+        repeat(5) {
+            scoopFromBoxAndShoot(launchPoint)
+        }
     }
 }
 
