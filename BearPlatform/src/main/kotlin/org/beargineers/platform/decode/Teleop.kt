@@ -66,12 +66,12 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         button(gamepad1::dpad_up) {
             lookAtGoal = false
             auto("Going to open the ramp") {
-                openRamp()
-            }
-        }.onHold {
-            lookAtGoal = false
-            auto("Going to open the ramp and collect") {
-                openRampAndCollect()
+                if (gamepad1.left_bumper) {
+                    openRampAndCollect()
+                }
+                else {
+                    openRamp()
+                }
             }
         }
 
