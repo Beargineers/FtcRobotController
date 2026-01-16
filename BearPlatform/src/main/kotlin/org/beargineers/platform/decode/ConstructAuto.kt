@@ -124,12 +124,12 @@ open class ConstructAuto(alliance: Alliance, val positions: String) : PhasedAuto
     }
 }
 
-@Autonomous
+@Autonomous(group = "Construct")
 class ConstructBlueNorth : ConstructAuto(Alliance.BLUE, AutonomousPrograms.BlueNorth)
-@Autonomous
+@Autonomous(group = "Construct")
 class ConstructBlueSouth : ConstructAuto(Alliance.BLUE, AutonomousPrograms.BlueSouth)
 
-@Autonomous
+@Autonomous(group = "Construct")
 class ConstructRedNorth : ConstructAuto(Alliance.RED, AutonomousPrograms.RedNorth)
-@Autonomous
+@Autonomous(group = "Construct")
 class ConstructRedSouth : ConstructAuto(Alliance.RED, AutonomousPrograms.RedSouth)
