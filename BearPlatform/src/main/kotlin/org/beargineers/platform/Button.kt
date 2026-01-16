@@ -23,7 +23,7 @@ open class Button(val test: () -> Boolean) {
             if (pressedAt == null) {
                 pressedAt = System.currentTimeMillis()
             }
-            else if (System.currentTimeMillis() - pressedAt!! > 300){
+            else if (System.currentTimeMillis() - pressedAt!! > 200){
                 onHold()
             }
         }
