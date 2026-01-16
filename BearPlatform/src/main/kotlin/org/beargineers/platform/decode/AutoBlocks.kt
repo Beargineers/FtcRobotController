@@ -9,6 +9,7 @@ import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
 import org.beargineers.platform.RelativePosition
+import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
@@ -16,6 +17,7 @@ import org.beargineers.platform.cm
 import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
+import org.beargineers.platform.drive
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.followPath
 import org.beargineers.platform.tilePosition
@@ -23,26 +25,22 @@ import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
 
 @PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.scoopSpike(spike: Spike) {
-    seq("Scoop spike ${spike.name}") {
-        driveTo(spike.startPose)
-        action {
-            val end = spike.endPose
-            val sign = if (opMode.alliance == Alliance.RED) +1 else -1
-            val targetY = sign * if (spike.name.contains('3')) locations.RED_SPIKE3_FINAL_Y else locations.RED_SPIKE2_FINAL_Y
-            driveToTarget(Position(end.x, targetY.cm, end.heading))
-        }
+private fun PhaseBuilder<DecodeRobot>.scoopSpike(spike: Int) {
+
+    seq("Scoop spike #$spike") {
+        driveTo(robot.spikeStart(spike))
+        driveTo(robot.spikeEnd(spike))
 
         // when collecting spike #2 we have to back off a bit up or otherwise we hit the ramp on the way to a shooting point
-        if (spike.name.contains('2')) {
-            driveTo(spike.startPose)
+        if (spike == 2) {
+            driveTo(robot.spikeEnd(spike))
         }
     }
 }
 
 @PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Spike, launchPose: Position) {
-    seq("Scoop and shoot ${spike.name}") {
+private fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
+    seq("Scoop and shoot #$spike") {
         scoopSpike(spike)
         shootAt(launchPose)
     }
@@ -57,7 +55,7 @@ private fun PhaseBuilder<DecodeRobot>.shootAt(launchPose: Position) {
     waitForShootingCompletion()
 }
 
-open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg spikes: Spike) :
+open class DecodeAutoStrategy(alliance: Alliance, val positions: String) :
     PhasedAutonomous<DecodeRobot>(alliance, {
 
         val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }
@@ -68,7 +66,7 @@ open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg 
             }
 
             looping {
-                autoStrategy(tilePosition(startingPoint), tilePosition(shootingPoint), *spikes)
+                autoStrategy(tilePosition(startingPoint), tilePosition(shootingPoint))
             }
 
             then {
@@ -91,10 +89,7 @@ open class DecodeAutoStrategy(alliance: Alliance, val positions: String, vararg 
 }
 
 @PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
-                                                   launchPoint: Position,
-                                                   vararg spikes: Spike
-) {
+private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, launchPoint: Position) {
     assumeRobotPosition(startingPoint)
     doOnce {
         enableFlywheel(true)
@@ -106,24 +101,32 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position,
     openRamp()
     shootAt(launchPoint)
 */
-    scoopAndShoot(spikes[0], launchPoint)
-    scoopAndShoot(spikes[1], launchPoint)
-    scoopAndShoot(spikes[2], launchPoint)
+
+    if (startingPoint.x.cm() > 0) {
+        // Far shooting zone
+        scoopAndShoot(1, launchPoint)
+        scoopAndShoot(2, launchPoint)
+        scoopAndShoot(3, launchPoint)
+    }
+    else {
+        scoopAndShoot(3, launchPoint)
+        scoopAndShoot(2, launchPoint)
+        scoopAndShoot(1, launchPoint)
+    }
 }
 
 fun PhaseBuilder<DecodeRobot>.openRamp() {
-    with(opMode.robot.locations) {
-        followPath(listOf(OPEN_RAMP_APPROACH, OPEN_RAMP), OPEN_RAMP_SPEED)
+    with(robot.locations) {
+        drive(listOf(
+            Waypoint(OPEN_RAMP_APPROACH),
+            Waypoint(OPEN_RAMP, OPEN_RAMP_SPEED)
+        ))
         wait(1.seconds)
     }
 }
 
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
-    doOnce {
-        intakeMode(IntakeMode.ON)
-        enableFlywheel(true)
-    }
     driveTo(launchPose)
     doOnce {
         launch()
@@ -146,16 +149,16 @@ fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
 }
 
 fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZones) {
-    val waypoints = mutableListOf<Position>()
+    val waypoints = mutableListOf<Waypoint>()
     doOnce {
         waypoints.clear()
 
         if (currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
-            waypoints.add(currentPosition + RelativePosition(-15.cm, 0.cm, 0.degrees))
+            waypoints.add(Waypoint(currentPosition + RelativePosition(-15.cm, 0.cm, 0.degrees)))
         }
 
         val targetLocation = closestPointInShootingZone(shootingZone)
-        waypoints.add(targetLocation.withHeading(headingToGoalFrom(targetLocation)))
+        waypoints.add(Waypoint(targetLocation.withHeading(headingToGoalFrom(targetLocation))))
     }
 
     action {

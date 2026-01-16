@@ -169,7 +169,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
      * ```
      */
     override fun driveToTarget(target: Position): Boolean {
-        return followPath(listOf(target))
+        return followPath(listOf(Waypoint(target)))
     }
 
     override fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
@@ -228,30 +228,4 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     val headingTolerance by config(5.0)
 
     val stalledPathAbortTimeoutMillis by config(100)
-
-
-
-    override fun followPath(path: List<Position>): Boolean {
-        // Check if this is a new path (different instance)
-        if (currentFollower?.path != path) {
-            // Create new PathFollower for this path
-            currentFollower = PathFollower(
-                robot = this,
-                path = path,
-                startPosition = currentPosition
-            )
-        }
-
-        return currentFollower!!.update()
-    }
-
-    override fun stopFollowingPath() {
-        currentFollower = null
-        stopDriving()
-    }
-
-
-    // Track which path we're currently following (by reference)
-    private var currentFollower: PathFollower? = null
-
 }
