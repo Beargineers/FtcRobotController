@@ -44,6 +44,7 @@ class Locations(val robot: DecodeRobot) {
     val SPIKE_FINAL_Y by robot.config(143.0) // 20cm less for Spike#3
 
     val SPIKE_SCOOPING_SPEED by robot.config(1.0)
+    val INITIAL_SHOT_SPEED by robot.config(1.0)
 }
 
 fun Position.mirrorForAlliance(robot: DecodeRobot): Position {
@@ -184,4 +185,8 @@ fun DecodeRobot.spikeEnd(n: Int): Position {
     val y = if (n == 3) (locations.SPIKE_FINAL_Y - 20) else locations.SPIKE_FINAL_Y
 
     return Position(x, y.cm, 90.degrees).mirrorForAlliance(this)
+}
+
+fun main() {
+    println(tileLocation("F6TR"))
 }
