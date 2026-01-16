@@ -23,7 +23,7 @@ import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
 
-private fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
+fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
     return buildList {
         add(Waypoint(spikeStart(spike)))
         add(Waypoint(spikeEnd(spike), locations.SPIKE_SCOOPING_SPEED))
@@ -35,9 +35,18 @@ private fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
 }
 
 @PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
+fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
     seq("Scoop and shoot #$spike") {
         followPathAndShoot(robot.scoopSpikePath(spike) + Waypoint(launchPose))
+    }
+}
+
+@PhaseDsl
+fun PhaseBuilder<DecodeRobot>.scoopFromBoxAndShoot(launchPose: Position) {
+    seq("Scoop from BOX and shoot") {
+        followPathAndShoot(robot.scoopSpikePath(0).map {
+            Waypoint(it.target.shift(11.cm, 0.cm), it.speed, it.onArrival)
+        } + Waypoint(launchPose))
     }
 }
 

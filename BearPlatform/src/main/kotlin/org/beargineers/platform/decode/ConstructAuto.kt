@@ -4,27 +4,24 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhasedAutonomous
+import org.beargineers.platform.Phases
+import org.beargineers.platform.doOnce
+import org.beargineers.platform.tilePosition
 
-@Autonomous
 open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(alliance) {
     override fun bearInit() {
         button(gamepad1::a) {
             if (runningSelection) {
-                selectedList.add(selectCategories[selectStep][optionHighlight])
-                if (selectStep == selectCategories.size - 1) {
-                    selectCategories.add(autoStepChoice)
-                }
-                selectStep += 1
-                optionHighlight = 1
+                selectedList.add(choices[optionHighlight])
             }
         }
         button(gamepad1::dpad_right) {
-            if (optionHighlight < selectCategories[selectStep].size - 1) {
+            if (optionHighlight < choices.size - 1) {
                 optionHighlight += 1
             }
         }
         button(gamepad1::dpad_left) {
-            if (optionHighlight > 1) {
+            if (optionHighlight > 0) {
                 optionHighlight -= 1
             }
         }
@@ -35,24 +32,36 @@ open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(all
         }
 
     }
+    class Choice(val name: String, val phases: Phases<DecodeRobot>)
 
-    val autoStepChoice = listOf(
-        "Next step",
-        "shoot close",
-        "shoot far",
-        "collect 1",
-        "collect 2",
-        "collect 3",
-        "collect from box",
-        "open the gate"
-    )
-    var selectCategories = mutableListOf(
-        listOf("Alliance", "Blue", "Red"),
-        listOf("Starting position", "far", "close")
-    )
+    val far = tilePosition("D1:+160")
+    val close = tilePosition("D4:+135")
+    var launchPosition = far.mirrorForAlliance(robot)
 
-    val selectedList = mutableListOf<String>()
-    var selectStep = 0
+    val choices = listOf(
+        Choice("All next Shooting FAR"){
+            launchPosition = far.mirrorForAlliance(robot)
+        },
+        Choice("All next Shooting CLOSE"){
+            launchPosition = close.mirrorForAlliance(robot)
+        },
+        Choice("Collect 1") {
+            scoopAndShoot(1, launchPosition)
+        },
+        Choice("Collect 2") {
+            scoopAndShoot(2, launchPosition)
+        },
+        Choice("Collect 3") {
+            scoopAndShoot(3, launchPosition)
+        },
+        Choice("Collect From Box") {
+            scoopFromBoxAndShoot(launchPosition)
+        },
+        Choice("Open Gate") {
+            openRamp()
+        }
+        )
+    val selectedList = mutableListOf<Choice>()
     var optionHighlight = 1
 
     var runningSelection = true
@@ -62,29 +71,38 @@ open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(all
             super.init_loop()
             var selected = ""
             for (i in 0..<selectedList.size) {
-                selected += selectedList[i] + ", "
+                selected += selectedList[i].name + ", "
             }
 
-            telemetry.addData("Selections", selected)
+            telemetry.addData("Selections: ", selected)
 
             allButtons.forEach { it.update() }
 
-            var selections = ""
-            for (i in 1..<selectCategories[selectStep].size) {
+            var selectionString = ""
+            for ((i, choice) in choices.withIndex()) {
                 if (i == optionHighlight) {
-                    selections += " __" + selectCategories[selectStep][i].uppercase() + "__ "
+                    selectionString += " __" + choice.name.uppercase() + "__ "
                 } else {
-                    selections += selectCategories[selectStep][i] + ", "
+                    selectionString += choice.name + ", "
                 }
             }
-            telemetry.addData(selectCategories[selectStep][0], selections)
+            telemetry.addData("Select the new step: ", selectionString)
         } else {
             telemetry.addData("Auto Program", " Saved")
         }
     }
 
     override fun PhaseBuilder<DecodeRobot>.phases() {
-        TODO("Not yet implemented")
+        doOnce {
+            enableFlywheel(true)
+            intakeMode(IntakeMode.ON)
+        }
+
+        for (choice in selectedList) {
+            with(choice) {
+                phases()
+            }
+        }
     }
 }
 
