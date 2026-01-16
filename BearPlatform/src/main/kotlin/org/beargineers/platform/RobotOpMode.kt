@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime
 
 
 abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
-    private val allButtons = mutableListOf<Button>()
+    protected val allButtons = mutableListOf<Button>()
 
     val robot by lazy { RobotFactory.newRobot(this) }
     private val allHubs by lazy {

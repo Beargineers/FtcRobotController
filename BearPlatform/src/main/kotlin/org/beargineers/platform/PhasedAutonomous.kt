@@ -682,7 +682,7 @@ class PhaseBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
     internal fun build(): List<AutonomousPhase<R>> = phases.toList()
 }
 
-abstract class PhasedAutonomous<R: Robot>(alliance: Alliance, phases: Phases<R>) : RobotOpMode<R>(alliance) {
+abstract class PhasedAutonomous<R: Robot>(alliance: Alliance) : RobotOpMode<R>(alliance) {
     val rootPhase by lazy {
         val builder = PhaseBuilder<R>(this)
         with(builder) {
@@ -690,6 +690,8 @@ abstract class PhasedAutonomous<R: Robot>(alliance: Alliance, phases: Phases<R>)
         }
         SequentialPhase("Plan", builder.build())
     }
+
+    abstract fun PhaseBuilder<R>.phases()
 
     /** Whether the root phase has been initialized */
     private var initialized = false

@@ -1,19 +1,13 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import org.beargineers.platform.Button
+import org.beargineers.platform.Alliance
+import org.beargineers.platform.PhaseBuilder
+import org.beargineers.platform.PhasedAutonomous
 
 @Autonomous
-class ConstructAuto : OpMode() {
-
-    private val allButtons = mutableListOf<Button>()
-
-    fun button(test: () -> Boolean, callback: () -> Unit) {
-        allButtons += Button(test).onRelease(callback)
-    }
-
-    override fun init() {
+open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(alliance) {
+    override fun bearInit() {
         button(gamepad1::a) {
             if (runningSelection) {
                 selectedList.add(selectCategories[selectStep][optionHighlight])
@@ -39,11 +33,6 @@ class ConstructAuto : OpMode() {
                 runningSelection = false
             }
         }
-
-    }
-
-    override fun loop() {
-
 
     }
 
@@ -92,6 +81,15 @@ class ConstructAuto : OpMode() {
         } else {
             telemetry.addData("Auto Program", " Saved")
         }
+    }
 
+    override fun PhaseBuilder<DecodeRobot>.phases() {
+        TODO("Not yet implemented")
     }
 }
+
+@Autonomous
+class ConstructBlue : ConstructAuto(Alliance.BLUE)
+
+@Autonomous
+class ConstructRed : ConstructAuto(Alliance.RED)
