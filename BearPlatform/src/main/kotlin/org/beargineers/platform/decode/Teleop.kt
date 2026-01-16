@@ -100,10 +100,10 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
 
     override fun bearStart() {
         super.bearStart()
+        robot.enableFlywheel(true)
 
 /*
         robot.intakeMode(IntakeMode.ON)
-        robot.enableFlywheel(true)
 */
     }
 
