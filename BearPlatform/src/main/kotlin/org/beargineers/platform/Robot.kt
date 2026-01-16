@@ -35,13 +35,6 @@ interface Robot {
      */
     fun driveToTarget(target: Position): Boolean
 
-    fun followPath(path: List<Position>): Boolean
-
-    /**
-     * Stops following the current path
-     */
-    fun stopFollowingPath()
-
     fun drive(forwardPower: Double, rightPower: Double, turnPower: Double)
     fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double)
 
@@ -67,6 +60,8 @@ interface Robot {
     fun configValue(name: String): String?
 
     val opMode: RobotOpMode<*>
+
+    val alliance: Alliance get() = opMode.alliance
 
     val dimensions: RobotDimensions
 

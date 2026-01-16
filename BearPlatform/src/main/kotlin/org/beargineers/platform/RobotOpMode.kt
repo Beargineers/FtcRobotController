@@ -135,4 +135,20 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
                 left_stick_x.touched() || left_stick_y.touched() ||
                 right_stick_x.touched() || right_stick_y.touched()
     }
+
+    private var currentFollower: PathFollower? = null
+
+    fun followPath(waypoints: List<Waypoint>): Boolean {
+        // Check if this is a new path (different instance)
+        if (currentFollower?.path != waypoints) {
+            // Create new PathFollower for this path
+            currentFollower = PathFollower(
+                robot = robot as BaseRobot,
+                path = waypoints,
+                startPosition = robot.currentPosition
+            )
+        }
+
+        return currentFollower!!.update()
+    }
 }
