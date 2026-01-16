@@ -5,11 +5,15 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Phases
+import org.beargineers.platform.Position
+import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.doOnce
 import org.beargineers.platform.tilePosition
 
-open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(alliance) {
+open class ConstructAuto(alliance: Alliance, val positions: String) : PhasedAutonomous<DecodeRobot>(alliance) {
     override fun bearInit() {
+        telemetry.addLine("Ensure robot is in position: ${positions.takeWhile { it != ',' }}")
+
         button(gamepad1::a) {
             if (runningSelection) {
                 selectedList.add(choices[optionHighlight])
@@ -34,17 +38,30 @@ open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(all
     }
     class Choice(val name: String, val phases: Phases<DecodeRobot>)
 
+/*
     val far = tilePosition("D1:+160")
     val close = tilePosition("D4:+135")
     var launchPosition = far.mirrorForAlliance(robot)
+*/
+
+    val startingPoint: Position
+    val launchPosition : Position
+
+    init {
+        val (sp, lp) = positions.split(",").map { it.trim() }.map { tilePosition(it) }
+        startingPoint = sp
+        launchPosition = lp
+    }
 
     val choices = listOf(
+/*
         Choice("All next Shooting FAR"){
             launchPosition = far.mirrorForAlliance(robot)
         },
         Choice("All next Shooting CLOSE"){
             launchPosition = close.mirrorForAlliance(robot)
         },
+*/
         Choice("Collect 1") {
             scoopAndShoot(1, launchPosition)
         },
@@ -93,6 +110,7 @@ open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(all
     }
 
     override fun PhaseBuilder<DecodeRobot>.phases() {
+        assumeRobotPosition(startingPoint)
         doOnce {
             enableFlywheel(true)
             intakeMode(IntakeMode.ON)
@@ -107,7 +125,11 @@ open class ConstructAuto(alliance: Alliance) : PhasedAutonomous<DecodeRobot>(all
 }
 
 @Autonomous
-class ConstructBlue : ConstructAuto(Alliance.BLUE)
+class ConstructBlueNorth : ConstructAuto(Alliance.BLUE, AutonomousPrograms.BlueNorth)
+@Autonomous
+class ConstructBlueSouth : ConstructAuto(Alliance.BLUE, AutonomousPrograms.BlueSouth)
 
 @Autonomous
-class ConstructRed : ConstructAuto(Alliance.RED)
+class ConstructRedNorth : ConstructAuto(Alliance.RED, AutonomousPrograms.RedNorth)
+@Autonomous
+class ConstructRedSouth : ConstructAuto(Alliance.RED, AutonomousPrograms.RedSouth)
