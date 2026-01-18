@@ -3,6 +3,7 @@
 package org.beargineers.platform
 
 import com.bylazar.field.PanelsField
+import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.Properties
@@ -97,7 +98,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         telemetry.addData("Velocity", "%s/s", hypot(currentVelocity.forward, currentVelocity.right))
 
         drawRobotOnPanelsField()
-        panelsTelemetry.update()
+        if (Panels.wasStarted) panelsTelemetry.update()
     }
 
     private fun drawRobotOnPanelsField() {
