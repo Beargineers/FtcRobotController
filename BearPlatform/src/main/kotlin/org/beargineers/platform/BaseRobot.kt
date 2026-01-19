@@ -6,7 +6,6 @@ import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import java.util.Properties
 import kotlin.math.PI
 import kotlin.math.cosh
 import kotlin.math.pow
@@ -19,8 +18,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val relativeLocalizer: RelativeLocalizer
     abstract val absoluteLocalizer: AbsoluteLocalizer
 
-    abstract val configResource: Int
-
     val allHardware = mutableListOf<Hardware>()
 
     override val telemetry: Telemetry get() = opMode.telemetry
@@ -30,35 +27,15 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     var lastTimeMovedNanos: Long = 0
 
+    private val parts = mutableMapOf<Part<*>, Any>()
+
     override var currentPosition: Position = FIELD_CENTER
 
-    override val dimensions =  RobotDimensions(this)
     override val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
     override var targetSpeed: Double = 1.0
 
-    internal var currentConfigText = ""
-    private set
-
-    private var configs = Properties()
-
-    private fun readConfigs(): Properties {
-        return Properties().apply {
-            load(currentConfigText.reader())
-        }
-    }
-
-    fun updateConfigText(text: String) {
-        currentConfigText = text
-        configs = readConfigs()
-    }
-
-    override fun configValue(name: String): String? {
-        return configs[name] as? String
-    }
 
     override fun init() {
-        updateConfigText(opMode.hardwareMap.appContext.resources.openRawResource(configResource).reader().readText())
-        SettingsWebServer.initRobot(this)
         allHardware.forEach {
             it.init()
         }
@@ -72,6 +49,13 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     override fun isMoving(): Boolean {
         val vel = currentVelocity
         return abs(vel.forward).cm() + abs(vel.right).cm() + abs(vel.turn).degrees() > 0.2
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T:Any> getPart(part: Part<T>): T {
+        return parts.getOrPut(part) {
+            part.build(this)
+        } as T
     }
 
     override fun loop() {
@@ -113,11 +97,12 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             }
 
             setStyle("white", "blue", 1.0)
-            moveCursor(lf_corner)
-            lineTo(rf_corner)
-            lineTo(rb_corner)
-            lineTo(lb_corner)
-            lineTo(lf_corner)
+            val l = getPart(RobotLocations)
+            moveCursor(l.lf_corner)
+            lineTo(l.rf_corner)
+            lineTo(l.rb_corner)
+            lineTo(l.lb_corner)
+            lineTo(l.lf_corner)
 
             setStyle("white", "white", 1.0)
             moveCursor(cp.x.inch(), cp.y.inch())

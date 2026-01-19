@@ -25,7 +25,6 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val absoluteLocalizer: AbsoluteLocalizer = LimelightCam(this)
     override val relativeLocalizer: RelativeLocalizer = PinpointLocalizer(this)
 
-    override val configResource: Int = R.raw.config
 
     val shooter = Shooter(this)
 

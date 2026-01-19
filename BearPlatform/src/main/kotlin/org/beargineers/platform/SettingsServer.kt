@@ -3,21 +3,8 @@ package org.beargineers.platform
 import fi.iki.elonen.NanoHTTPD
 
 object SettingsWebServer : NanoHTTPD(9000) {
-    var configText = ""
-    var robot: BaseRobot? = null
-
     init {
         start()
-    }
-
-    fun initRobot(r: BaseRobot) {
-        robot = r
-        if (configText.isBlank()) {
-            configText = robot!!.currentConfigText
-        }
-        else {
-            robot!!.updateConfigText(configText)
-        }
     }
 
     override fun serve(session: IHTTPSession): Response {
@@ -57,7 +44,7 @@ object SettingsWebServer : NanoHTTPD(9000) {
             ""
         }
 
-        val configText = escapeHtml(configText)
+        val configText = escapeHtml(Config.currentConfigText)
         val html = """
             <!DOCTYPE html>
             <html>
@@ -176,8 +163,7 @@ object SettingsWebServer : NanoHTTPD(9000) {
         }
 
         // Get the settings value from the form
-        configText = session.parameters["settings"]?.firstOrNull() ?: ""
-        robot?.updateConfigText(configText)
+        Config.updateConfigText(session.parameters["settings"]?.firstOrNull() ?: "")
 
         // Respond with the settings form again, but with success message
         return serveSettingsForm(showSuccessMessage = true)
@@ -196,7 +182,7 @@ object SettingsWebServer : NanoHTTPD(9000) {
         return newFixedLengthResponse(
             Response.Status.OK,
             "text/plain",
-            configText
+            Config.currentConfigText
         )
     }
 
@@ -218,8 +204,7 @@ object SettingsWebServer : NanoHTTPD(9000) {
             val newConfigText = String(body, Charsets.UTF_8)
 
             // Update the config
-            configText = newConfigText
-            robot?.updateConfigText(configText)
+            Config.updateConfigText(newConfigText)
 
             return newFixedLengthResponse(
                 Response.Status.OK,
