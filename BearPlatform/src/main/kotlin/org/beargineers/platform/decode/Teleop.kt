@@ -3,6 +3,7 @@ package org.beargineers.platform.decode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
+import org.beargineers.platform.FIELD_CENTER
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.cm
@@ -13,10 +14,10 @@ import org.beargineers.platform.sin
 import kotlin.math.abs
 
 open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
-    val POSITIONAL_GAIN by robot.config(60)
-    val ROTATIONAL_GAIN by robot.config(20)
+    val POSITIONAL_GAIN by config(60)
+    val ROTATIONAL_GAIN by config(20)
 
-    val slowCoeff by robot.config(0.4)
+    val slowCoeff by config(0.4)
     private var fpvDrive = true
     private var lookAtGoal = false
     private var lookAtGoalBtnClickedAt = 0L
@@ -119,6 +120,8 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
     override fun bearStart() {
         super.bearStart()
         robot.enableFlywheel(true)
+
+        robot.assumePosition(FIELD_CENTER)
 
 /*
         robot.intakeMode(IntakeMode.ON)

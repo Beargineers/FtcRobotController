@@ -6,6 +6,7 @@ import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.Robot
+import org.beargineers.platform.RobotLocations
 import org.beargineers.platform.atan2
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
@@ -38,21 +39,21 @@ class Locations(val robot: DecodeRobot) {
     val OPEN_RAMP_COLLECT get() = RED_OPEN_RAMP_COLLECT.mirrorForAlliance(robot)
     val OPEN_RAMP_COLLECT_APPROACH get() = RED_OPEN_RAMP_COLLECT_APPROACH.mirrorForAlliance(robot)
 
-    val OPEN_RAMP_SPEED by robot.config(0.6)
+    val OPEN_RAMP_SPEED by config(0.6)
 
-    private val RED_GOAL by robot.config(tileLocation("F6TR"))
-    private val RED_PARK by robot.config(tileLocation("B2BR").shift(-9.inch, -9.inch))
-    private val RED_OPEN_RAMP_COLLECT by robot.config(-6.cm, 129.cm, 90.degrees)
-    private val RED_OPEN_RAMP_COLLECT_APPROACH by robot.config(-6.cm, 80.cm, 90.degrees)
+    private val RED_GOAL by config(tileLocation("F6TR"))
+    private val RED_PARK by config(tileLocation("B2BR").shift(-9.inch, -9.inch))
+    private val RED_OPEN_RAMP_COLLECT by config(-6.cm, 129.cm, 90.degrees)
+    private val RED_OPEN_RAMP_COLLECT_APPROACH by config(-6.cm, 80.cm, 90.degrees)
 
-    private val RED_OPEN_RAMP by robot.config(-6.cm, 129.cm, 90.degrees)
-    private val RED_OPEN_RAMP_APPROACH by robot.config(-6.cm, 80.cm, 90.degrees)
+    private val RED_OPEN_RAMP by config(-6.cm, 129.cm, 90.degrees)
+    private val RED_OPEN_RAMP_APPROACH by config(-6.cm, 80.cm, 90.degrees)
 
-    val SPIKE_APPROACH_Y by robot.config(61.0)
-    val SPIKE_FINAL_Y by robot.config(143.0) // 20cm less for Spike#3
+    val SPIKE_APPROACH_Y by config(61.0)
+    val SPIKE_FINAL_Y by config(143.0) // 20cm less for Spike#3
 
-    val SPIKE_SCOOPING_SPEED by robot.config(1.0)
-    val INITIAL_SHOT_SPEED by robot.config(1.0)
+    val SPIKE_SCOOPING_SPEED by config(1.0)
+    val INITIAL_SHOT_SPEED by config(1.0)
 }
 
 fun Position.mirrorForAlliance(robot: DecodeRobot): Position {
@@ -120,10 +121,12 @@ fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSE
         }
     }
 
-    return pointInShootingZone(rf_wheel) ||
-            pointInShootingZone(lf_wheel) ||
-            pointInShootingZone(rb_wheel) ||
-            pointInShootingZone(lb_wheel)
+    val l = getPart(RobotLocations)
+
+    return pointInShootingZone(l.rf_wheel) ||
+            pointInShootingZone(l.lf_wheel) ||
+            pointInShootingZone(l.rb_wheel) ||
+            pointInShootingZone(l.lb_wheel)
 }
 
 fun DecodeRobot.clearForShooting(): Boolean{
