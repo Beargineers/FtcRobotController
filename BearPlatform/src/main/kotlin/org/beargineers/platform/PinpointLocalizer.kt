@@ -6,26 +6,29 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 
+object PinpointConfig {
+    val pinpoint_xOffset by config(8.1)
+    val pinpoint_yOffset by config(6.0)
+
+    val pinpoint_xEncoderDirection by config(DcMotorSimple.Direction.FORWARD)
+    val pinpoint_yEncoderDirection by config(DcMotorSimple.Direction.FORWARD)
+}
+
 class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
     private val pinpoint by hardware<GoBildaPinpointDriver>()
 
-    private val pinpoint_xOffset by robot.config(8.1)
-    private val pinpoint_yOffset by robot.config(6.0)
-
-    private val pinpoint_xEncoderDirection by robot.config(DcMotorSimple.Direction.FORWARD)
-    private val pinpoint_yEncoderDirection by robot.config(DcMotorSimple.Direction.FORWARD)
 
     override fun init() {
         pinpoint.setOffsets(
-            pinpoint_xOffset,
-            pinpoint_yOffset,
+            PinpointConfig.pinpoint_xOffset,
+            PinpointConfig.pinpoint_yOffset,
             DistanceUnit.CM
         )
 
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
         pinpoint.setEncoderDirections(
-            pinpoint_xEncoderDirection.direction(),
-            pinpoint_yEncoderDirection.direction()
+            PinpointConfig.pinpoint_xEncoderDirection.direction(),
+            PinpointConfig.pinpoint_yEncoderDirection.direction()
         )
         pinpoint.resetPosAndIMU()
     }

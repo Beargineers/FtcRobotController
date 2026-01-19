@@ -22,15 +22,14 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
     private val imu: IMU by hardware("imu")
 
     val localizerByMotorEncoders: RelativeLocalizer by lazy { MecanumEncodersLocalizers() }
-    val config = WheelsConfig()
 
     override fun init() {
         val allMotors = listOf(lf, rf, lb, rb)
 
-        lf.direction = config.lf_direction
-        lb.direction = config.lb_direction
-        rf.direction = config.rf_direction
-        rb.direction = config.rb_direction
+        lf.direction = WheelsConfig.lf_direction
+        lb.direction = WheelsConfig.lb_direction
+        rf.direction = WheelsConfig.rf_direction
+        rb.direction = WheelsConfig.rb_direction
 
         allMotors.forEach {
             it.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -56,18 +55,18 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
 
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
-        val limit = robot.targetSpeed * config.topSpeed
+        val limit = robot.targetSpeed * WheelsConfig.topSpeed
         fun normalize(v: Double) = (v / maxMag) * limit
 
-        lf.power = normalize(lfP * config.lf_correction)
-        rf.power = normalize(rfP * config.rf_correction)
-        lb.power = normalize(lbP * config.lb_correction)
-        rb.power = normalize(rbP * config.rb_correction)
+        lf.power = normalize(lfP * WheelsConfig.lf_correction)
+        rf.power = normalize(rfP * WheelsConfig.rf_correction)
+        lb.power = normalize(lbP * WheelsConfig.lb_correction)
+        rb.power = normalize(rbP * WheelsConfig.rb_correction)
     }
 
     override fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
-        val power = power * robot.targetSpeed * config.topSpeed
-        val turn = turn * robot.targetSpeed * config.topSpeed
+        val power = power * robot.targetSpeed * WheelsConfig.topSpeed
+        val turn = turn * robot.targetSpeed * WheelsConfig.topSpeed
 
         val sin = sin(theta + Math.PI / 4)
         val cos = cos(theta + Math.PI / 4)
@@ -84,10 +83,10 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
     }
 
     private fun setMotorPowers(lfP: Double, rfP: Double, lrp: Double, rbp: Double) {
-        lf.power = lfP * config.lf_correction
-        rf.power = rfP * config.rf_correction
-        lb.power = lrp * config.lb_correction
-        rb.power = rbp * config.rb_correction
+        lf.power = lfP * WheelsConfig.lf_correction
+        rf.power = rfP * WheelsConfig.rf_correction
+        lb.power = lrp * WheelsConfig.lb_correction
+        rb.power = rbp * WheelsConfig.rb_correction
     }
 
     override fun stop() = setMotorPowers(0.0, 0.0, 0.0, 0.0)
@@ -165,14 +164,14 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
 
             fun DcMotorSimple.Direction.sign() = if (this == DcMotorSimple.Direction.FORWARD) 1 else -1
 
-            val deltaLF = (lfp - lastLf) / config.lf_correction * config.lf_encoder_direction.sign()
-            val deltaLB = (lbp - lastLb) / config.lb_correction * config.lb_encoder_direction.sign()
-            val deltaRF = (rfp - lastRf) / config.rf_correction * config.rf_encoder_direction.sign()
-            val deltaRB = (rbp - lastRb) / config.rb_correction * config.rb_encoder_direction.sign()
+            val deltaLF = (lfp - lastLf) / WheelsConfig.lf_correction * WheelsConfig.lf_encoder_direction.sign()
+            val deltaLB = (lbp - lastLb) / WheelsConfig.lb_correction * WheelsConfig.lb_encoder_direction.sign()
+            val deltaRF = (rfp - lastRf) / WheelsConfig.rf_correction * WheelsConfig.rf_encoder_direction.sign()
+            val deltaRB = (rbp - lastRb) / WheelsConfig.rb_correction * WheelsConfig.rb_encoder_direction.sign()
 
 
-            val forward = config.cm_per_tick_forward * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
-            val right = config.cm_per_tick_strafe * (deltaLF - deltaRF + deltaRB - deltaLB) / (4 * sqrt(2.0))
+            val forward = WheelsConfig.cm_per_tick_forward * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
+            val right = WheelsConfig.cm_per_tick_strafe * (deltaLF - deltaRF + deltaRB - deltaLB) / (4 * sqrt(2.0))
 
             return RelativePosition(
                 forward = forward.cm,
@@ -230,26 +229,25 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
             ).normalizeHeading()
         }
     }
+}
 
-    inner class WheelsConfig {
-        val topSpeed by robot.config(1.0)
-        val lf_direction by robot.config(DcMotorSimple.Direction.REVERSE)
-        val rf_direction by robot.config(DcMotorSimple.Direction.FORWARD)
-        val lb_direction by robot.config( DcMotorSimple.Direction.REVERSE)
-        val rb_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+object WheelsConfig {
+    val topSpeed by config(1.0)
+    val lf_direction by config(DcMotorSimple.Direction.REVERSE)
+    val rf_direction by config(DcMotorSimple.Direction.FORWARD)
+    val lb_direction by config( DcMotorSimple.Direction.REVERSE)
+    val rb_direction by config(DcMotorSimple.Direction.FORWARD)
 
-        val lf_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
-        val rf_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
-        val lb_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
-        val rb_encoder_direction by robot.config(DcMotorSimple.Direction.FORWARD)
+    val lf_encoder_direction by config(DcMotorSimple.Direction.FORWARD)
+    val rf_encoder_direction by config(DcMotorSimple.Direction.FORWARD)
+    val lb_encoder_direction by config(DcMotorSimple.Direction.FORWARD)
+    val rb_encoder_direction by config(DcMotorSimple.Direction.FORWARD)
 
-        val lf_correction by robot.config(1.0)
-        val rf_correction by robot.config(1.0)
-        val lb_correction by robot.config(1.0)
-        val rb_correction by robot.config(1.0)
+    val lf_correction by config(1.0)
+    val rf_correction by config(1.0)
+    val lb_correction by config(1.0)
+    val rb_correction by config(1.0)
 
-        val cm_per_tick_forward by robot.config(0.0)
-        val cm_per_tick_strafe by robot.config(0.0)
-    }
-
+    val cm_per_tick_forward by config(0.0)
+    val cm_per_tick_strafe by config(0.0)
 }

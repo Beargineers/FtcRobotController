@@ -1,6 +1,8 @@
 package org.beargineers.platform
 
 interface RobotFactory<T:Robot> {
+    val configResource: Int
+
     fun createRobot(op: RobotOpMode<T>): T
 
     companion object {

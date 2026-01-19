@@ -1,29 +1,55 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import java.util.Properties
 import kotlin.properties.ReadOnlyProperty
 
-fun Robot.config(default: Double) : ReadOnlyProperty<Any, Double> {
+object Config {
+    internal var currentConfigText = ""
+        private set
+
+    private var configs = Properties()
+
+    fun updateConfigText(text: String) {
+        currentConfigText = text
+        configs = Properties().apply {
+            load(text.reader())
+        }
+    }
+
+    fun configValue(name: String): String? {
+        return configs[name] as? String
+    }
+
+    fun defaultConfigText(text: String) {
+        if (currentConfigText.isBlank()) {
+            updateConfigText(text)
+        }
+    }
+}
+    
+
+fun config(default: Double) : ReadOnlyProperty<Any, Double> {
     return ReadOnlyProperty {_, property ->
-        configValue(property.name)?.toDouble() ?: default
+        Config.configValue(property.name)?.toDouble() ?: default
     }
 }
 
-fun Robot.config(default: Int) : ReadOnlyProperty<Any, Int> {
+fun config(default: Int) : ReadOnlyProperty<Any, Int> {
     return ReadOnlyProperty {_, property ->
-        configValue(property.name)?.toInt() ?: default
+        Config.configValue(property.name)?.toInt() ?: default
     }
 }
 
-fun Robot.config(default: String) : ReadOnlyProperty<Any, String> {
+fun config(default: String) : ReadOnlyProperty<Any, String> {
     return ReadOnlyProperty {_, property ->
-        configValue(property.name) ?: default
+        Config.configValue(property.name) ?: default
     }
 }
 
-fun Robot.config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMotorSimple.Direction> {
+fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMotorSimple.Direction> {
     return ReadOnlyProperty {_, property ->
-        configValue(property.name)?.let {
+        Config.configValue(property.name)?.let {
             when(it) {
                 "forward", "FORWARD", "F" -> DcMotorSimple.Direction.FORWARD
                 "reverse", "REVERSE",
@@ -34,13 +60,13 @@ fun Robot.config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMot
     }
 }
 
-fun Robot.config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any, Position> {
+fun config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any, Position> {
     return config(Position(dx, dy, dh))
 }
 
-fun Robot.config(default: Position): ReadOnlyProperty<Any, Position> {
+fun config(default: Position): ReadOnlyProperty<Any, Position> {
     return ReadOnlyProperty { _, property ->
-        configValue(property.name)?.let {
+        Config.configValue(property.name)?.let {
             val first = it.first()
             if (first.isDigit() || first=='-') {
                 val (x, y, heading) = it.split(",").map { it.trim().toDouble() }
@@ -53,13 +79,13 @@ fun Robot.config(default: Position): ReadOnlyProperty<Any, Position> {
     }
 }
 
-fun Robot.config(dx: Distance, dy: Distance): ReadOnlyProperty<Any, Location> {
+fun config(dx: Distance, dy: Distance): ReadOnlyProperty<Any, Location> {
     return config(Location(dx, dy))
 }
 
-fun Robot.config(default: Location): ReadOnlyProperty<Any, Location> {
+fun config(default: Location): ReadOnlyProperty<Any, Location> {
     return ReadOnlyProperty { _, property ->
-        configValue(property.name)?.let {
+        Config.configValue(property.name)?.let {
             val first = it.first()
             if (first.isDigit() || first=='-') {
                 val (x, y) = it.split(",").map { it.trim().toDouble() }

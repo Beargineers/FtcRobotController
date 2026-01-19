@@ -13,8 +13,8 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     private val intake: DcMotor by hardware("intake")
     private val ballDetector: DistanceSensor by hardware("ball")
 
-    val sensorDistanceTreshold by robot.config(10.0)
-    val sensorFramesCount by robot.config(3)
+    val sensorDistanceTreshold by config(10.0)
+    val sensorFramesCount by config(3)
 
     var mode: IntakeMode = IntakeMode.OFF
 

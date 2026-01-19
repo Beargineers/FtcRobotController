@@ -9,10 +9,10 @@ import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.goalDistance
 
 class Shooter(robot: BaseRobot): Hardware(robot) {
-    val SHOOTER_POWER_ADJUST by robot.config(1.0)
-    val SHOOTER_DISTANCE_QUOTIENT by robot.config(0.00101)
-    val SHOOTER_FREE_QUOTIENT by robot.config(0.556)
-    val SHOOTING_TIME_SECONDS by robot.config(4.5)
+    val SHOOTER_POWER_ADJUST by config(1.0)
+    val SHOOTER_DISTANCE_QUOTIENT by config(0.00101)
+    val SHOOTER_FREE_QUOTIENT by config(0.556)
+    val SHOOTING_TIME_SECONDS by config(4.5)
 
     val fly1 by hardware<DcMotor>()
     val fly2 by hardware<DcMotor>()

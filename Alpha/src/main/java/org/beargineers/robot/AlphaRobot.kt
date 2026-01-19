@@ -1,6 +1,5 @@
 package org.beargineers.robot
 
-import org.beargineers.R
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.AprilTagWebcam
@@ -15,7 +14,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 
 @Suppress("unused")
 class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRobot {
-    override val configResource: Int = R.raw.config
     override val drive = MecanumDrive(this)
 
     override val relativeLocalizer get() = drive.localizerByMotorEncoders
