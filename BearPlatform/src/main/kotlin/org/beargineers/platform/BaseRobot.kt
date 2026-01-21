@@ -15,9 +15,8 @@ fun cursorLocation(): Location{
 }
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
-    abstract val relativeLocalizer: RelativeLocalizer
-    abstract val absoluteLocalizer: AbsoluteLocalizer
 
+    abstract val localizer: Localizer
     val allHardware = mutableListOf<Hardware>()
 
     override val telemetry: Telemetry get() = opMode.telemetry
@@ -25,13 +24,11 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     val panelsTelemetry = PanelsTelemetry.telemetry
     val panelsField = PanelsField.field
 
-    var lastTimeMovedNanos: Long = 0
-
     private val parts = mutableMapOf<Part<*>, Any>()
 
-    override var currentPosition: Position = FIELD_CENTER
+    override val currentPosition: Position get() = localizer.getPosition()
 
-    override val currentVelocity: RelativePosition get() = relativeLocalizer.getVelocity()
+    override val currentVelocity: RelativePosition get() = localizer.getVelocity()
     override var targetSpeed: Double = 1.0
 
 
@@ -42,8 +39,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     }
 
     override fun assumePosition(position: Position) {
-        currentPosition = position
-        relativeLocalizer.updatePositionEstimate(position)
+        localizer.setStartingPosition(position)
     }
 
     override fun isMoving(): Boolean {
@@ -63,26 +59,17 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             it.loop()
         }
 
-        if (isMoving()) {
-            lastTimeMovedNanos = System.nanoTime()
-        }
-
-        // Once we get reliable vision result, use it for current position and also update odometry computer
-        val visionMeasurement = absoluteLocalizer.getRobotPose()
-        if (visionMeasurement != null) {
-            telemetry.addData("Vision", "✓ acquired")
-            relativeLocalizer.updatePositionEstimate(visionMeasurement)
-            currentPosition = visionMeasurement
-        } else {
-            telemetry.addData("Vision", "✗ odometry only")
-            currentPosition = relativeLocalizer.getPosition()
-        }
+        localizer.update()
 
         telemetry.addData("Position", currentPosition)
-        telemetry.addData("Velocity", "%s/s", hypot(currentVelocity.forward, currentVelocity.right))
+        telemetry.addData("Velocity", "%s/s, %s/s",
+            hypot(currentVelocity.forward, currentVelocity.right),
+            abs(currentVelocity.turn))
 
-        drawRobotOnPanelsField()
-        if (Panels.wasStarted) panelsTelemetry.update()
+        if (Panels.wasStarted) {
+            drawRobotOnPanelsField()
+            panelsTelemetry.update()
+        }
     }
 
     private fun drawRobotOnPanelsField() {
@@ -203,12 +190,9 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     // Too low values will result in robot moving unnecessarily slow
     // Too high values will result in robot driving past destination and maybe even oscillating around it
 
-    val position_P by config(0.035) // Position gain (power per distance unit)
-    val position_I by config(0.0)
-    val position_D by config(0.0)
-    val heading_P by config(0.01) // Heading gain (power per angle unit)
-    val heading_I by config(0.0)
-    val heading_D by config(0.0)
+    val drive_K by config(PIDFTCoeffs(0.025, 0.0, 0.00001, 0.6))
+    val translational_K by config(PIDFTCoeffs(0.1, 0.0, 0.0, 0.015))
+    val heading_K by config(PIDFTCoeffs(1.0, 0.0, 0.0, 0.01))
 
     val positionTolerance by config(2.0)
     val headingTolerance by config(5.0)

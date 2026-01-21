@@ -1,8 +1,14 @@
 package org.beargineers.platform
 
 import com.bylazar.telemetry.TelemetryManager
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
+
+data class PIDFTCoeffs(
+    val p: Double, val i: Double, val d: Double, val t: Double
+)
 
 class PID(
     // Anti-windup parameters
@@ -11,9 +17,7 @@ class PID(
     private val outputMin: Double = Double.NEGATIVE_INFINITY,
     private val outputMax: Double = Double.POSITIVE_INFINITY
 ) {
-    private var p: Double = 0.0
-    private var i: Double = 0.0
-    private var d: Double = 0.0
+    private var K: PIDFTCoeffs = PIDFTCoeffs(0.0, 0.0, 0.0, 0.0)
 
     private var target = 0.0
     private var error = 0.0
@@ -24,7 +28,7 @@ class PID(
     private var errorLow = 0.0
     private var errorHigh = 0.0
     private var oscillationPeriod = 0L
-    private var updateTimeNano = 0L
+    private var updateTimer: ElapsedTime? = null
 
     // Oscillation detection using derivative sign changes
     private val peakTimes = mutableListOf<Long>()
@@ -39,11 +43,9 @@ class PID(
         }
     }
 
-    fun updateCoefficients(p: Double, i: Double, d: Double) {
-        if (this.p != p || this.i != i || this.d != d) {
-            this.p = p
-            this.i = i
-            this.d = d
+    fun updateCoefficients(k: PIDFTCoeffs) {
+        if (this.K != k) {
+            this.K = k
             reset()
         }
     }
@@ -56,7 +58,7 @@ class PID(
         errorLow = 0.0
         errorHigh = 0.0
         oscillationPeriod = 0L
-        updateTimeNano = 0L
+        updateTimer = null
         peakTimes.clear()
         troughTimes.clear()
         peakValues.clear()
@@ -68,14 +70,14 @@ class PID(
     }
 
     fun updateError(e: Double) {
-        val now = System.nanoTime()
-        val dtMillis = if (updateTimeNano > 0) TimeUnit.NANOSECONDS.toMillis(now - updateTimeNano) else 0L
-        updateTimeNano = now
+        if (updateTimer != null) {
+            val dt = updateTimer!!.seconds()
+            updateTimer!!.reset()
 
-        if (dtMillis > 0) {
+            prevDerivative = derivativeError
             // Anti-windup Strategy 1: Integral zone (only accumulate when close to target)
-            if (kotlin.math.abs(e) < integralZone) {
-                integralError += e * dtMillis
+            if (abs(e) < integralZone) {
+                integralError += e * dt
 
                 // Anti-windup Strategy 2: Clamp integral accumulator
                 integralError = integralError.coerceIn(-integralMax, integralMax)
@@ -84,19 +86,24 @@ class PID(
                 integralError = 0.0
             }
 
-            derivativeError = (e - error) / dtMillis
+            val de = (e - error) / dt
+            derivativeError = K.t * prevDerivative + (1 - K.t) * de
 
             // Detect oscillation using derivative sign changes
-            detectOscillation(now, derivativeError)
+            detectOscillation()
+        }
+        else {
+            updateTimer = ElapsedTime()
         }
 
         error = e
     }
 
-    private fun detectOscillation(now: Long, derivative: Double) {
+    private fun detectOscillation() {
+        val now: Long = System.nanoTime()
         // Detect when derivative changes sign (peak or trough)
-        val derivativeSignChanged = (prevDerivative > 0 && derivative < 0) ||
-                                    (prevDerivative < 0 && derivative > 0)
+        val derivativeSignChanged = (prevDerivative > 0 && derivativeError < 0) ||
+                                    (prevDerivative < 0 && derivativeError > 0)
 
         if (derivativeSignChanged) {
             if (prevDerivative > 0) {
@@ -135,14 +142,12 @@ class PID(
                 errorLow = troughValues.average()
             }
         }
-
-        prevDerivative = derivative
     }
 
     fun error(): Double = error
 
     fun result(): Double {
-        val output = p * error + i * integralError + d * derivativeError
+        val output = K.p * error + K.i * integralError + K.d * derivativeError
 
         // Anti-windup Strategy 3: Back-calculation (conditional integration)
         // If output is saturated and error has same sign as integral, stop accumulating
@@ -157,22 +162,22 @@ class PID(
     }
 
     fun logErrors(telemetry: TelemetryManager) {
-        telemetry.addData("PE", error * p)
-        telemetry.addData("DE", derivativeError * d)
-        telemetry.addData("IE", integralError * i)
+        telemetry.addData("PE", error * K.p)
+        telemetry.addData("DE", derivativeError * K.d)
+        telemetry.addData("IE", integralError * K.i)
         telemetry.addData("E", result())
     }
 
-    fun logOscillation(telemetry: Telemetry) {
-        telemetry.addData("Oscillation magnitude", errorHigh - errorLow)
-        telemetry.addData("Oscillation period", oscillationPeriod)
+    fun logOscillation(telemetry: TelemetryManager) {
+        telemetry.addData("OM", errorHigh - errorLow)
+        telemetry.addData("OP", oscillationPeriod)
     }
 
     fun logPIDState(telemetry: Telemetry) {
         telemetry.addData("Error", "%.3f", error)
-        telemetry.addData("P term", "%.3f", p * error)
-        telemetry.addData("I term", "%.3f", i * integralError)
-        telemetry.addData("D term", "%.3f", d * derivativeError)
+        telemetry.addData("P term", "%.3f", K.p * error)
+        telemetry.addData("I term", "%.3f", K.i * integralError)
+        telemetry.addData("D term", "%.3f", K.d * derivativeError)
         telemetry.addData("Integral accum", "%.1f", integralError)
         telemetry.addData("Output", "%.3f", result())
     }
