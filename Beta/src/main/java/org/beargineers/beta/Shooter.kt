@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.PID
+import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.goalDistance
@@ -17,9 +18,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_FREE_QUOTIENT by config(0.556)
     val SHOOTING_TIME_SECONDS by config(4.5)
 
-    val SHOOTER_P by config(0.0)
-    val SHOOTER_I by config(0.0)
-    val SHOOTER_D by config(0.0)
+    val SHOOTER_PID by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
     val SHOOTER_ANGLE_CORRECTION by config(0.0)
 
     val pid = PID()
@@ -58,7 +57,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     }
 
     private fun powerFlywheel(p: Double) {
-        pid.updateCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D)
+        pid.updateCoefficients(SHOOTER_PID)
         pid.setTarget(p)
         pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
         telemetry.addData("Shooter error", pid.error())

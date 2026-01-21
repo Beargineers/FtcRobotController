@@ -25,7 +25,12 @@ internal class PathFollower(
     private var lastTargetIndex: Int = 0
     private var currentSpeed: Double = 0.0
     private var lastTimeMoved = ElapsedTime()
-    private val distancePID = PID(
+    private val drivePID = PID(
+        integralZone = 20.0,
+        integralMax = 3000.0,
+        outputMin = -1.0, outputMax = 1.0
+    )
+    private val translationalPID = PID(
         integralZone = 20.0,
         integralMax = 3000.0,
         outputMin = -1.0, outputMax = 1.0
@@ -37,8 +42,9 @@ internal class PathFollower(
     )
 
     init {
-        distancePID.updateCoefficients(robot.position_P, robot.position_I, robot.position_D)
-        headingPID.updateCoefficients(robot.heading_P, robot.heading_I, robot.heading_D)
+        drivePID.updateCoefficients(robot.drive_K)
+        headingPID.updateCoefficients(robot.heading_K)
+        translationalPID.updateCoefficients(robot.heading_K)
     }
 
     /**
@@ -67,19 +73,26 @@ internal class PathFollower(
             return false
         }
 
-        val positionError = currentPosition.distanceTo(currentTarget).cm()
+        val (dForward, dRight) = currentTarget.location().toRobotFrame(robot)
+
+        val driveError = dForward.cm()
+        val translationalError = dRight.cm()
         val headingError = (currentTarget.heading - currentPosition.heading).normalize().degrees()
 
-        distancePID.updateCoefficients(robot.position_P, robot.position_I, robot.position_D)
-        headingPID.updateCoefficients(robot.heading_P, robot.heading_I, robot.heading_D)
+        drivePID.updateCoefficients(robot.drive_K)
+        translationalPID.updateCoefficients(robot.translational_K)
+        headingPID.updateCoefficients(robot.heading_K)
 
-        distancePID.updateError(positionError)
+        drivePID.updateError(driveError)
+        translationalPID.updateError(translationalError)
         headingPID.updateError(headingError)
 
-        robot.panelsTelemetry.addData("PosE", positionError)
+        robot.panelsTelemetry.addData("DriveE", driveError)
+        robot.panelsTelemetry.addData("TransE", translationalError)
         robot.panelsTelemetry.addData("HeadE", abs(headingError))
 
-        distancePID.logErrors(robot.panelsTelemetry)
+        headingPID.logErrors(robot.panelsTelemetry)
+        headingPID.logOscillation(robot.panelsTelemetry)
 
         val finished = lastTargetIndex == path.lastIndex &&
                 currentPosition.distanceTo(path.last().target).cm() < robot.positionTolerance &&
@@ -96,18 +109,15 @@ internal class PathFollower(
             return if (abs(this) > 0.0001 && abs(this) < min) min else this
         }
 
-        val movePower = distancePID.result().coerceIn(-1.0, 1.0).dezeroify()
-        val turnPower = -headingPID.result().coerceIn(-1.0, 1.0).dezeroify()
 
 //        headingPID.logOscillation(robot.telemetry)
 
-        // Apply drive power to robot
-        val theta = (atan2(
-            currentTarget.y - robot.currentPosition.y,
-            currentTarget.x - robot.currentPosition.x) - currentPosition.heading).normalize()
+        val forwardPower = drivePID.result().dezeroify()
+        val strafePower = translationalPID.result().dezeroify()
+        val turnPower = -headingPID.result().dezeroify()
 
         robot.targetSpeed = currentWaypoint.speed
-        robot.driveByPowerAndAngle(theta.radians(), movePower, turnPower)
+        robot.drive(forwardPower,strafePower, turnPower)
 
         return true
     }
