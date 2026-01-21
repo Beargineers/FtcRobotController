@@ -21,7 +21,7 @@ It says that
 
 val FIELD_CENTER = Location(0.cm, 0.cm).withHeading(0.degrees)
 
-class Location(val x: Distance, val y: Distance) {
+data class Location(val x: Distance, val y: Distance) {
     fun shift(x: Distance, y: Distance): Location {
         return Location(this.x + x, this.y + y)
     }
@@ -249,4 +249,19 @@ fun Location.toRelative(cp: Position): Location {
     val relX = cos(relH)*magnitude
     val relY = sin(relH)*magnitude
     return Location(relX, relY)
+}
+
+fun Location.toRobotFrame(r: Robot): Location {
+    // Translate to robot's origin
+    val cp = r.currentPosition
+    val dx = x - cp.x
+    val dy = y - cp.y
+
+    // Rotate to robot's frame (heading = 0 means facing along positive field X)
+    // In robot frame: +x is forward, +y is right
+    val theta = cp.heading
+    val robotX = cos(theta) * dx + sin(theta) * dy
+    val robotY = sin(theta) * dx - cos(theta) * dy
+
+    return Location(robotX, robotY)
 }

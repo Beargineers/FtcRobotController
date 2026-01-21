@@ -3,10 +3,6 @@ package org.beargineers.platform
 import fi.iki.elonen.NanoHTTPD
 
 object SettingsWebServer : NanoHTTPD(9000) {
-    init {
-        start()
-    }
-
     override fun serve(session: IHTTPSession): Response {
         val uri = session.uri
 

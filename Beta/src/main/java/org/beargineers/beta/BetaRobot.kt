@@ -1,12 +1,12 @@
 package org.beargineers.beta
 
-import org.beargineers.platform.AbsoluteLocalizer
 import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.LimelightCam
+import org.beargineers.platform.Localizer
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.PinpointLocalizer
-import org.beargineers.platform.RelativeLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
@@ -22,9 +22,8 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         manualAngleCorrection += angle
     }
 
-    override val absoluteLocalizer: AbsoluteLocalizer = LimelightCam(this)
-    override val relativeLocalizer: RelativeLocalizer = PinpointLocalizer(this)
-
+    override val localizer: Localizer =
+        FusionLocalizer(telemetry, LimelightCam(this), PinpointLocalizer(this))
 
     val shooter = Shooter(this)
 

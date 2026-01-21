@@ -10,6 +10,10 @@ object Config {
 
     private var configs = Properties()
 
+    init {
+        SettingsWebServer.start()
+    }
+
     fun updateConfigText(text: String) {
         currentConfigText = text
         configs = Properties().apply {
@@ -94,6 +98,24 @@ fun config(default: Location): ReadOnlyProperty<Any, Location> {
             else {
                 tileLocation(it)
             }
+        } ?: default
+    }
+}
+
+fun config(default: PIDFTCoeffs): ReadOnlyProperty<Any, PIDFTCoeffs> {
+    return ReadOnlyProperty { _, property ->
+        Config.configValue(property.name)?.let {
+            val components = mutableListOf<Double>()
+            components.addAll(it.split(',').map { it.toDouble() })
+            repeat(5) { components.add(0.0)}
+
+            PIDFTCoeffs(
+                components[0],
+                components[1],
+                components[2],
+                components[4]
+            )
+
         } ?: default
     }
 }

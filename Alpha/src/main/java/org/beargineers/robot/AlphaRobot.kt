@@ -4,6 +4,8 @@ import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.AprilTagWebcam
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.FusionLocalizer
+import org.beargineers.platform.Localizer
 import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
@@ -16,12 +18,11 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRobot {
     override val drive = MecanumDrive(this)
 
-    override val relativeLocalizer get() = drive.localizerByMotorEncoders
-    override val absoluteLocalizer get() = aprilTags
-
     val aprilTags = AprilTagWebcam(this)
     val shooter = Shooter(this)
     val intake = Intake(this)
+
+    override val localizer: Localizer = FusionLocalizer(telemetry, aprilTags, drive.localizerByMotorEncoders)
 
     override fun loop() {
         super.loop()

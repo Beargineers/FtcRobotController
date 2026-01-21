@@ -1,5 +1,7 @@
 package org.beargineers.platform
 
+import org.firstinspires.ftc.robotcore.external.Telemetry
+
 /**
  * Provides relative positioning information - the movement/shift of the robot
  * since the last query. This is typically implemented using odometry sensors
@@ -53,17 +55,50 @@ interface AbsoluteLocalizer {
      * Returns the robot's current absolute position on the field with confidence.
      * Returns null if position cannot be determined (e.g., no AprilTag visible).
      *
-     * Multiple calls to this method return the current position estimate
-     * at each point in time - it does not modify internal state.
-     *
-     * Confidence indicates measurement quality:
-     * - 1.0: Excellent (close range, good angle, clear detection)
-     * - 0.7-0.9: Good (moderate range/angle)
-     * - 0.4-0.6: Fair (far range or poor angle)
-     * - 0.0-0.3: Poor (very far, extreme angle, or ambiguous)
-     *
-     * @return AbsolutePose containing position and confidence,
-     *         or null if absolute position is unavailable
+     * @return AbsolutePose containing position
+     *         or null if absolute position is unavailable or confidence is too low.
      */
     fun getRobotPose(): Position?
+}
+
+interface Localizer {
+    fun setStartingPosition(position: Position)
+    fun update()
+
+    fun getPosition(): Position
+    fun getVelocity(): RelativePosition
+}
+
+class FusionLocalizer(
+    val telemetry: Telemetry,
+    val absoluteLocalizer: AbsoluteLocalizer,
+    val relativeLocalizer: RelativeLocalizer
+) : Localizer {
+    var currentPosition: Position = FIELD_CENTER
+
+    override fun setStartingPosition(position: Position) {
+        currentPosition = position
+        relativeLocalizer.updatePositionEstimate(position)
+    }
+
+    override fun update() {
+        val pose = absoluteLocalizer.getRobotPose()
+        if (pose != null) {
+            telemetry.addData("Vision", "✓ acquired")
+            relativeLocalizer.updatePositionEstimate(pose)
+            currentPosition = pose
+        }
+        else {
+            telemetry.addData("Vision", "✗ odometry only")
+            currentPosition = relativeLocalizer.getPosition()
+        }
+    }
+
+    override fun getPosition(): Position {
+        return currentPosition
+    }
+
+    override fun getVelocity(): RelativePosition {
+        return relativeLocalizer.getVelocity()
+    }
 }
