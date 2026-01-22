@@ -22,27 +22,6 @@ interface RelativeLocalizer {
 }
 
 /**
- * Represents an absolute position measurement with associated confidence.
- *
- * @property pose The robot's position on the field (x, y, heading)
- * @property confidence Quality metric from 0.0 (lowest) to 1.0 (highest) indicating
- *                      reliability of the position estimate. Factors affecting confidence:
- *                      - Distance to reference point (closer = higher confidence)
- *                      - Viewing angle (perpendicular = higher confidence)
- *                      - Number of features detected (more = higher confidence)
- *                      - Signal quality or detection ambiguity
- */
-data class AbsolutePose(
-    val pose: Position,
-    val confidence: Double,
-    val timestampNano: Long
-) {
-    init {
-        require(confidence in 0.0..1.0) { "Confidence must be in range [0.0, 1.0], got $confidence" }
-    }
-}
-
-/**
  * Provides absolute positioning information - the robot's current position
  * on the field in global coordinates. This is typically implemented using
  * external references like AprilTags, GPS, or pre-mapped landmarks.
