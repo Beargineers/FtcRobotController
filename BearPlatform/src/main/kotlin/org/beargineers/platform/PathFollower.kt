@@ -96,7 +96,7 @@ internal class PathFollower(
 
         val finished = lastTargetIndex == path.lastIndex &&
                 currentPosition.distanceTo(path.last().target).cm() < robot.positionTolerance &&
-                abs(currentPosition.heading - path.last().target.heading).degrees() < robot.headingTolerance
+                abs((currentPosition.heading - path.last().target.heading).normalize()).degrees() < robot.headingTolerance
 
         if (finished) {
             currentWaypoint.onArrival()
