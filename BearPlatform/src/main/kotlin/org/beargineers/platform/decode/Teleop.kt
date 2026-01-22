@@ -3,7 +3,6 @@ package org.beargineers.platform.decode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
-import org.beargineers.platform.FIELD_CENTER
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.cm
@@ -121,7 +120,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         super.bearStart()
         robot.enableFlywheel(true)
 
-        robot.assumePosition(FIELD_CENTER)
+        robot.assumePosition(lastKnownPosition)
 
 /*
         robot.intakeMode(IntakeMode.ON)
