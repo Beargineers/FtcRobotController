@@ -12,6 +12,8 @@ object PinpointConfig {
 
     val pinpoint_xEncoderDirection by config(DcMotorSimple.Direction.FORWARD)
     val pinpoint_yEncoderDirection by config(DcMotorSimple.Direction.FORWARD)
+
+    val pinpoint_yawScalar by config(0.0)
 }
 
 class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
@@ -31,6 +33,11 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
             PinpointConfig.pinpoint_yEncoderDirection.direction()
         )
         pinpoint.resetPosAndIMU()
+
+        val yawScalar = PinpointConfig.pinpoint_yawScalar
+        if (yawScalar > 0.0001) {
+            pinpoint.setYawScalar(yawScalar)
+        }
     }
 
     private fun DcMotorSimple.Direction.direction(): GoBildaPinpointDriver.EncoderDirection {
