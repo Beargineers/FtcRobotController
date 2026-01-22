@@ -74,11 +74,13 @@ class FusionLocalizer(
     val absoluteLocalizer: AbsoluteLocalizer,
     val relativeLocalizer: RelativeLocalizer
 ) : Localizer {
-    var currentPosition: Position = FIELD_CENTER
-
     override fun setStartingPosition(position: Position) {
-        currentPosition = position
+        updateCurrentPosition(position)
         relativeLocalizer.updatePositionEstimate(position)
+    }
+
+    private fun updateCurrentPosition(cp: Position) {
+        RobotOpMode.lastKnownPosition = cp
     }
 
     override fun update() {
@@ -86,16 +88,16 @@ class FusionLocalizer(
         if (pose != null) {
             telemetry.addData("Vision", "✓ acquired")
             relativeLocalizer.updatePositionEstimate(pose)
-            currentPosition = pose
+            updateCurrentPosition(pose)
         }
         else {
             telemetry.addData("Vision", "✗ odometry only")
-            currentPosition = relativeLocalizer.getPosition()
+            updateCurrentPosition(relativeLocalizer.getPosition())
         }
     }
 
     override fun getPosition(): Position {
-        return currentPosition
+        return RobotOpMode.lastKnownPosition
     }
 
     override fun getVelocity(): RelativePosition {
