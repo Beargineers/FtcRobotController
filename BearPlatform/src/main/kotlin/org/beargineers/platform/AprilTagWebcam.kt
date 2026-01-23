@@ -12,6 +12,13 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 
 class AprilTagWebcam(robot: BaseRobot): Camera(robot) {
+    val CameraPosition_forward by config(0.0)
+    val CameraPosition_up by config(0.0)
+    val CameraPosition_right by config(0.0)
+    val CameraPosition_pitch by config(0.0)
+    val CameraPosition_yaw by config(0.0)
+    val CameraPosition_roll by config(0.0)
+
     private val camera: WebcamName by hardware("Webcam 1")
 
     private lateinit var aprilTag: AprilTagProcessor
