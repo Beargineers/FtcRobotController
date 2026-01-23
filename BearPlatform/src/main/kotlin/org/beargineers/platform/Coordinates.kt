@@ -16,11 +16,8 @@ It says that
 - X axis goes from goals towards the audience, i.e. x getting higher when row index getting lower
 - Y axis goes from blue goal side towards red goal side, i.e. y getting higher with column index getting higher
 - Center of the field has [0,0] coordinates
-- Heading is 0  when facing upwards, and increases counterclockwise [TODO:check by an experiment]
+- Heading is 0  when facing upwards, and increases counterclockwise
  */
-
-val FIELD_CENTER = Location(0.cm, 0.cm).withHeading(0.degrees)
-
 data class Location(val x: Distance, val y: Distance) {
     fun shift(x: Distance, y: Distance): Location {
         return Location(this.x + x, this.y + y)

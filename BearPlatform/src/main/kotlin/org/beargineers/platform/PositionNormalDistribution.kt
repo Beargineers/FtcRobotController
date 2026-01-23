@@ -3,7 +3,7 @@ package org.beargineers.platform
 import kotlin.math.min
 import kotlin.math.sqrt
 
-private val N = 150
+private val N = 20
 
 private class DoubleNormalDistribution {
     private val data = DoubleArray(N)
@@ -59,6 +59,14 @@ class PositionNormalDistribution(val minSamples: Int) {
         if (xstd > positionTolerance.cm() || ystd > positionTolerance.cm() || hstd > headingTolerance.degrees()) return null
 
         return Position(xm.cm, ym.cm, hm.degrees)
+    }
+
+    fun std(): Triple<Distance, Distance, Angle> {
+        val (xm, xstd) = x.result()
+        val (ym, ystd) = y.result()
+        val (hm, hstd) = heading.result()
+
+        return Triple(xstd.cm, ystd.cm, hstd.degrees)
     }
 
     fun reset() {

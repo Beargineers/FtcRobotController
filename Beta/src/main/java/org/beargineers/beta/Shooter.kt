@@ -3,6 +3,7 @@ package org.beargineers.beta
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.PID
@@ -10,6 +11,7 @@ import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.goalDistance
+import kotlin.math.abs
 
 class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_POWER_ADJUST by config(1.0)
@@ -17,6 +19,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     val SHOOTER_DISTANCE_QUOTIENT by config(0.00101)
     val SHOOTER_FREE_QUOTIENT by config(0.556)
     val SHOOTING_TIME_SECONDS by config(4.5)
+    val SHOOTER_ERROR_MARGIN by config(0.03)
 
     val SHOOTER_PID by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
     val SHOOTER_ANGLE_CORRECTION by config(0.0)
@@ -28,11 +31,15 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
 
     val feeder by hardware<DcMotor>()
 
-    var feederStartedAt: Long = 0
+    var stopFeederAt: Long = 0
 
     var flywheelEnabled = false
 
+    var feederOn = false
+
     var maxTicks = 0
+
+    val loopTime = ElapsedTime()
 
 
     override fun init() {
@@ -61,6 +68,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         pid.setTarget(p)
         pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
         telemetry.addData("Shooter error", pid.error())
+        robot.panelsTelemetry.addData("Shooter error", pid.error())
 
         val v = pid.result() + p
         fly1.power = v
@@ -69,18 +77,28 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
 
     fun launch() {
         feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        setMotorPower(feeder, 1.0)
-        feederStartedAt = System.currentTimeMillis()
+        feederOn = true
+        stopFeederAt = System.currentTimeMillis() + (SHOOTING_TIME_SECONDS * 1000).toLong()
         (robot as BetaRobot).intake.onShoot()
     }
 
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
 
     override fun loop() {
-        if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > SHOOTING_TIME_SECONDS * 1000) {
-            setMotorPower(feeder, 0.0)
-            feederStartedAt = 0L
+        val dt = loopTime.milliseconds()
+        loopTime.reset()
+
+        if (stopFeederAt != 0L && System.currentTimeMillis() >= stopFeederAt) {
+            feederOn = false
+            stopFeederAt = 0L
         }
+
+        val flywheelPoweredUp = abs(pid.error()) < SHOOTER_ERROR_MARGIN
+        if (feederOn && !flywheelPoweredUp) {
+            stopFeederAt += dt.toLong()
+        }
+
+        feeder.power = if (feederOn && flywheelPoweredUp) 1.0 else 0.0
 
         val nominalPower = when {
             flywheelEnabled -> recommendedFlywheelPower()
