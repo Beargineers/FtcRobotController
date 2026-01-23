@@ -7,6 +7,7 @@ import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.MecanumDrive
+import org.beargineers.platform.MecanumEncodersLocalizers
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
@@ -22,7 +23,7 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     val shooter = Shooter(this)
     val intake = Intake(this)
 
-    override val localizer: Localizer = FusionLocalizer(telemetry, aprilTags, drive.localizerByMotorEncoders)
+    override val localizer: Localizer = FusionLocalizer(telemetry, aprilTags, MecanumEncodersLocalizers(this, drive))
 
     override fun loop() {
         super.loop()
