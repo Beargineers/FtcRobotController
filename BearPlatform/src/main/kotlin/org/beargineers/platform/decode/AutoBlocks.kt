@@ -14,6 +14,7 @@ import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.cm
+import org.beargineers.platform.config
 import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
@@ -22,6 +23,16 @@ import org.beargineers.platform.followPath
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
+
+object AutoPositions {
+    val NORTH_START by config(tilePosition("F6BL:+135"))
+    val NORTH_SHOOTING by config(tilePosition("D4:+135"))
+    val SOUTH_START by config(Position(160.cm,44.cm,180.degrees))
+    val SOUTH_SHOOTING by config(tilePosition("D1:+160"))
+    val BOX_APPROACH by config(tilePosition("D4:+135"))
+    val BOX_SCOOP by config(tilePosition("D4:+135"))
+    val BOX_SCOOP_SPEED by config(1.0)
+}
 
 fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
     return buildList {
@@ -34,6 +45,15 @@ fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
     }
 }
 
+fun DecodeRobot.scoopBoxPath(): List<Waypoint> {
+    return buildList {
+        add(Waypoint(AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance)))
+        add(Waypoint(AutoPositions.BOX_SCOOP.mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED))
+    }
+}
+
+
+
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
     seq("Scoop and shoot #$spike") {
@@ -43,15 +63,24 @@ fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
 
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.scoopFromBoxAndShoot(launchPose: Position) {
-    seq("Scoop from BOX and shoot") {
-        val boxCollectionPath = robot.scoopSpikePath(0).map {
-            Waypoint(
-                it.target.shift(11.cm, if (robot.alliance == Alliance.RED) 5.cm else -5.cm),
-                it.speed,
-                it.onArrival
-            )
+    doWhile("Scoop from BOX and shoot") {
+        condition { artifactsCount < 3 }
+
+        looping {
+            action {
+                followPath(scoopBoxPath())
+            }
+            action {
+                followPath(scoopBoxPath())
+            }
+            action {
+                followPath(scoopBoxPath())
+            }
         }
-        followPathAndShoot(boxCollectionPath + boxCollectionPath + boxCollectionPath +  Waypoint(launchPose))
+
+        then {
+            followPathAndShoot(listOf(Waypoint(launchPose)))
+        }
     }
 }
 
@@ -62,17 +91,28 @@ private fun PhaseBuilder<DecodeRobot>.shoot() {
     waitForShootingCompletion()
 }
 
-open class DecodeAutoStrategy(alliance: Alliance, val positions: String) : PhasedAutonomous<DecodeRobot>(alliance) {
-    override fun PhaseBuilder<DecodeRobot>.phases() {
-        val (startingPoint, shootingPoint) = positions.split(",").map { it.trim() }
 
+open class DecodeAutoStrategy(alliance: Alliance, val zone: ShootingZones) : PhasedAutonomous<DecodeRobot>(alliance) {
+    val startingPoint = (if (zone == ShootingZones.FRONT) {
+        AutoPositions.NORTH_START
+    } else {
+        AutoPositions.SOUTH_START
+    }).mirrorForAlliance(alliance)
+
+    val shootingPoint = (if (zone == ShootingZones.FRONT) {
+        AutoPositions.NORTH_SHOOTING
+    } else {
+        AutoPositions.SOUTH_SHOOTING
+    }).mirrorForAlliance(alliance)
+
+    override fun PhaseBuilder<DecodeRobot>.phases() {
         doWhile("AUTO") {
             condition {
                 opMode.elapsedTime.seconds() < 29
             }
 
             looping {
-                autoStrategy(tilePosition(startingPoint), tilePosition(shootingPoint))
+                autoStrategy(startingPoint, shootingPoint)
             }
 
             then {
@@ -90,7 +130,7 @@ open class DecodeAutoStrategy(alliance: Alliance, val positions: String) : Phase
     override fun bearInit() {
         super.bearInit()
 
-        telemetry.addLine("Ensure robot is in position: ${positions.takeWhile { it != ',' }}")
+        telemetry.addLine("Ensure robot is in position: $startingPoint")
     }
 }
 

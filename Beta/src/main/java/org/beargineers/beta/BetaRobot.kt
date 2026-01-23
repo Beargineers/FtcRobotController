@@ -53,4 +53,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         telemetry.addData("Distance to goal", goalDistance())
         telemetry.addData("Heading to goal error", headingToGoal() - currentPosition.heading)
     }
+
+    override val artifactsCount: Int
+        get() = intake.artifacts
 }

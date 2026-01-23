@@ -28,6 +28,8 @@ interface DecodeRobot : Robot {
     val shootingAngleCorrection: Angle
 
     val locations : Locations get() = Locations(this)
+
+    val artifactsCount: Int
 }
 
 class Locations(val robot: DecodeRobot) {
@@ -57,7 +59,11 @@ class Locations(val robot: DecodeRobot) {
 }
 
 fun Position.mirrorForAlliance(robot: DecodeRobot): Position {
-    return if (robot.alliance == Alliance.RED) this else Position(x, -y, -heading)
+    return mirrorForAlliance(robot.alliance)
+}
+
+fun Position.mirrorForAlliance(alliance: Alliance): Position {
+    return if (alliance == Alliance.RED) this else Position(x, -y, -heading)
 }
 
 fun Location.mirrorForAlliance(robot: DecodeRobot): Location {
