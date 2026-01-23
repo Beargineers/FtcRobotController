@@ -64,6 +64,18 @@ fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMotorSimp
     }
 }
 
+fun config(default: Boolean) : ReadOnlyProperty<Any, Boolean> {
+    return ReadOnlyProperty {_, property ->
+        Config.configValue(property.name)?.let {
+            when(it.lowercase()) {
+                "f", "false", "n", "no" -> false
+                "y", "yes", "t", "true" -> true
+                else -> null
+            }
+        } ?: default
+    }
+}
+
 fun config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any, Position> {
     return config(Position(dx, dy, dh))
 }

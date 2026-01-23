@@ -42,7 +42,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     override fun isShooting(): Boolean {
-        return shooter.feederStartedAt != 0L
+        return shooter.stopFeederAt != 0L
     }
 
     override val shootingAngleCorrection: Angle
