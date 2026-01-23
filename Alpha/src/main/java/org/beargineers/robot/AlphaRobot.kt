@@ -53,6 +53,8 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     override val intakeMode: IntakeMode get() = intake.mode
     override val shootingAngleCorrection: Angle
         get() = 0.degrees
+    override val artifactsCount: Int
+        get() = 0
 
     override fun launch() {
         shooter.launch()

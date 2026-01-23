@@ -37,6 +37,8 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val intakeMode: IntakeMode get() = IntakeMode.OFF
     override val shootingAngleCorrection: Angle
         get() = 0.degrees
+    override val artifactsCount: Int
+        get() = 0
 
     override fun intakeMode(mode: IntakeMode) {
         // TODO("Not yet implemented")
