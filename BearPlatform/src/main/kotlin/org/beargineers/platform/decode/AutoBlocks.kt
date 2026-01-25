@@ -3,6 +3,7 @@ package org.beargineers.platform.decode
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
+import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
@@ -45,10 +46,10 @@ fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
     }
 }
 
-fun DecodeRobot.scoopBoxPath(): List<Waypoint> {
+fun DecodeRobot.scoopBoxPath(shift: Distance): List<Waypoint> {
     return buildList {
-        add(Waypoint(AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance)))
-        add(Waypoint(AutoPositions.BOX_SCOOP.mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED))
+        add(Waypoint(AutoPositions.BOX_APPROACH.shift(-shift, 0.cm).mirrorForAlliance(alliance)))
+        add(Waypoint(AutoPositions.BOX_SCOOP.shift(-shift, 0.cm).mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED))
     }
 }
 
@@ -68,13 +69,7 @@ fun PhaseBuilder<DecodeRobot>.scoopFromBoxAndShoot(launchPose: Position) {
 
         looping {
             action {
-                followPath(scoopBoxPath())
-            }
-            action {
-                followPath(scoopBoxPath())
-            }
-            action {
-                followPath(scoopBoxPath())
+                followPath(scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(40.cm))
             }
         }
 
@@ -121,7 +116,7 @@ open class DecodeAutoStrategy(alliance: Alliance, val zone: ShootingZones) : Pha
                     enableFlywheel(false)
                 }
                 action {
-                    driveToTarget(locations.OPEN_RAMP_APPROACH)
+                    driveToTarget(if (zone == ShootingZones.FRONT) locations.OPEN_RAMP_APPROACH else AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance))
                 }
             }
         }
@@ -154,6 +149,7 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, laun
         scoopAndShoot(1, launchPoint)
     }
     else {
+        scoopAndShoot(1, launchPoint)
         // Far shooting zone
         repeat(5) {
             scoopFromBoxAndShoot(launchPoint)

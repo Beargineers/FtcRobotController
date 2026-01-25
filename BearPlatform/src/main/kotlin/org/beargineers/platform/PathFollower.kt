@@ -60,7 +60,7 @@ internal class PathFollower(
         var currentTarget = currentWaypoint.target
 
         if (lastTargetIndex < path.lastIndex &&  currentPosition.distanceTo(path[lastTargetIndex].target) < 8.cm) {
-            currentWaypoint.onArrival()
+            currentWaypoint.onArrival?.invoke()
             lastTargetIndex++
             currentWaypoint = path[lastTargetIndex]
             currentTarget = currentWaypoint.target
@@ -100,7 +100,7 @@ internal class PathFollower(
                 abs((currentPosition.heading - path.last().target.heading).normalize()).degrees() < robot.headingTolerance
 
         if (finished) {
-            currentWaypoint.onArrival()
+            currentWaypoint.onArrival?.invoke()
             robot.stopDriving()
             return false
         }
