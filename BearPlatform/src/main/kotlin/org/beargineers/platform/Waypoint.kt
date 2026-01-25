@@ -3,7 +3,7 @@ package org.beargineers.platform
 data class Waypoint(
     val target: Position,
     val speed: Double = 1.0,
-    val onArrival: () -> Unit = {}
+    val onArrival: (() -> Unit)? = null
 )
 
 fun <T: Robot> T.followPath(path: List<Waypoint>): Boolean {
