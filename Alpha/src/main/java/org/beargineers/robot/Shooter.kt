@@ -2,13 +2,12 @@ package org.beargineers.robot
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
-import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.goalDistance
 
-class Shooter(robot: BaseRobot): Hardware(robot) {
+class Shooter(val alphaRobot: AlphaRobot): Hardware(alphaRobot) {
     val SHOOTER_POWER_ADJUST by config(1.0)
     val SHOOTER_DISTANCE_QUOTIENT by config(0.00101)
     val SHOOTER_FREE_QUOTIENT by config(0.556)
@@ -45,23 +44,23 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     }
 
     private fun powerFlywheel(p: Double) {
-        setMotorPower(fly1, p)
-        setMotorPower(fly2, p)
+        alphaRobot.setMotorPower(fly1, p)
+        alphaRobot.setMotorPower(fly2, p)
     }
 
     fun launch() {
         frozenFlywheelPower = recommendedFlywheelPower()
 
         feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        setMotorPower(feeder, 1.0)
+        alphaRobot.setMotorPower(feeder, 1.0)
         feederStartedAt = System.currentTimeMillis()
     }
 
-    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
+    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.alphaRobot as DecodeRobot).goalDistance().cm())
 
     override fun loop() {
         if (feederStartedAt != 0L && (System.currentTimeMillis() - feederStartedAt) > SHOOTING_TIME_SECONDS * 1000) {
-            setMotorPower(feeder, 0.0)
+            alphaRobot.setMotorPower(feeder, 0.0)
             feederStartedAt = 0L
             frozenFlywheelPower = null
         }
@@ -80,6 +79,6 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
 
     override fun stop() {
         enableFlywheel(false)
-        setMotorPower(feeder, 0.0)
+        alphaRobot.setMotorPower(feeder, 0.0)
     }
 }

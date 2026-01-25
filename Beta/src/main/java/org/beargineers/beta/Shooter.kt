@@ -114,6 +114,6 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
 
     override fun stop() {
         enableFlywheel(false)
-        setMotorPower(feeder, 0.0)
+        feeder.power = 0.0
     }
 }

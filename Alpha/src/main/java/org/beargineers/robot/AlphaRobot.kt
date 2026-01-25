@@ -1,5 +1,7 @@
 package org.beargineers.robot
 
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.AprilTagWebcam
@@ -72,4 +74,16 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
 
     }
 
+    fun setMotorPower(motor: DcMotor, power: Double, compensate: Boolean = true) {
+        val ticksPerSecond = motor.motorType.achieveableMaxTicksPerSecondRounded
+        if (motor is DcMotorEx && ticksPerSecond > 0) {
+            motor.velocity = power * ticksPerSecond
+        }
+        else {
+            val nominalVoltage = 12.0
+            val voltage = if (compensate) hardwareMap.voltageSensor.iterator().next().voltage else nominalVoltage
+            val compensation = voltage / nominalVoltage
+            motor.power = (power / compensation).coerceIn(-1.0, 1.0)
+        }
+    }
 }
