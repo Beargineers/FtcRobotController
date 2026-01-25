@@ -11,6 +11,14 @@ data class RelativePosition(val forward: Distance, val right: Distance, val turn
         return String.format(Locale.getDefault(), "(%s %s) %s", forward, right, turn)
     }
 
+    fun lateral(): Distance {
+        return hypot(forward, right)
+    }
+
+    fun angular(): Angle {
+        return turn
+    }
+
     companion object {
         fun zero(): RelativePosition {
             return RelativePosition(0.cm, 0.cm, 0.degrees)

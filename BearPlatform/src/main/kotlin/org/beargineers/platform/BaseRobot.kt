@@ -44,7 +44,10 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun isMoving(): Boolean {
         val vel = currentVelocity
-        return abs(vel.forward).cm() + abs(vel.right).cm() + abs(vel.turn).degrees() > 0.2
+        val lateral = vel.lateral().cm()
+        val angular = vel.angular().degrees()
+
+        return lateral > positionTolerance || angular > headingTolerance
     }
 
     @Suppress("UNCHECKED_CAST")
