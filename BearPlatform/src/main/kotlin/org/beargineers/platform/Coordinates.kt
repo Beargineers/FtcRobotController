@@ -73,6 +73,14 @@ class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparab
         return distance.compareTo(toMyUnit(other))
     }
 
+    override fun equals(other: Any?): Boolean {
+        return other is Distance && compareTo(other) == 0
+    }
+
+    override fun hashCode(): Int {
+        return cm().hashCode()
+    }
+
     private fun toMyUnit(other: Distance): Double {
         return distanceUnit.fromUnit(other.distanceUnit, other.distance)
     }
@@ -159,6 +167,14 @@ class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
 
     fun radians(): Double = toUnit(AngleUnit.RADIANS)
     fun degrees(): Double = toUnit(AngleUnit.DEGREES)
+
+    override fun equals(other: Any?): Boolean {
+        return other is Angle && compareTo(other) == 0
+    }
+
+    override fun hashCode(): Int {
+        return degrees().hashCode()
+    }
 }
 
 fun sin(theta: Angle): Double {
@@ -180,7 +196,7 @@ val Int.degrees: Angle get() = Angle(this.toDouble(), AngleUnit.DEGREES)
 operator fun Double.times(other: Angle): Angle = other * this
 operator fun Double.div(other: Angle): Angle = other / this
 
-class Position(val x: Distance, val y: Distance, val heading: Angle) {
+data class Position(val x: Distance, val y: Distance, val heading: Angle) {
     fun rotate(angle: Angle): Position {
         return Position(x, y, heading + angle)
     }
