@@ -30,15 +30,15 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     override fun loop() {
         telemetry.addData("Intake", mode.name)
 
-        when(mode) {
+        intake.power = when(mode) {
             IntakeMode.ON -> {
-                setMotorPower(intake, 1.0)
+                1.0
             }
             IntakeMode.OFF -> {
-                setMotorPower(intake, 0.0)
+                0.0
             }
             IntakeMode.REVERSE -> {
-                setMotorPower(intake, -1.0)
+                -1.0
             }
         }
 
