@@ -2,11 +2,10 @@ package org.beargineers.robot
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
-import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.decode.IntakeMode
 
-class Intake(robot: BaseRobot): Hardware(robot) {
+class Intake(val alphaRobot: AlphaRobot): Hardware(alphaRobot) {
     private val intake: DcMotor by hardware("intake")
 
     var mode: IntakeMode = IntakeMode.OFF
@@ -19,13 +18,13 @@ class Intake(robot: BaseRobot): Hardware(robot) {
         telemetry.addData("Intake", mode.name)
         when(mode) {
             IntakeMode.ON -> {
-                setMotorPower(intake, 1.0)
+                alphaRobot.setMotorPower(intake, 1.0)
             }
             IntakeMode.OFF -> {
-                setMotorPower(intake, 0.0)
+                alphaRobot.setMotorPower(intake, 0.0)
             }
             IntakeMode.REVERSE -> {
-                setMotorPower(intake, -1.0)
+                alphaRobot.setMotorPower(intake, -1.0)
             }
         }
     }
