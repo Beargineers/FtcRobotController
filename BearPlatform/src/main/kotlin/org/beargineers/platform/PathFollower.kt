@@ -70,7 +70,8 @@ internal class PathFollower(
             lastTimeMoved.reset()
         }
         else if (lastTimeMoved.milliseconds() > robot.stalledPathAbortTimeoutMillis) {
-            return false
+            lastTargetIndex++
+            return true
         }
 
         val (dForward, dRight) = currentTarget.location().toRobotFrame(robot)
