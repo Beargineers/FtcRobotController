@@ -7,6 +7,7 @@ import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.Robot
 import org.beargineers.platform.RobotLocations
+import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
@@ -96,34 +97,29 @@ enum class ShootingZones {
 }
 fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSEST): Boolean{
 
+    fun pointInCloseShootingZone(p: Location): Boolean{
+       if (p.x.cm() < 0){
+           return abs(p.x)>(abs(p.y))
+       }else{
+           return false
+       }
+    }
+
+    fun pointInFarShootingZone(p: Location): Boolean {
+        if (p.x > 48.inch) {
+            return abs(p.x - 48.inch) > abs(p.y)
+        } else {
+            return false
+        }
+    }
+
     fun pointInShootingZone(p: Location): Boolean{
         if (shootingZone == ShootingZones.CLOSEST) {
-            return if (p.x > 0.inch) { // far shooting zones
-                if (p.y > 0.inch) { // red far shooting zone
-                    p.y < p.x - 48.inch
-                } else { // Blue far shooting zone
-                    -p.y < p.x - 48.inch
-                }
-            } else { // close shooting zone
-                if (p.y > 0.inch) {// red
-                    p.y < -p.x
-                } else { // blue
-                    -p.y < -p.x
-                }
-            }
+            return (pointInCloseShootingZone(p) || pointInFarShootingZone(p))
         }else if (shootingZone == ShootingZones.FRONT){// close shooting zone
-            return  if (p.y > 0.inch) {// red
-                p.y < -p.x
-            } else { // blue
-                -p.y < -p.x
-
-            }
+            return (pointInCloseShootingZone(p))
         }else{ // far shooting zone
-            return if (p.y > 0.inch) { // red far shooting zone
-                p.y < p.x - 48.inch
-            } else { // Blue far shooting zone
-                -p.y < p.x - 48.inch
-            }
+            return (pointInFarShootingZone(p))
         }
     }
 
