@@ -177,7 +177,7 @@ fun DecodeRobot.openRampCollectPath(): List<Waypoint> {
 
 fun PhaseBuilder<DecodeRobot>.openRamp() {
     drive(robot.openRampPath())
-    wait(1.seconds)
+    wait(0.5.seconds)
 }
 
 fun PhaseBuilder<DecodeRobot>.openRampAndCollect() {
