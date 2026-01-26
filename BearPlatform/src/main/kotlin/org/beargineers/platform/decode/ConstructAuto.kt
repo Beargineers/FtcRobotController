@@ -6,6 +6,7 @@ import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Phases
 import org.beargineers.platform.Position
+import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.doOnce
 
@@ -50,6 +51,7 @@ open class ConstructAuto(alliance: Alliance) :
     class Choice(val name: String, val list: List<Option.FOption>)
     lateinit var startingPoint: Position
     lateinit var launchPosition: Position
+    lateinit var endPosition: Position
     val valueChoices = listOf(
         Choice(   "starting point:", listOf(
             Option.FOption("close"){
@@ -66,8 +68,15 @@ open class ConstructAuto(alliance: Alliance) :
             Option.FOption("far"){
                 launchPosition = AutoPositions.SOUTH_SHOOTING.mirrorForAlliance(robot)
             }
-        )
-        )
+        )),
+        Choice(  "end positions", listOf(
+            Option.FOption("open gate") {
+                endPosition = Locations(robot).OPEN_RAMP_APPROACH.mirrorForAlliance(robot)
+            },
+            Option.FOption("box"){
+                endPosition = AutoPositions.BOX_APPROACH.mirrorForAlliance(robot)
+            }
+        ))
     )
     val actionOptions = listOf(
         /*
@@ -127,6 +136,7 @@ open class ConstructAuto(alliance: Alliance) :
                 }
             }
         } else if (selectedValueList.size < valueChoices.size) {     // displays value choices
+            telemetry.addLine("Please select the ${valueChoices[selectedValueList.size].name}:")
             for ((i, option) in valueChoices[selectedValueList.size].list.withIndex()) {
                 if (i == (optionHighlight % valueChoices[selectedValueList.size].list.size)) {
                     telemetry.addLine("  >" + option.name)
@@ -134,7 +144,6 @@ open class ConstructAuto(alliance: Alliance) :
                     telemetry.addLine(option.name)
                 }
             }
-
         } else {
             telemetry.addLine("Auto Program is saved")
         }
@@ -150,10 +159,25 @@ open class ConstructAuto(alliance: Alliance) :
             intakeMode(IntakeMode.ON)
             assumePosition(startingPoint)
         }
-
-        for (choice in selectedActionsList) {
-            with(choice) {
-                phases()
+        doWhile("Autonomous"){
+            condition {
+                opMode.elapsedTime.seconds() < 29
+            }
+            looping {
+                for (choice in selectedActionsList) {
+                    with(choice) {
+                        phases()
+                    }
+                }
+            }
+            then{
+                doOnce {
+                    intakeMode(IntakeMode.OFF)
+                    enableFlywheel(false)
+                }
+                action {
+                    driveToTarget(endPosition)
+                }
             }
         }
     }
