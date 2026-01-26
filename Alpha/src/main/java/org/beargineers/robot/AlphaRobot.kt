@@ -81,7 +81,7 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
         }
         else {
             val nominalVoltage = 12.0
-            val voltage = if (compensate) hardwareMap.voltageSensor.iterator().next().voltage else nominalVoltage
+            val voltage = if (compensate) opMode.hardwareMap.voltageSensor.iterator().next().voltage else nominalVoltage
             val compensation = voltage / nominalVoltage
             motor.power = (power / compensation).coerceIn(-1.0, 1.0)
         }
