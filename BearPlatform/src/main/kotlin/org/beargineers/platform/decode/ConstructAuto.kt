@@ -7,7 +7,6 @@ import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Phases
 import org.beargineers.platform.Position
 import org.beargineers.platform.action
-import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.doOnce
 
 open class ConstructAuto(alliance: Alliance) :
