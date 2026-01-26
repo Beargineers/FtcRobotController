@@ -181,7 +181,9 @@ fun PhaseBuilder<DecodeRobot>.openRamp() {
 }
 
 fun PhaseBuilder<DecodeRobot>.openRampAndCollect() {
-    drive(robot.openRampCollectPath())
+    val path = robot.openRampCollectPath()
+    drive(path.take(1))
+    drive(path.drop(1))
     wait(1.seconds)
 }
 
