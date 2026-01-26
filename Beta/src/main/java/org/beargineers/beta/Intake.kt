@@ -13,15 +13,22 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     private val intake: DcMotor by hardware("intake")
     private val ballDetector: DistanceSensor by hardware("ball")
 
-    val sensorDistanceTreshold by config(10.0)
-    val sensorFramesCount by config(3)
+    val ballInThreshold by config(13.0)
+    val ballOutThreshold by config(17.0)
 
     var mode: IntakeMode = IntakeMode.OFF
 
-    var artifacts: Int = 0
-    var isHole: Int = 0
-    var sensorSee: Boolean = false
-    var ballInIntake: Boolean = false
+
+    val ballCounter = BallCounter(ballInThreshold, ballOutThreshold) {
+        artifacts++
+        if (artifacts == 3) {
+            mode = IntakeMode.OFF
+            robot.opMode.gamepad1.rumble(300)
+        }
+    }
+
+    var artifacts = 0
+    var logUntil: Long = 0
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
@@ -42,29 +49,19 @@ class Intake(robot: BaseRobot): Hardware(robot) {
             }
         }
 
-        sensorSee = ballDetector.getDistance(DistanceUnit.CM) < sensorDistanceTreshold
+        val now = System.currentTimeMillis()
 
-        when {
-            sensorSee && !ballInIntake -> {
-                ballInIntake = true
-                artifacts += 1
-                isHole = sensorFramesCount
-                if (artifacts == 3) {
-                    mode = IntakeMode.OFF
-                    robot.opMode.gamepad1.rumble(300)
-                }
-            }
-            isHole > 0 && !sensorSee -> {
-                isHole -= 1
-            }
-            !sensorSee -> {
-                ballInIntake = false
-            }
-            else -> {
-                isHole = sensorFramesCount
-            }
+
+        val distance = ballDetector.getDistance(DistanceUnit.CM)
+        if (distance < 18) logUntil = now + 1500
+
+        ballCounter.update(distance)
+
+        if (now < logUntil) {
+            println("BALL: $distance, $artifacts")
         }
 
+        robot.panelsTelemetry.addData("Sensor Distance", distance)
         telemetry.addData("Artifacts", artifacts)
     }
 
@@ -76,5 +73,19 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
     override fun stop() {
         mode = IntakeMode.OFF
+    }
+}
+
+class BallCounter(val ballInThreshold: Double, val ballOutThreshold: Double, val onArtifact: () -> Unit) {
+    var ballIsIn = false
+
+    fun update(distance: Double) {
+        if (!ballIsIn && distance < ballInThreshold) {
+            ballIsIn = true
+            onArtifact()
+        }
+        else if (ballIsIn && distance > ballOutThreshold) {
+            ballIsIn = false
+        }
     }
 }
