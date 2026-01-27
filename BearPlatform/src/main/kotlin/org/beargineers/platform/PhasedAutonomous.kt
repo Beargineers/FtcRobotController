@@ -1,10 +1,6 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.beargineers.platform.decode.DecodeRobot
-import kotlin.math.PI
-import kotlin.math.cosh
-import kotlin.math.pow
 import kotlin.time.Duration
 
 /**
@@ -219,64 +215,6 @@ fun <R: Robot> PhaseBuilder<R>.assumeRobotPosition(position: Position) {
     doOnce {
         assumePosition(position)
     }
-}
-
-class GotoPosePhase(val pose: Position, val maxSpeed: Double) : AutonomousPhase<Robot> {
-    override fun Robot.initPhase() {
-    }
-
-    override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        targetSpeed = maxSpeed
-        return driveToTarget(pose)
-    }
-}
-
-class CurveToPosePhase(val pose: Position, val radius: Distance, val clockwise: Boolean) : AutonomousPhase<DecodeRobot> {
-    override fun DecodeRobot.initPhase() {
-    }
-    fun DecodeRobot.curveToTarget(target: Position, radius: Distance, clockwise: Boolean): Boolean {
-        val r = radius
-        val cp = currentPosition
-
-        val distanceToTarget = hypot((target.x - cp.x), (target.y - cp.y))
-        val t = cosh(1- 0.5*(distanceToTarget/r).pow(2))
-        val t2: Double = PI/4 - 0.5 * t
-        val curvedDistanceToTarget = t * r
-
-        val positionTolerance = 2.0
-        val headingTolerance = 5.0
-        // Calculate heading error (normalized to -180 to 180 degrees equivalent)
-        val headingError = (target.heading - cp.heading).normalize()
-
-        telemetry.addData("Distance to target", distanceToTarget)
-        telemetry.addData("Heading Error", headingError)
-
-        // Check if we've reached the target
-        if (distanceToTarget.cm() < positionTolerance && abs(headingError).degrees() < headingTolerance) {
-            stopDriving()
-            return false
-        }
-
-        val vectorHeading = when(clockwise){
-            true -> atan2((target.y - cp.y), (target.x - cp.x)) + ((PI/4).radians - t2.radians)
-            false -> atan2((target.y - cp.y), (target.x - cp.x)) - ((PI/4).radians - t2.radians)
-        }
-
-        val driveTo = Position(
-            cp.x + curvedDistanceToTarget * cos(vectorHeading),
-            cp.y + curvedDistanceToTarget * sin(vectorHeading),
-            target.heading)
-
-        driveToTarget(driveTo)
-        return true
-    }
-    override fun DecodeRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return curveToTarget(pose, radius, clockwise)
-    }
-}
-@PhaseDsl
-fun PhaseBuilder<*>.driveTo(pose: Position, maxSpeed: Double = 1.0) {
-    phase(GotoPosePhase(pose, maxSpeed))
 }
 
 class GotoPositionViaPhase(val waypoints: List<Waypoint>): AutonomousPhase<Robot> {
