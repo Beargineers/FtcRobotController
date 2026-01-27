@@ -180,19 +180,19 @@ interface AutonomousPhase<in R: Robot> {
     fun R.loopPhase(phaseTime: ElapsedTime): Boolean
 }
 
-class WaitPhase(private val durationInSeconds: Double) : AutonomousPhase<Robot> {
+class WaitPhase(private val durationInMilliseconds: Long) : AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
         stopDriving()
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return phaseTime.seconds() < durationInSeconds
+        return phaseTime.milliseconds() < durationInMilliseconds
     }
 }
 
 @PhaseDsl
 fun PhaseBuilder<*>.wait(duration: Duration) {
-    phase(WaitPhase(duration.inWholeSeconds.toDouble()))
+    phase(WaitPhase(duration.inWholeMilliseconds))
 }
 
 class SimpleActionPhase<R: Robot>(private val action: R.() -> Boolean) : AutonomousPhase<R> {
