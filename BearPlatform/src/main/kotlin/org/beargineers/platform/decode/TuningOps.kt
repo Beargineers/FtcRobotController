@@ -10,9 +10,10 @@ import org.beargineers.platform.RelativePosition
 import org.beargineers.platform.Robot
 import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.degrees
+import org.beargineers.platform.drive
 import org.beargineers.platform.driveRelative
-import org.beargineers.platform.driveTo
 import org.beargineers.platform.inch
+import org.beargineers.platform.pathTo
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -55,7 +56,7 @@ class Tune_Turn90CCW : TestOp() {
 class Tune_C1ToC6Forward : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
         assumeRobotPosition(tilePosition("C1:180"))
-        driveTo(tilePosition("C6:180"))
+        drive(pathTo(tilePosition("C6:180")))
     }
 }
 
@@ -63,7 +64,7 @@ class Tune_C1ToC6Forward : TestOp() {
 class Tune_B1ToB6Left : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
         assumeRobotPosition(tilePosition("B1:90"))
-        driveTo(tilePosition("B6:90"))
+        drive(pathTo(tilePosition("B6:90")))
     }
 }
 
