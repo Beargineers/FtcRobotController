@@ -14,6 +14,7 @@ import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
 import org.beargineers.platform.assumeRobotPosition
+import org.beargineers.platform.buildPath
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.cursorLocation
@@ -21,6 +22,7 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
 import org.beargineers.platform.drive
 import org.beargineers.platform.followPath
+import org.beargineers.platform.pathTo
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
@@ -33,23 +35,25 @@ object AutoPositions {
     val BOX_APPROACH by config(tilePosition("D4:+135"))
     val BOX_SCOOP by config(tilePosition("D4:+135"))
     val BOX_SCOOP_SPEED by config(1.0)
+
+    val OPEN_RAMP_WAIT_TIME by config(0.01)
 }
 
 fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
-    return buildList {
-        add(Waypoint(spikeStart(spike)))
-        add(Waypoint(spikeEnd(spike), locations.SPIKE_SCOOPING_SPEED))
+    return buildPath {
+        addWaypoint(spikeStart(spike))
+        addWaypoint(spikeEnd(spike), locations.SPIKE_SCOOPING_SPEED)
 
         if (spike == 2) {
-            add(Waypoint(spikeStart(spike)))
+            addWaypoint(spikeStart(spike))
         }
     }
 }
 
 fun DecodeRobot.scoopBoxPath(shift: Distance): List<Waypoint> {
-    return buildList {
-        add(Waypoint(AutoPositions.BOX_APPROACH.shift(-shift, 0.cm).mirrorForAlliance(alliance)))
-        add(Waypoint(AutoPositions.BOX_SCOOP.shift(-shift, 0.cm).mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED))
+    return buildPath {
+        addWaypoint(AutoPositions.BOX_APPROACH.shift(-shift, 0.cm).mirrorForAlliance(alliance))
+        addWaypoint(AutoPositions.BOX_SCOOP.shift(-shift, 0.cm).mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED)
     }
 }
 
@@ -58,7 +62,7 @@ fun DecodeRobot.scoopBoxPath(shift: Distance): List<Waypoint> {
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
     seq("Scoop and shoot #$spike") {
-        followPathAndShoot(robot.scoopSpikePath(spike) + Waypoint(launchPose))
+        followPathAndShoot(robot.scoopSpikePath(spike) + pathTo(launchPose))
     }
 }
 
@@ -74,7 +78,7 @@ fun PhaseBuilder<DecodeRobot>.scoopFromBoxAndShoot(launchPose: Position) {
         }
 
         then {
-            followPathAndShoot(listOf(Waypoint(launchPose)))
+            followPathAndShoot(pathTo(launchPose))
         }
     }
 }
@@ -143,7 +147,7 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, laun
         val secondScoop = robot.scoopSpikePath(2)
         drive(secondScoop.take(2) + robot.openRampPath())
         wait(1.seconds)
-        followPathAndShoot(listOf(secondScoop.last(), Waypoint(launchPoint)))
+        followPathAndShoot(secondScoop.drop(2) + pathTo(launchPoint))
         // Far shooting zone
         scoopAndShoot(3, launchPoint)
         scoopAndShoot(1, launchPoint)
@@ -158,26 +162,27 @@ private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, laun
 }
 
 fun DecodeRobot.openRampPath(): List<Waypoint> {
-    return buildList {
+    return buildPath {
         with(locations) {
-            add(Waypoint(OPEN_RAMP_APPROACH))
-            add(Waypoint(OPEN_RAMP, OPEN_RAMP_SPEED))
+            addWaypoint(OPEN_RAMP_APPROACH, positionTolerance = 2.cm, headingTolerance = 2.degrees)
+            addWaypoint(OPEN_RAMP, OPEN_RAMP_SPEED, positionTolerance = 1.cm, headingTolerance = 1.degrees)
         }
     }
 }
 
 fun DecodeRobot.openRampCollectPath(): List<Waypoint> {
-    return buildList {
+    return buildPath {
         with(locations) {
-            add(Waypoint(OPEN_RAMP_COLLECT_APPROACH))
-            add(Waypoint(OPEN_RAMP_COLLECT, OPEN_RAMP_SPEED))
+            addWaypoint(OPEN_RAMP_COLLECT_APPROACH)
+            addWaypoint(OPEN_RAMP_COLLECT, OPEN_RAMP_SPEED)
         }
     }
 }
 
 fun PhaseBuilder<DecodeRobot>.openRamp() {
     drive(robot.openRampPath())
-    wait(0.5.seconds)
+    wait(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
+    drive(pathTo(robot.locations.COLLECT_FROM_OPEN_RAMP))
 }
 
 fun PhaseBuilder<DecodeRobot>.openRampAndCollect() {
@@ -189,7 +194,7 @@ fun PhaseBuilder<DecodeRobot>.openRampAndCollect() {
 
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
-    followPathAndShoot(listOf(Waypoint(launchPose, robot.locations.INITIAL_SHOT_SPEED)))
+    followPathAndShoot(pathTo(launchPose, robot.locations.INITIAL_SHOT_SPEED))
 }
 
 class WaitForShootingCompletion() : AutonomousPhase<DecodeRobot> {
@@ -211,13 +216,16 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
     doOnce {
         waypoints.clear()
 
-        if (currentPosition.distanceTo(locations.OPEN_RAMP_COLLECT) < 10.cm ||
-            currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
-            waypoints.add(Waypoint(currentPosition + RelativePosition(-15.cm, 0.cm, 0.degrees)))
-        }
+        waypoints.addAll(buildPath {
+            if (currentPosition.distanceTo(locations.OPEN_RAMP_COLLECT) < 10.cm ||
+                currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
+                addWaypoint(currentPosition + RelativePosition(-15.cm, 0.cm, 0.degrees))
+            }
 
-        val targetLocation = closestPointInShootingZone(shootingZone)
-        waypoints.add(Waypoint(targetLocation.withHeading(headingToGoalFrom(targetLocation))))
+            val targetLocation = closestPointInShootingZone(shootingZone)
+            addWaypoint(targetLocation.withHeading(headingToGoalFrom(targetLocation)))
+        })
+
     }
 
     followPathAndShoot(waypoints)
@@ -226,6 +234,7 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoint>) {
     action {
+        val waypoints = waypoints.withIndex().map { (i, waypoint) -> if (i == waypoints.lastIndex) waypoint.copy(positionTolerance = 3.cm) else waypoint }
         followPath(waypoints)
     }
 
