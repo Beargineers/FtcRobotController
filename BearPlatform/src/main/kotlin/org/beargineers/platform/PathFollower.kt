@@ -4,6 +4,7 @@ package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlin.math.abs
+import kotlin.math.sign
 
 /**
  * Manages the state and execution of following a specific Path.
@@ -22,7 +23,7 @@ internal class PathFollower(
     val path: List<Waypoint>,
     startPosition: Position
 ) {
-    private var lastTargetIndex: Int = 0
+    private var currentWaypointIndex: Int = 0
     private var currentSpeed: Double = 0.0
     private var lastTimeMoved = ElapsedTime()
     private val drivePID = PID(
@@ -54,24 +55,35 @@ internal class PathFollower(
      * @return true if still following, false if target reached
      */
     fun update(): Boolean {
-        if (lastTargetIndex > path.lastIndex) return false
-        val currentPosition = robot.currentPosition
-        var currentWaypoint = path[lastTargetIndex]
-        var currentTarget = currentWaypoint.target
+        if (currentWaypointIndex > path.lastIndex) {
+            robot.stopDriving()
+            return false
+        }
 
-        if (lastTargetIndex < path.lastIndex &&  currentPosition.distanceTo(path[lastTargetIndex].target) < 8.cm) {
-            currentWaypoint.onArrival?.invoke()
-            lastTargetIndex++
-            currentWaypoint = path[lastTargetIndex]
-            currentTarget = currentWaypoint.target
+        val currentPosition = robot.currentPosition
+        val currentWaypoint = path[currentWaypointIndex]
+        val currentTarget = currentWaypoint.target
+
+        val pt = currentWaypoint.positionTolerance ?:
+            if (currentWaypointIndex == path.lastIndex) PathFollowingConfig.positionTolerance else PathFollowingConfig.intermediateWaypointPositionTolerance
+
+        val ht = currentWaypoint.headingTolerance ?:
+            if (currentWaypointIndex == path.lastIndex) PathFollowingConfig.headingTolerance else PathFollowingConfig.intermediateWaypointHeadingTolerance
+
+        val waypointReached = currentPosition.distanceTo(currentTarget) < pt &&
+                abs((currentPosition.heading - currentTarget.heading).normalize()) < ht
+
+        if (waypointReached) {
+            currentWaypointIndex++
+            return update()
         }
 
         if (robot.isMoving()) {
             lastTimeMoved.reset()
         }
-        else if (lastTimeMoved.milliseconds() > robot.stalledPathAbortTimeoutMillis) {
-            lastTargetIndex++
-            return true
+        else if (lastTimeMoved.milliseconds() > PathFollowingConfig.stalledPathAbortTimeoutMillis) {
+            currentWaypointIndex++
+            return update()
         }
 
         val (dForward, dRight) = currentTarget.location().toRobotFrame(robot)
@@ -80,7 +92,9 @@ internal class PathFollower(
         val translationalError = dRight.cm()
         val headingError = (currentTarget.heading - currentPosition.heading).normalize().degrees()
 
-        drivePID.updateCoefficients(robot.drive_K)
+        val dK = if (driveError > 4) robot.drive_K else robot.drive_K2.takeIf { it.p > 0.0001 } ?: robot.drive_K
+
+        drivePID.updateCoefficients(dK)
         translationalPID.updateCoefficients(robot.translational_K)
         headingPID.updateCoefficients(robot.heading_K)
 
@@ -92,22 +106,12 @@ internal class PathFollower(
         robot.panelsTelemetry.addData("TransE", translationalError)
         robot.panelsTelemetry.addData("HeadE", abs(headingError))
 
-        headingPID.logErrors(robot.panelsTelemetry)
-        headingPID.logOscillation(robot.panelsTelemetry)
-
-        val finished = lastTargetIndex == path.lastIndex &&
-                currentPosition.distanceTo(path.last().target).cm() < robot.positionTolerance &&
-                abs((currentPosition.heading - path.last().target.heading).normalize()).degrees() < robot.headingTolerance
-
-        if (finished) {
-            currentWaypoint.onArrival?.invoke()
-            robot.stopDriving()
-            return false
-        }
+        drivePID.logErrors(robot.panelsTelemetry)
+        drivePID.logOscillation(robot.panelsTelemetry)
 
         fun Double.dezeroify(): Double {
             val min = robot.minimalWheelPower
-            return if (abs(this) > 0.0001 && abs(this) < min) min else this
+            return if (abs(this) > 0.0001 && abs(this) < min) min * sign(this) else this
         }
 
 

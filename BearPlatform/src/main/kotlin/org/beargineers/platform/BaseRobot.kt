@@ -44,10 +44,10 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun isMoving(): Boolean {
         val vel = currentVelocity
-        val lateral = vel.lateral().cm()
-        val angular = vel.angular().degrees()
+        val lateral = vel.lateral()
+        val angular = vel.angular()
 
-        return lateral > positionTolerance || angular > headingTolerance
+        return lateral > PathFollowingConfig.positionTolerance || angular > PathFollowingConfig.headingTolerance
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -145,7 +145,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
      * ```
      */
     override fun driveToTarget(target: Position): Boolean {
-        return followPath(listOf(Waypoint(target)))
+        return followPath(pathTo(target))
     }
 
     override fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
@@ -194,11 +194,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     // Too high values will result in robot driving past destination and maybe even oscillating around it
 
     val drive_K by config(PIDFTCoeffs(0.025, 0.0, 0.00001, 0.6))
+    val drive_K2 by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
     val translational_K by config(PIDFTCoeffs(0.1, 0.0, 0.0, 0.015))
     val heading_K by config(PIDFTCoeffs(1.0, 0.0, 0.0, 0.01))
-
-    val positionTolerance by config(2.0)
-    val headingTolerance by config(5.0)
-
-    val stalledPathAbortTimeoutMillis by config(100)
 }

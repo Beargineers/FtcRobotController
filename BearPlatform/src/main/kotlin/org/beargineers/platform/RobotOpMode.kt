@@ -153,7 +153,9 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
             )
         }
 
-        return currentFollower!!.update()
+        return currentFollower!!.update().also {
+            if (!it) currentFollower = null
+        }
     }
 
     companion object {

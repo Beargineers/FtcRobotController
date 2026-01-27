@@ -42,12 +42,16 @@ class Locations(val robot: DecodeRobot) {
     val OPEN_RAMP_COLLECT get() = RED_OPEN_RAMP_COLLECT.mirrorForAlliance(robot)
     val OPEN_RAMP_COLLECT_APPROACH get() = RED_OPEN_RAMP_COLLECT_APPROACH.mirrorForAlliance(robot)
 
+    val COLLECT_FROM_OPEN_RAMP get() = RED_COLLECT_FROM_OPEN_RAMP.mirrorForAlliance(robot)
+
     val OPEN_RAMP_SPEED by config(0.6)
 
     private val RED_GOAL by config(tileLocation("F6TR"))
     private val RED_PARK by config(tileLocation("B2BR").shift(-9.inch, -9.inch))
     private val RED_OPEN_RAMP_COLLECT by config(-6.cm, 129.cm, 90.degrees)
     private val RED_OPEN_RAMP_COLLECT_APPROACH by config(-6.cm, 80.cm, 90.degrees)
+
+    private val RED_COLLECT_FROM_OPEN_RAMP by config(50.cm, 152.cm, 152.degrees)
 
     private val RED_OPEN_RAMP by config(-6.cm, 129.cm, 90.degrees)
     private val RED_OPEN_RAMP_APPROACH by config(-6.cm, 80.cm, 90.degrees)

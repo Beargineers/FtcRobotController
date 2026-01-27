@@ -95,6 +95,18 @@ fun config(default: Position): ReadOnlyProperty<Any, Position> {
     }
 }
 
+fun config(default: Distance): ReadOnlyProperty<Any, Distance> {
+    return ReadOnlyProperty { _, property ->
+        Config.configValue(property.name)?.toDouble()?.cm ?: default
+    }
+}
+
+fun config(default: Angle): ReadOnlyProperty<Any, Angle> {
+    return ReadOnlyProperty { _, property ->
+        Config.configValue(property.name)?.toDouble()?.degrees ?: default
+    }
+}
+
 fun config(dx: Distance, dy: Distance): ReadOnlyProperty<Any, Location> {
     return config(Location(dx, dy))
 }
