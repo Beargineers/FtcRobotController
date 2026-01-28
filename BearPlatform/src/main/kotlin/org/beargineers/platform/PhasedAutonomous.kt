@@ -178,7 +178,6 @@ interface AutonomousPhase<in R: Robot> {
 
 class WaitPhase(private val durationInMilliseconds: Long) : AutonomousPhase<Robot> {
     override fun Robot.initPhase() {
-        stopDriving()
     }
 
     override fun Robot.loopPhase(phaseTime: ElapsedTime): Boolean {
