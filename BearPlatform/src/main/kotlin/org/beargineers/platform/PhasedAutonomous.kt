@@ -488,6 +488,7 @@ class ParallelPhase<R: Robot>(
     override fun R.initPhase() {
         // Initialize all child phases at once
         for (i in childPhases.indices) {
+            completed[i] = false
             with(childPhases[i]) {
                 initPhase()
             }
