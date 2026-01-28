@@ -3,6 +3,7 @@ package org.beargineers.beta
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
@@ -11,6 +12,7 @@ import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.goalDistance
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
 
 class Shooter(robot: BaseRobot): Hardware(robot) {
@@ -30,6 +32,10 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     val fly2 by hardware<DcMotor>()
 
     val feeder by hardware<DcMotor>()
+
+    val shooterBallDetector by hardware<DistanceSensor>()
+
+    val shooterBallDetectorThreshold by config(15.0)
 
     var stopFeederAt: Long = 0
 
@@ -85,10 +91,17 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
 
     override fun loop() {
+        val ballDistance = shooterBallDetector.getDistance(DistanceUnit.CM)
         val dt = loopTime.milliseconds()
+        val now = System.currentTimeMillis()
         loopTime.reset()
+        telemetry.addData("ShooterDistanceSensor", ballDistance)
+        robot.panelsTelemetry.addData("ShooterDistanceSensor", ballDistance)
 
-        if (stopFeederAt != 0L && System.currentTimeMillis() >= stopFeederAt) {
+        if (ballDistance < shooterBallDetectorThreshold && stopFeederAt != 0L) {
+            stopFeederAt = now + 100
+        }
+        if (stopFeederAt != 0L && now >= stopFeederAt) {
             feederOn = false
             stopFeederAt = 0L
         }
