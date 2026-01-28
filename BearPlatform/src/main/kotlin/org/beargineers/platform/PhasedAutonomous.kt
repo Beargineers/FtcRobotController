@@ -519,7 +519,7 @@ class ParallelPhase<R: Robot>(
         telemetry.addData("Progress $_name", "$completedCount / ${childPhases.size} complete")
 
         // Continue until all phases complete
-        return completed.all { it }
+        return completedCount < childPhases.size
     }
 }
 
