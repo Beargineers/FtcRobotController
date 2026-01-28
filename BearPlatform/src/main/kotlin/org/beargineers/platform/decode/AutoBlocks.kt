@@ -233,9 +233,22 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
 
 @PhaseDsl
 private fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoint>) {
-    action {
-        val waypoints = waypoints.withIndex().map { (i, waypoint) -> if (i == waypoints.lastIndex) waypoint.copy(positionTolerance = 3.cm) else waypoint }
-        followPath(waypoints)
+    par("Follow path and shoot") {
+        seq("Follow path") {
+            wait(0.2.seconds)
+            doOnce {
+                intakeMode(IntakeMode.ON)
+            }
+        }
+
+        action {
+            val waypoints = waypoints.withIndex().map { (i, waypoint) ->
+                    if (i == waypoints.lastIndex) waypoint.copy(
+                        positionTolerance = 3.cm
+                    ) else waypoint
+                }
+            followPath(waypoints)
+        }
     }
 
     shoot()
