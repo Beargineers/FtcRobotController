@@ -13,6 +13,9 @@ import kotlin.math.pow
 fun cursorLocation(): Location{
     return Location(PanelsField.field.cursorX.inch,PanelsField.field.cursorY.inch)
 }
+
+private val locationHistorySize by config(50)
+
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
 
@@ -30,6 +33,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override val currentVelocity: RelativePosition get() = localizer.getVelocity()
     override var targetSpeed: Double = 1.0
+
+    private val locationHistory = ArrayDeque<Location>(locationHistorySize)
 
 
     override fun init() {
@@ -69,6 +74,13 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             hypot(currentVelocity.forward, currentVelocity.right),
             abs(currentVelocity.turn))
 
+        locationHistory.addLast(currentPosition.location())
+        while (locationHistory.size >= locationHistorySize) {
+            locationHistory.removeFirst()
+        }
+
+        panelsTelemetry.addData("Position", currentPosition)
+
         if (Panels.wasStarted) {
             drawRobotOnPanelsField()
             panelsTelemetry.update()
@@ -100,6 +112,13 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
             moveCursor(cp.x.inch() + 3 * cos(cp.heading), cp.y.inch() + 3 * sin(cp.heading))
             circle(1.0)
+
+            setStyle("", "#4CAF50", 0.75)
+
+            for ((prev, next) in locationHistory.zipWithNext()) {
+                moveCursor(prev.x.inch(), prev.y.inch())
+                line(next.x.inch(), next.y.inch())
+            }
 
             update()
         }
