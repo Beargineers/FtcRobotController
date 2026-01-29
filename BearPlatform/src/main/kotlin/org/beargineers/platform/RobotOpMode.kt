@@ -1,5 +1,6 @@
 package org.beargineers.platform
 
+import com.bylazar.panels.Panels
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
@@ -31,6 +32,8 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
     open fun bearInit() {}
 
     final override fun init() {
+        Panels.config.enableLogs = false
+
         elapsedTime.reset()
 
         // Make sure we read all of the sensor and motor data in one bulk read.
