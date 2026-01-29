@@ -36,6 +36,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     val shooterBallDetector by hardware<DistanceSensor>()
 
     val shooterBallDetectorThreshold by config(15.0)
+    val stopFeederDelay by config(100)
 
     var stopFeederAt: Long = 0
 
@@ -96,14 +97,21 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         val now = System.currentTimeMillis()
         loopTime.reset()
         telemetry.addData("ShooterDistanceSensor", ballDistance)
-        robot.panelsTelemetry.addData("ShooterDistanceSensor", ballDistance)
+        if (ballDistance < 100) {
+            robot.panelsTelemetry.addData("ShooterDistanceSensor", ballDistance)
+        }
+
+        if (stopFeederAt != 0L) {
+            println("BD: $ballDistance")
+        }
 
         if (ballDistance < shooterBallDetectorThreshold && stopFeederAt != 0L) {
-            stopFeederAt = now + 100
+            stopFeederAt = now + stopFeederDelay
         }
         if (stopFeederAt != 0L && now >= stopFeederAt) {
             feederOn = false
             stopFeederAt = 0L
+            println("BD: STOPPED SHOOTING")
         }
 
         val flywheelPoweredUp = abs(pid.error()) < SHOOTER_ERROR_MARGIN
