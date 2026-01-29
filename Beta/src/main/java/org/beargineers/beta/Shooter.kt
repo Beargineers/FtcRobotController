@@ -38,11 +38,12 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     val shooterBallDetectorThreshold by config(15.0)
     val stopFeederDelay by config(100)
 
+    var feederTransferring = false
     var stopFeederAt: Long = 0
 
     var flywheelEnabled = false
 
-    var feederOn = false
+    var feederShooting = false
 
     var maxTicks = 0
 
@@ -82,9 +83,14 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         fly2.power = v
     }
 
+    fun getReadyForShoot(){
+        if (!feederShooting) {
+            feederTransferring = true
+        }
+    }
     fun launch() {
         feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        feederOn = true
+        feederShooting = true
         stopFeederAt = System.currentTimeMillis() + (SHOOTING_TIME_SECONDS * 1000).toLong()
         (robot as BetaRobot).intake.onShoot()
     }
@@ -105,20 +111,26 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
             robot.panelsTelemetry.addData("ShooterDistanceSensor", ballDistance)
         }
 
-        if (ballDistance < shooterBallDetectorThreshold && stopFeederAt != 0L) {
+        if (stopFeederAt != 0L) {
+            println("BD: $ballDistance")
+        }
+        if(feederTransferring && ballDistance < shooterBallDetectorThreshold){
+            feederTransferring = false
+        }
+        if (ballDistance < shooterBallDetectorThreshold && feederShooting) {
             stopFeederAt = now + stopFeederDelay
         }
-        if (stopFeederAt != 0L && now >= stopFeederAt) {
-            feederOn = false
+        if (feederShooting && now >= stopFeederAt) {
+            feederShooting = false
             stopFeederAt = 0L
         }
 
         val flywheelPoweredUp = abs(pid.error()) < SHOOTER_ERROR_MARGIN
-        if (feederOn && !flywheelPoweredUp) {
+        if (feederShooting && !flywheelPoweredUp) {
             stopFeederAt += dt.toLong()
         }
 
-        feeder.power = if (feederOn && flywheelPoweredUp) 1.0 else 0.0
+        feeder.power = if (feederShooting && flywheelPoweredUp && flywheelEnabled || feederTransferring) 1.0 else 0.0
 
         val nominalPower = when {
             flywheelEnabled -> recommendedFlywheelPower()

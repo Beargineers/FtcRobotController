@@ -239,6 +239,10 @@ private fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoin
             doOnce {
                 intakeMode(IntakeMode.ON)
             }
+            wait(0.5.seconds)
+            doOnce {
+                getReadyForShoot()
+            }
         }
 
         action {

@@ -37,6 +37,10 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         shooter.launch()
     }
 
+    override fun getReadyForShoot() {
+        shooter.getReadyForShoot()
+    }
+
     override fun enableFlywheel(on: Boolean) {
         shooter.enableFlywheel(on)
     }
