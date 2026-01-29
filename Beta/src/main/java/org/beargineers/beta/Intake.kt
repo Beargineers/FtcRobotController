@@ -3,6 +3,7 @@ package org.beargineers.beta
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
+import com.qualcomm.robotcore.hardware.LED
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
@@ -15,6 +16,13 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
     val ballInThreshold by config(13.0)
     val ballOutThreshold by config(17.0)
+
+    val led1green by hardware<LED>()
+    val led1red by hardware<LED>()
+    val led2green by hardware<LED>()
+    val led2red by hardware<LED>()
+    val led3green by hardware<LED>()
+    val led3red by hardware<LED>()
 
     var mode: IntakeMode = IntakeMode.OFF
 
@@ -31,18 +39,23 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
+        led1red.off()
+        led3red.off()
+        led2red.off()
     }
 
     override fun loop() {
         telemetry.addData("Intake", mode.name)
 
-        intake.power = when(mode) {
+        intake.power = when (mode) {
             IntakeMode.ON -> {
                 1.0
             }
+
             IntakeMode.OFF -> {
                 0.0
             }
+
             IntakeMode.REVERSE -> {
                 -1.0
             }
@@ -53,8 +66,33 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
         robot.panelsTelemetry.addData("Sensor Distance", distance)
         telemetry.addData("Artifacts", artifacts)
-    }
 
+        when (artifacts) {
+            0 -> {
+                led1green.off()
+                led2green.off()
+                led3green.off()
+            }
+
+            1 -> {
+                led1green.on()
+                led2green.off()
+                led3green.off()
+            }
+
+            2 -> {
+                led1green.on()
+                led2green.on()
+                led3green.off()
+            }
+
+            3 -> {
+                led1green.on()
+                led2green.on()
+                led3green.on()
+            }
+        }
+    }
     fun onShoot(){
         artifacts = 0
         mode=IntakeMode.ON
@@ -64,7 +102,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     override fun stop() {
         mode = IntakeMode.OFF
     }
-}
+
 
 class BallCounter(val ballInThreshold: Double, val ballOutThreshold: Double, val onArtifact: () -> Unit) {
     var ballIsIn = false
@@ -78,4 +116,4 @@ class BallCounter(val ballInThreshold: Double, val ballOutThreshold: Double, val
             ballIsIn = false
         }
     }
-}
+}}

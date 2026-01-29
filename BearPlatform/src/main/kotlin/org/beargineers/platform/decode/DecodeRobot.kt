@@ -152,27 +152,28 @@ fun DecodeRobot.clearForShooting(): Boolean{
 }
 
 
-fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones): Location{
+fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones, position: Location = currentPosition.location()): Location{
+    val cp = position
     if ((inShootingZone() && shootingZone == ShootingZones.CLOSEST) || (shootingZone == ShootingZones.FRONT && inShootingZone(ShootingZones.FRONT)) || (shootingZone == ShootingZones.BACK && inShootingZone(
             ShootingZones.BACK))){
-        return currentPosition.location()
+        return cp
     }
     val far = AutoPositions.SOUTH_SHOOTING.mirrorForAlliance(this).location() // far
-    val close = if (currentPosition.y <= 0.cm){ // blue side
-        if (currentPosition.y < -currentPosition.x){
-            Location((currentPosition.x + currentPosition.y)*0.5, (currentPosition.x + currentPosition.y)*0.5)
+    val close = if (cp.y <= 0.cm){ // blue side
+        if (cp.y < -cp.x){
+            Location((cp.x + cp.y)*0.5, (cp.x + cp.y)*0.5)
         } else {
             Location(0.cm, 0.cm)
         }
     } else { // RED side
-        if (currentPosition.y > currentPosition.x) {
-            Location((currentPosition.y - currentPosition.x)*0.5, -(currentPosition.y - currentPosition.x)*0.5)
+        if (cp.y > cp.x) {
+            Location((cp.y - cp.x)*0.5, -(cp.y - cp.x)*0.5)
         }else{
             Location(0.cm, 0.cm)
         }
     }
     return if (shootingZone == ShootingZones.CLOSEST){
-        if (currentPosition.location().distanceTo(close) < currentPosition.location().distanceTo(far)){
+        if (cp.distanceTo(close) < cp.distanceTo(far)){
             close
         } else {
             far
