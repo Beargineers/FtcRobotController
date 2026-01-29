@@ -33,25 +33,25 @@ object Config {
 }
     
 
-fun config(default: Double) : ReadOnlyProperty<Any, Double> {
+fun config(default: Double) : ReadOnlyProperty<Any?, Double> {
     return ReadOnlyProperty {_, property ->
         Config.configValue(property.name)?.toDouble() ?: default
     }
 }
 
-fun config(default: Int) : ReadOnlyProperty<Any, Int> {
+fun config(default: Int) : ReadOnlyProperty<Any?, Int> {
     return ReadOnlyProperty {_, property ->
         Config.configValue(property.name)?.toInt() ?: default
     }
 }
 
-fun config(default: String) : ReadOnlyProperty<Any, String> {
+fun config(default: String) : ReadOnlyProperty<Any?, String> {
     return ReadOnlyProperty {_, property ->
         Config.configValue(property.name) ?: default
     }
 }
 
-fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMotorSimple.Direction> {
+fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any?, DcMotorSimple.Direction> {
     return ReadOnlyProperty {_, property ->
         Config.configValue(property.name)?.let {
             when(it) {
@@ -64,7 +64,7 @@ fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any, DcMotorSimp
     }
 }
 
-fun config(default: Boolean) : ReadOnlyProperty<Any, Boolean> {
+fun config(default: Boolean) : ReadOnlyProperty<Any?, Boolean> {
     return ReadOnlyProperty {_, property ->
         Config.configValue(property.name)?.let {
             when(it.lowercase()) {
@@ -76,11 +76,11 @@ fun config(default: Boolean) : ReadOnlyProperty<Any, Boolean> {
     }
 }
 
-fun config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any, Position> {
+fun config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any?, Position> {
     return config(Position(dx, dy, dh))
 }
 
-fun config(default: Position): ReadOnlyProperty<Any, Position> {
+fun config(default: Position): ReadOnlyProperty<Any?, Position> {
     return ReadOnlyProperty { _, property ->
         Config.configValue(property.name)?.let {
             val first = it.first()
@@ -95,23 +95,23 @@ fun config(default: Position): ReadOnlyProperty<Any, Position> {
     }
 }
 
-fun config(default: Distance): ReadOnlyProperty<Any, Distance> {
+fun config(default: Distance): ReadOnlyProperty<Any?, Distance> {
     return ReadOnlyProperty { _, property ->
         Config.configValue(property.name)?.toDouble()?.cm ?: default
     }
 }
 
-fun config(default: Angle): ReadOnlyProperty<Any, Angle> {
+fun config(default: Angle): ReadOnlyProperty<Any?, Angle> {
     return ReadOnlyProperty { _, property ->
         Config.configValue(property.name)?.toDouble()?.degrees ?: default
     }
 }
 
-fun config(dx: Distance, dy: Distance): ReadOnlyProperty<Any, Location> {
+fun config(dx: Distance, dy: Distance): ReadOnlyProperty<Any?, Location> {
     return config(Location(dx, dy))
 }
 
-fun config(default: Location): ReadOnlyProperty<Any, Location> {
+fun config(default: Location): ReadOnlyProperty<Any?, Location> {
     return ReadOnlyProperty { _, property ->
         Config.configValue(property.name)?.let {
             val first = it.first()
@@ -126,7 +126,7 @@ fun config(default: Location): ReadOnlyProperty<Any, Location> {
     }
 }
 
-fun config(default: PIDFTCoeffs): ReadOnlyProperty<Any, PIDFTCoeffs> {
+fun config(default: PIDFTCoeffs): ReadOnlyProperty<Any?, PIDFTCoeffs> {
     return ReadOnlyProperty { _, property ->
         Config.configValue(property.name)?.let {
             val components = mutableListOf<Double>()
