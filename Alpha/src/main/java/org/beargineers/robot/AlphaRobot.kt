@@ -86,4 +86,8 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
             motor.power = (power / compensation).coerceIn(-1.0, 1.0)
         }
     }
+
+    override fun getReadyForShoot() {
+        TODO("Not yet implemented")
+    }
 }
