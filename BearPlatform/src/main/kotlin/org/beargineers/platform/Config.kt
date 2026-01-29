@@ -137,7 +137,7 @@ fun config(default: PIDFTCoeffs): ReadOnlyProperty<Any?, PIDFTCoeffs> {
                 components[0],
                 components[1],
                 components[2],
-                components[4]
+                components[3]
             )
 
         } ?: default
