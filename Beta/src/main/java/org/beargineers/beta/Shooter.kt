@@ -105,17 +105,12 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
             robot.panelsTelemetry.addData("ShooterDistanceSensor", ballDistance)
         }
 
-        if (stopFeederAt != 0L) {
-            println("BD: $ballDistance")
-        }
-
         if (ballDistance < shooterBallDetectorThreshold && stopFeederAt != 0L) {
             stopFeederAt = now + stopFeederDelay
         }
         if (stopFeederAt != 0L && now >= stopFeederAt) {
             feederOn = false
             stopFeederAt = 0L
-            println("BD: STOPPED SHOOTING")
         }
 
         val flywheelPoweredUp = abs(pid.error()) < SHOOTER_ERROR_MARGIN

@@ -196,7 +196,3 @@ fun DecodeRobot.spikeEnd(n: Int): Position {
 
     return Position(x, y.cm, 90.degrees).mirrorForAlliance(this)
 }
-
-fun main() {
-    println(tileLocation("F6TR"))
-}

@@ -28,7 +28,6 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     }
 
     var artifacts = 0
-    var logUntil: Long = 0
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
@@ -49,17 +48,8 @@ class Intake(robot: BaseRobot): Hardware(robot) {
             }
         }
 
-        val now = System.currentTimeMillis()
-
-
         val distance = ballDetector.getDistance(DistanceUnit.CM)
-        if (distance < 18) logUntil = now + 1500
-
         ballCounter.update(distance)
-
-        if (now < logUntil) {
-            println("BALL: $distance, $artifacts")
-        }
 
         robot.panelsTelemetry.addData("Sensor Distance", distance)
         telemetry.addData("Artifacts", artifacts)
