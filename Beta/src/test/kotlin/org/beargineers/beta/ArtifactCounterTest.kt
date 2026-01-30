@@ -26,7 +26,7 @@ class ArtifactCounterTest {
 
     private fun doTest(testData: List<Double>, expected: Int) {
         var artifacts = 0
-        val ballCounter = BallCounter(13.0, 17.0) {
+        val ballCounter = Intake.BallCounter(13.0, 17.0) {
             artifacts++
         }
 
