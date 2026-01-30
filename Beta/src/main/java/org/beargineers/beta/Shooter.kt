@@ -98,28 +98,21 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
 
     override fun loop() {
-        val before = System.currentTimeMillis()
-        val ballDistance = shooterBallDetector.getDistance(DistanceUnit.CM)
         val dt = loopTime.milliseconds()
         val now = System.currentTimeMillis()
 
-        robot.panelsTelemetry.addData("SensorTime", (now - before))
-
         loopTime.reset()
-        telemetry.addData("ShooterDistanceSensor", ballDistance)
-        if (ballDistance < 100) {
-            robot.panelsTelemetry.addData("ShooterDistanceSensor", ballDistance)
+
+        if (feederShooting || feederTransferring) {
+            val ballDistance = shooterBallDetector.getDistance(DistanceUnit.CM)
+            if(feederTransferring && ballDistance < shooterBallDetectorThreshold){
+                feederTransferring = false
+            }
+            if (feederShooting && ballDistance < shooterBallDetectorThreshold) {
+                stopFeederAt = now + stopFeederDelay
+            }
         }
 
-        if (stopFeederAt != 0L) {
-            println("BD: $ballDistance")
-        }
-        if(feederTransferring && ballDistance < shooterBallDetectorThreshold){
-            feederTransferring = false
-        }
-        if (ballDistance < shooterBallDetectorThreshold && feederShooting) {
-            stopFeederAt = now + stopFeederDelay
-        }
         if (feederShooting && now >= stopFeederAt) {
             feederShooting = false
             stopFeederAt = 0L
