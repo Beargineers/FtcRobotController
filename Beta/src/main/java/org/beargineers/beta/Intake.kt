@@ -3,10 +3,10 @@ package org.beargineers.beta
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
-import com.qualcomm.robotcore.hardware.LED
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
+import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
@@ -50,10 +50,10 @@ class Intake(robot: BaseRobot): Hardware(robot) {
             }
         }
 
-        val distance = ballDetector.getDistance(DistanceUnit.CM)
-        ballCounter.update(distance)
+        if (mode == IntakeMode.ON && !(robot as DecodeRobot).isShooting() && artifacts < 3) {
+            ballCounter.update(ballDetector.getDistance(DistanceUnit.CM))
+        }
 
-        robot.panelsTelemetry.addData("Sensor Distance", distance)
         telemetry.addData("Artifacts", artifacts)
 
         LedIndicator.ledMods.ledCounter = artifacts
