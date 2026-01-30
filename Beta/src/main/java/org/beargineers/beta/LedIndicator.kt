@@ -14,24 +14,40 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
     inner class Led(name: String) {
         val red = getHardware<LED>(name+"red")
         val green = getHardware<LED>(name+"green")
-        fun green(){
-            red.off()
-            green.on()
+        var state = -1
+
+        inline fun state(s: Int, body: () -> Unit) {
+            if (state != s) {
+                state = s
+                body()
+            }
+        }
+        fun green() {
+            state(1) {
+                red.off()
+                green.on()
+            }
         }
 
         fun red(){
-            red.on()
-            green.off()
+            state(2) {
+                red.on()
+                green.off()
+            }
         }
 
         fun off(){
-            red.off()
-            green.off()
+            state(0) {
+                red.off()
+                green.off()
+            }
         }
 
         fun yellow(){
-            red.on()
-            green.on()
+            state(3) {
+                red.on()
+                green.on()
+            }
         }
     }
 
