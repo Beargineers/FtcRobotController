@@ -59,4 +59,10 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override fun isShooting(): Boolean {
         return false
     }
+
+    override fun warnDriverON() {
+    }
+
+    override fun warnDriverOFF() {
+    }
 }
