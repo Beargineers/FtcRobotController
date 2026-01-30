@@ -5,20 +5,15 @@ import org.beargineers.platform.Hardware
 import kotlin.time.Duration
 
 class LedIndicator (robot: BetaRobot): Hardware(robot) {
-    object ledMods{
+    object LedMods{
         var ledRedBlinkingStopAt: Long = 0L
         var ledRedBlinkingInterval: Long = 0L
         var ledContinuousRedBlinking: Boolean = false
         var ledCounter: Int = 0
     }
-    val led1red: LED by hardware("led1red")
-    val led1green: LED by hardware("led1green")
-    val led2red: LED by hardware("led2red")
-    val led2green: LED by hardware("led2green")
-    val led3red: LED by hardware("led3red")
-    val led3green: LED by hardware("led3green")
-
-    class Led(val red: LED, val green: LED) {
+    inner class Led(name: String) {
+        val red = getHardware<LED>(name+"red")
+        val green = getHardware<LED>(name+"green")
         fun green(){
             red.off()
             green.on()
@@ -41,31 +36,31 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
     }
 
     fun blinkRed(interval: Duration, duration: Duration) {
-        ledMods.ledRedBlinkingStopAt = System.currentTimeMillis() + duration.inWholeMilliseconds
-        ledMods.ledRedBlinkingInterval = interval.inWholeMilliseconds
+        LedMods.ledRedBlinkingStopAt = System.currentTimeMillis() + duration.inWholeMilliseconds
+        LedMods.ledRedBlinkingInterval = interval.inWholeMilliseconds
     }
 
     fun blinkRed(blinkCount: Int, duration: Duration) {
-        ledMods.ledRedBlinkingStopAt = System.currentTimeMillis() + duration.inWholeMilliseconds
-        ledMods.ledRedBlinkingInterval = duration.inWholeMilliseconds / blinkCount
+        LedMods.ledRedBlinkingStopAt = System.currentTimeMillis() + duration.inWholeMilliseconds
+        LedMods.ledRedBlinkingInterval = duration.inWholeMilliseconds / blinkCount
     }
 
     fun continuousRedBlinkingON(interval: Duration) {
-        ledMods.ledContinuousRedBlinking = true
-        ledMods.ledRedBlinkingInterval = interval.inWholeMilliseconds
-        ledMods.ledRedBlinkingStopAt = 0L
+        LedMods.ledContinuousRedBlinking = true
+        LedMods.ledRedBlinkingInterval = interval.inWholeMilliseconds
+        LedMods.ledRedBlinkingStopAt = 0L
     }
 
     fun continuousRedBlinkingOFF() {
-        ledMods.ledContinuousRedBlinking = false
+        LedMods.ledContinuousRedBlinking = false
     }
 
     fun setCounter(count: Int){
-        ledMods.ledCounter = count
+        LedMods.ledCounter = count
     }
 
     fun showCounter(){
-        when(ledMods.ledCounter){
+        when(LedMods.ledCounter){
             0 -> {
                 led1.off()
                 led2.off()
@@ -91,9 +86,9 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
     }
 
 
-    val led1 = Led(led1red, led1green)
-    val led2 = Led(led2red, led2green)
-    val led3 = Led(led3red, led3green)
+    val led1 = Led("led1")
+    val led2 = Led("led2")
+    val led3 = Led("led3")
 
     override fun init() {
         led1.off()
@@ -103,11 +98,11 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
 
     override fun loop() {
         val now = System.currentTimeMillis()
-        val timeLeftToBlink = ledMods.ledRedBlinkingStopAt - now
-        if (ledMods.ledRedBlinkingStopAt != 0L) {
-            if (System.currentTimeMillis() >= ledMods.ledRedBlinkingStopAt) {
-                ledMods.ledRedBlinkingStopAt = 0L
-            } else if (timeLeftToBlink % ledMods.ledRedBlinkingInterval < ledMods.ledRedBlinkingInterval / 2) {
+        val timeLeftToBlink = LedMods.ledRedBlinkingStopAt - now
+        if (LedMods.ledRedBlinkingStopAt != 0L) {
+            if (System.currentTimeMillis() >= LedMods.ledRedBlinkingStopAt) {
+                LedMods.ledRedBlinkingStopAt = 0L
+            } else if (timeLeftToBlink % LedMods.ledRedBlinkingInterval < LedMods.ledRedBlinkingInterval / 2) {
                 led1.red()
                 led2.red()
                 led3.red()
@@ -115,8 +110,8 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
                 showCounter()
             }
 
-        }else if(ledMods.ledContinuousRedBlinking){
-                if (now % ledMods.ledRedBlinkingInterval < ledMods.ledRedBlinkingInterval / 2){
+        }else if(LedMods.ledContinuousRedBlinking){
+                if (now % LedMods.ledRedBlinkingInterval < LedMods.ledRedBlinkingInterval / 2){
                     led1.red()
                     led2.red()
                     led3.red()

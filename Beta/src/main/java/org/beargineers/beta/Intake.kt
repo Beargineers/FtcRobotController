@@ -56,7 +56,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
         telemetry.addData("Artifacts", artifacts)
 
-        LedIndicator.ledMods.ledCounter = artifacts
+        LedIndicator.LedMods.ledCounter = artifacts
     }
     fun onShoot(){
         artifacts = 0
