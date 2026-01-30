@@ -12,6 +12,7 @@ import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.goalDistance
+import org.beargineers.platform.roundMotorPower
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
 
@@ -78,7 +79,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         telemetry.addData("Shooter error", pid.error())
         robot.panelsTelemetry.addData("Shooter error", pid.error())
 
-        val v = pid.result() + p
+        val v = roundMotorPower(pid.result() + p)
         fly1.power = v
         fly2.power = v
     }
