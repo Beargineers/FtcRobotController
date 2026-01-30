@@ -52,7 +52,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
         val limit = robot.targetSpeed * WheelsConfig.topSpeed
-        fun normalize(v: Double) = roundMotorPower((v * ticksPerSecond / maxMag) * limit)
+        fun normalize(v: Double) = roundMotorPower((v / maxMag) * limit) * ticksPerSecond
 
         lf.velocity = normalize(lfP * WheelsConfig.lf_correction)
         rf.velocity = normalize(rfP * WheelsConfig.rf_correction)
