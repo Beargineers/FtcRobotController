@@ -90,4 +90,10 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     override fun getReadyForShoot() {
         TODO("Not yet implemented")
     }
+
+    override fun warnDriverON() {
+    }
+
+    override fun warnDriverOFF() {
+    }
 }
