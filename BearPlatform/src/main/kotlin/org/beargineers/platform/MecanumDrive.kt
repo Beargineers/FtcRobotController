@@ -2,6 +2,7 @@ package org.beargineers.platform
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot
 import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.IMU
 import kotlin.math.abs
@@ -15,10 +16,12 @@ import kotlin.math.sqrt
 class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
 
     // Match these names in  RC configuration
-    val lf: DcMotor by hardware("leftFront")
-    val rf: DcMotor by hardware("rightFront")
-    val lb: DcMotor by hardware("leftBack")
-    val rb: DcMotor by hardware("rightBack")
+    val lf: DcMotorEx by hardware("leftFront")
+    val rf: DcMotorEx by hardware("rightFront")
+    val lb: DcMotorEx by hardware("leftBack")
+    val rb: DcMotorEx by hardware("rightBack")
+
+    var ticksPerSecond: Int = 0
 
     override fun init() {
         val allMotors = listOf(lf, rf, lb, rb)
@@ -27,6 +30,9 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
         lb.direction = WheelsConfig.lb_direction
         rf.direction = WheelsConfig.rf_direction
         rb.direction = WheelsConfig.rb_direction
+
+        ticksPerSecond = lf.motorType.achieveableMaxTicksPerSecondRounded
+
 
         allMotors.forEach {
             it.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -46,12 +52,12 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
         val limit = robot.targetSpeed * WheelsConfig.topSpeed
-        fun normalize(v: Double) = (v / maxMag) * limit
+        fun normalize(v: Double) = (v * ticksPerSecond / maxMag) * limit
 
-        lf.power = normalize(lfP * WheelsConfig.lf_correction)
-        rf.power = normalize(rfP * WheelsConfig.rf_correction)
-        lb.power = normalize(lbP * WheelsConfig.lb_correction)
-        rb.power = normalize(rbP * WheelsConfig.rb_correction)
+        lf.velocity = normalize(lfP * WheelsConfig.lf_correction)
+        rf.velocity = normalize(rfP * WheelsConfig.rf_correction)
+        lb.velocity = normalize(lbP * WheelsConfig.lb_correction)
+        rb.velocity = normalize(rbP * WheelsConfig.rb_correction)
     }
 
     override fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
