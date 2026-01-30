@@ -2,6 +2,7 @@ package org.beargineers.platform
 
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import kotlin.math.round
 import kotlin.reflect.KProperty
 
 abstract class Hardware(val robot: BaseRobot) {
@@ -29,4 +30,9 @@ abstract class Hardware(val robot: BaseRobot) {
     open fun init() {}
     open fun loop() {}
     open fun stop() {}
+}
+
+fun roundMotorPower(v: Double): Double {
+    val scale = 100_000.0
+    return round(v.coerceIn(-1.0, 1.0) * scale) / scale
 }
