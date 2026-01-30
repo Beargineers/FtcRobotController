@@ -13,6 +13,8 @@ import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     private var manualAngleCorrection = 0.0
@@ -27,6 +29,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     val shooter = Shooter(this)
 
+    val LedIndicator = LedIndicator(this)
     val intake = Intake(this)
     override val intakeMode: IntakeMode get() = intake.mode
     override fun intakeMode(mode: IntakeMode) {
@@ -39,6 +42,10 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun getReadyForShoot() {
         shooter.getReadyForShoot()
+    }
+
+    override fun warnDriver() {
+        LedIndicator.blinkRed(6, 2.seconds)
     }
 
     override fun enableFlywheel(on: Boolean) {

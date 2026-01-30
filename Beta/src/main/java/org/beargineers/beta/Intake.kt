@@ -17,7 +17,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
     val ballInThreshold by config(13.0)
     val ballOutThreshold by config(17.0)
 
-    val led1green by hardware<LED>()
+    val led1green: LED by hardware<LED>("led1green")
     val led1red by hardware<LED>()
     val led2green by hardware<LED>()
     val led2red by hardware<LED>()
@@ -67,31 +67,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
         robot.panelsTelemetry.addData("Sensor Distance", distance)
         telemetry.addData("Artifacts", artifacts)
 
-        when (artifacts) {
-            0 -> {
-                led1green.off()
-                led2green.off()
-                led3green.off()
-            }
-
-            1 -> {
-                led1green.on()
-                led2green.off()
-                led3green.off()
-            }
-
-            2 -> {
-                led1green.on()
-                led2green.on()
-                led3green.off()
-            }
-
-            3 -> {
-                led1green.on()
-                led2green.on()
-                led3green.on()
-            }
-        }
+        LedIndicator.ledMods.ledCounter = artifacts
     }
     fun onShoot(){
         artifacts = 0
