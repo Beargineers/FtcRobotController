@@ -232,7 +232,7 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
 }
 
 @PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoint>) {
+fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoint>) {
     par("Follow path and shoot") {
         seq("Follow path") {
             wait(0.2.seconds)
