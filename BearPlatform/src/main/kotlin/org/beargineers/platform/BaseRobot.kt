@@ -5,6 +5,7 @@ package org.beargineers.platform
 import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import kotlin.math.PI
 import kotlin.math.cosh
@@ -15,6 +16,7 @@ fun cursorLocation(): Location{
 }
 
 private val locationHistorySize by config(50)
+private val PANELS_FIELD_FPS by config(3)
 
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
@@ -87,13 +89,23 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         }
     }
 
+    private val drawnAt = ElapsedTime()
     private fun drawRobotOnPanelsField() {
+        if (drawnAt.milliseconds() > 1000 / PANELS_FIELD_FPS) {
+            drawnAt.reset()
+
+            doDrawRobot()
+        }
+    }
+
+    private fun doDrawRobot() {
         val cp = currentPosition
         with(panelsField) {
             fun lineTo(location: Location) {
                 line(location.x.inch(), location.y.inch())
                 moveCursor(location.x.inch(), location.y.inch())
             }
+
             fun moveCursor(location: Location) {
                 moveCursor(location.x.inch(), location.y.inch())
             }
