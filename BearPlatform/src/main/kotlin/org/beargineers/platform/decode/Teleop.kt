@@ -116,7 +116,7 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         }
 
         button(gamepad1::x){
-            robot.getReadyForShoot()
+            robot.warnDriver()
         }
     }
 
