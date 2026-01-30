@@ -115,8 +115,8 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
             robot.adjustShooting(+0.0, -0.33)
         }
 
-        button(gamepad1::x){
-            robot.warnDriver()
+        button( gamepad1::x){
+            robot.assumePosition(Position.zero())
         }
     }
 
