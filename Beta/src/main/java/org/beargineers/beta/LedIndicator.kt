@@ -8,6 +8,7 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
     object ledMods{
         var ledRedBlinkingStopAt: Long = 0L
         var ledRedBlinkingInterval: Long = 0L
+        var ledContinuousRedBlinking: Boolean = false
         var ledCounter: Int = 0
     }
     val led1red: LED by hardware("led1red")
@@ -47,6 +48,16 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
     fun blinkRed(blinkCount: Int, duration: Duration) {
         ledMods.ledRedBlinkingStopAt = System.currentTimeMillis() + duration.inWholeMilliseconds
         ledMods.ledRedBlinkingInterval = duration.inWholeMilliseconds / blinkCount
+    }
+
+    fun continuousRedBlinkingON(interval: Duration) {
+        ledMods.ledContinuousRedBlinking = true
+        ledMods.ledRedBlinkingInterval = interval.inWholeMilliseconds
+        ledMods.ledRedBlinkingStopAt = 0L
+    }
+
+    fun continuousRedBlinkingOFF() {
+        ledMods.ledContinuousRedBlinking = false
     }
 
     fun setCounter(count: Int){
@@ -96,13 +107,22 @@ class LedIndicator (robot: BetaRobot): Hardware(robot) {
         if (ledMods.ledRedBlinkingStopAt != 0L) {
             if (System.currentTimeMillis() >= ledMods.ledRedBlinkingStopAt) {
                 ledMods.ledRedBlinkingStopAt = 0L
-            }else if(timeLeftToBlink % ledMods.ledRedBlinkingInterval < ledMods.ledRedBlinkingInterval/2){
+            } else if (timeLeftToBlink % ledMods.ledRedBlinkingInterval < ledMods.ledRedBlinkingInterval / 2) {
                 led1.red()
                 led2.red()
                 led3.red()
-            }else{
+            } else {
                 showCounter()
             }
+
+        }else if(ledMods.ledContinuousRedBlinking){
+                if (now % ledMods.ledRedBlinkingInterval < ledMods.ledRedBlinkingInterval / 2){
+                    led1.red()
+                    led2.red()
+                    led3.red()
+                }else{
+                    showCounter()
+                }
         }else {
             showCounter()
         }

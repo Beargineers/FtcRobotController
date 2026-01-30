@@ -44,9 +44,14 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         shooter.getReadyForShoot()
     }
 
-    override fun warnDriver() {
-        LedIndicator.blinkRed(6, 2.seconds)
+    override fun warnDriverON() {
+        LedIndicator.continuousRedBlinkingON(500.milliseconds)
     }
+
+    override fun warnDriverOFF() {
+        LedIndicator.continuousRedBlinkingOFF()
+    }
+
 
     override fun enableFlywheel(on: Boolean) {
         shooter.enableFlywheel(on)
