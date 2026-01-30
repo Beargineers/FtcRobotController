@@ -31,17 +31,18 @@ abstract class TestOp() :
     PhasedAutonomous<DecodeRobot>(Alliance.BLUE)
 
 @Autonomous(group = "Tune")
-class Tune_HalfTileLoop : TestOp() {
+class Tune_TwoTileLoop : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
-        wait(3.seconds)
-        driveRelative(RelativePosition.forward(12.inch))
-        driveRelative(RelativePosition.turnCCW(90.degrees))
-        driveRelative(RelativePosition.forward(12.inch))
-        driveRelative(RelativePosition.turnCCW(90.degrees))
-        driveRelative(RelativePosition.forward(12.inch))
-        driveRelative(RelativePosition.turnCCW(90.degrees))
-        driveRelative(RelativePosition.forward(12.inch))
-        driveRelative(RelativePosition.turnCCW(90.degrees))
+        repeat(5) {
+            driveRelative(RelativePosition.forward(48.inch))
+            driveRelative(RelativePosition.turnCCW(90.degrees))
+            driveRelative(RelativePosition.forward(48.inch))
+            driveRelative(RelativePosition.turnCCW(90.degrees))
+            driveRelative(RelativePosition.forward(48.inch))
+            driveRelative(RelativePosition.turnCCW(90.degrees))
+            driveRelative(RelativePosition.forward(48.inch))
+            driveRelative(RelativePosition.turnCCW(90.degrees))
+        }
     }
 }
 
