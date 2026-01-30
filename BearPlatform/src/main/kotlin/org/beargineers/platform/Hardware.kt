@@ -24,6 +24,7 @@ abstract class Hardware(val robot: BaseRobot) {
     }
 
     inline fun <reified T> hardware(name: String = "") = HardwareDelegate(name, T::class.java)
+    inline fun <reified T> getHardware(name: String) = hardwareMap.get(T::class.java, name)
 
     open fun init() {}
     open fun loop() {}
