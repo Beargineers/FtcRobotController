@@ -16,14 +16,6 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
     val ballInThreshold by config(13.0)
     val ballOutThreshold by config(17.0)
-
-    val led1green: LED by hardware<LED>("led1green")
-    val led1red by hardware<LED>()
-    val led2green by hardware<LED>()
-    val led2red by hardware<LED>()
-    val led3green by hardware<LED>()
-    val led3red by hardware<LED>()
-
     var mode: IntakeMode = IntakeMode.OFF
 
 
@@ -39,9 +31,6 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
-        led1red.off()
-        led3red.off()
-        led2red.off()
     }
 
     override fun loop() {
