@@ -31,7 +31,7 @@ class ArtifactCounterTest {
         }
 
         for (distance in testData) {
-            ballCounter.update(distance)
+            ballCounter.update {distance}
         }
 
         assertEquals(expected, artifacts)
