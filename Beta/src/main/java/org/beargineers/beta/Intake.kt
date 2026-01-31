@@ -51,7 +51,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
         }
 
         if (mode == IntakeMode.ON && !(robot as DecodeRobot).isShooting() && artifacts < 3) {
-            ballCounter.update(ballDetector.getDistance(DistanceUnit.CM))
+            ballCounter.update { ballDetector.getDistance(DistanceUnit.CM) }
         }
 
         telemetry.addData("Artifacts", artifacts)
@@ -71,14 +71,26 @@ class Intake(robot: BaseRobot): Hardware(robot) {
 
 class BallCounter(val ballInThreshold: Double, val ballOutThreshold: Double, val onArtifact: () -> Unit) {
     var ballIsIn = false
+    var attentionCounter = 0 // Tells for how many more loops we have to pay close attention to sensor data
+    var loopsToSkip = 0 // Tells how many more loops it is safe to skip asking sensor for data
 
-    fun update(distance: Double) {
+
+    fun update(distanceFn: () -> Double) {
+        loopsToSkip--
+        if (loopsToSkip >= 0) return
+
+        val distance = distanceFn()
+
         if (!ballIsIn && distance < ballInThreshold) {
             ballIsIn = true
+            attentionCounter = 2
             onArtifact()
         }
-        else if (ballIsIn && distance > ballOutThreshold) {
+        else if (distance > ballOutThreshold) {
             ballIsIn = false
+            attentionCounter--
         }
+
+        loopsToSkip = if (attentionCounter > 0) 0 else 2
     }
 }}
