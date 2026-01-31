@@ -8,6 +8,7 @@ import org.beargineers.platform.Phases
 import org.beargineers.platform.Position
 import org.beargineers.platform.action
 import org.beargineers.platform.doOnce
+import org.beargineers.platform.pathTo
 
 open class ConstructAuto(alliance: Alliance) :
     PhasedAutonomous<DecodeRobot>(alliance) {
@@ -163,6 +164,7 @@ open class ConstructAuto(alliance: Alliance) :
                 opMode.elapsedTime.seconds() < 29
             }
             looping {
+                followPathAndShoot(pathTo(launchPosition))
                 for (choice in selectedActionsList) {
                     with(choice) {
                         phases()
