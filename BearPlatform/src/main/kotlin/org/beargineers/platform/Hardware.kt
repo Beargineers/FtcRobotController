@@ -33,6 +33,6 @@ abstract class Hardware(val robot: BaseRobot) {
 }
 
 fun roundMotorPower(v: Double): Double {
-    val scale = 100_000.0
+    val scale = 1000.0
     return round(v.coerceIn(-1.0, 1.0) * scale) / scale
 }
