@@ -21,6 +21,8 @@ interface Robot {
     fun init()
     fun loop()
 
+    fun onLowFPS() {}
+
     val telemetry: Telemetry
 
     val currentPosition: Position
