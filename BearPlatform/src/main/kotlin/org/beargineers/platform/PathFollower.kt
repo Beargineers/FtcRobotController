@@ -25,7 +25,9 @@ internal class PathFollower(
 ) {
     private var currentWaypointIndex: Int = 0
     private var currentSpeed: Double = 0.0
-    private var lastTimeMoved = ElapsedTime()
+    private val lastTimeMoved = ElapsedTime()
+    private val pathElapsedTime = ElapsedTime()
+
     private val drivePID = PID(
         integralZone = 20.0,
         integralMax = 3000.0,
@@ -81,7 +83,7 @@ internal class PathFollower(
         if (robot.isMoving()) {
             lastTimeMoved.reset()
         }
-        else if (lastTimeMoved.milliseconds() > PathFollowingConfig.stalledPathAbortTimeoutMillis) {
+        else if (pathElapsedTime.milliseconds() > 1000 && lastTimeMoved.milliseconds() > PathFollowingConfig.stalledPathAbortTimeoutMillis) {
             currentWaypointIndex++
             return update()
         }
