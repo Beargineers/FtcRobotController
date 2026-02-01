@@ -14,9 +14,9 @@ import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
+    var lowFPSMode = false
     private var manualAngleCorrection = 0.0
     override val drive = MecanumDrive(this)
     override fun adjustShooting(distance: Double, angle: Double) {
@@ -52,6 +52,9 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         LedIndicator.continuousRedBlinkingOFF()
     }
 
+    override fun onLowFPS() {
+        lowFPSMode = true
+    }
 
     override fun enableFlywheel(on: Boolean) {
         shooter.enableFlywheel(on)
