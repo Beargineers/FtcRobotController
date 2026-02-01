@@ -561,7 +561,7 @@ class PhaseBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
      * @param name The name for this composite phase (shown in telemetry)
      * @param phases A lambda that builds the child phases
      */
-    fun seq(name: String, phases: Phases<R>) {
+    fun seq(name: String = "", phases: Phases<R>) {
         val builder = PhaseBuilder<R>(opMode)
         builder.phases()
         this@PhaseBuilder.phases.add(SequentialPhase(name, builder.build()))
@@ -577,7 +577,7 @@ class PhaseBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
      * @param name The name for this parallel phase (shown in telemetry)
      * @param phases A lambda that builds the child phases
      */
-    fun par(name: String, phases: Phases<R>) {
+    fun par(name: String = "", phases: Phases<R>) {
         val builder = PhaseBuilder<R>(opMode)
         builder.phases()
         this@PhaseBuilder.phases.add(ParallelPhase(name, builder.build()))
