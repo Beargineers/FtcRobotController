@@ -233,25 +233,44 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
 
 @PhaseDsl
 fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoint>) {
-    par("Follow path and shoot") {
-        seq("Follow path") {
-            wait(0.2.seconds)
-            doOnce {
-                intakeMode(IntakeMode.ON)
-            }
-            wait(0.5.seconds)
-            doOnce {
-                getReadyForShoot()
-            }
+    seq("Follow path and prepare for shooting") {
+        var followingPath = false
+
+        doOnce {
+            followingPath = true
         }
 
-        action {
-            val waypoints = waypoints.withIndex().map { (i, waypoint) ->
+        par {
+            doWhile("Prepare for shooting") {
+                condition {
+                    followingPath
+                }
+
+                looping {
+                    wait(0.2.seconds)
+                    doOnce {
+                        intakeMode(IntakeMode.ON)
+                    }
+                    wait(0.5.seconds)
+                    doOnce {
+                        getReadyForShoot()
+                    }
+                }
+
+                then {
+                    // Do nothing
+                }
+            }
+
+            action {
+                val waypoints = waypoints.withIndex().map { (i, waypoint) ->
                     if (i == waypoints.lastIndex) waypoint.copy(
                         positionTolerance = 3.cm
                     ) else waypoint
                 }
-            followPath(waypoints)
+                followingPath = followPath(waypoints)
+                followingPath
+            }
         }
     }
 
