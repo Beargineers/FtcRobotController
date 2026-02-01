@@ -65,7 +65,7 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
 
     open fun bearLoop() {}
 
-    private var FPS = 0.0
+    var FPS = 0.0
 
     final override fun loop() {
         for (hub in allHubs) {
@@ -79,6 +79,10 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
             FPS = loopsCount / loopsTimer.seconds()
             loopsCount = 0
             loopsTimer.reset()
+        }
+
+        if (FPS < 25 && elapsedTime.seconds() > 3) {
+            robot.onLowFPS()
         }
 
         robot.loop()

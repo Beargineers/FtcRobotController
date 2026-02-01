@@ -3,14 +3,12 @@ package org.beargineers.beta
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
-import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
-import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
-class Intake(robot: BaseRobot): Hardware(robot) {
+class Intake(val bot: BetaRobot): Hardware(bot) {
     private val intake: DcMotor by hardware("intake")
     private val ballDetector: DistanceSensor by hardware("ball")
 
@@ -50,7 +48,7 @@ class Intake(robot: BaseRobot): Hardware(robot) {
             }
         }
 
-        if (mode == IntakeMode.ON && !(robot as DecodeRobot).isShooting() && artifacts < 3) {
+        if (mode == IntakeMode.ON && !bot.isShooting() && artifacts < 3 && !bot.lowFPSMode) {
             ballCounter.update { ballDetector.getDistance(DistanceUnit.CM) }
         }
 
