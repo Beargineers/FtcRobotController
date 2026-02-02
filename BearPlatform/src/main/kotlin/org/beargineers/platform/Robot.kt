@@ -21,7 +21,7 @@ interface Robot {
     fun init()
     fun loop()
 
-    fun onLowFPS() {}
+    fun lowFpsMode(mode: Boolean) {}
 
     val telemetry: Telemetry
 

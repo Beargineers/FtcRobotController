@@ -20,8 +20,7 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
         hardwareMap.getAll(LynxModule::class.java)
     }
 
-    private val loopsTimer = ElapsedTime()
-    private var loopsCount = 0
+    private val loopTimer = ElapsedTime()
 
 
     private var auto: AutonomousPhase<T>? = null
@@ -51,8 +50,7 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
     open fun bearStart() {}
     final override fun start() {
         super.start()
-        loopsTimer.reset()
-        loopsCount = 0
+        loopTimer.reset()
 
         bearStart()
         elapsedTime.reset()
@@ -65,29 +63,33 @@ abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
 
     open fun bearLoop() {}
 
-    var FPS = 0.0
+    var lowFPSStartedAt = 0L
 
     final override fun loop() {
         for (hub in allHubs) {
             hub.clearBulkCache()
         }
 
-        telemetry.addData("FPS", "%.1f", FPS)
+        val fps = 1000 / loopTimer.milliseconds()
+        loopTimer.reset()
+        telemetry.addData("FPS", "%.1f", fps)
 
-        loopsCount++
-        if (loopsTimer.seconds() > 1) {
-            FPS = loopsCount / loopsTimer.seconds()
-            loopsCount = 0
-            loopsTimer.reset()
+        if (fps < 25 && elapsedTime.seconds() > 3) {
+            val now = System.currentTimeMillis()
+            if (lowFPSStartedAt == 0L) {
+                lowFPSStartedAt = now
+            }
+
+            if (now - lowFPSStartedAt > 500) {
+                robot.lowFpsMode(true)
+            }
         }
-
-        if (FPS < 25 && elapsedTime.seconds() > 3) {
-            robot.onLowFPS()
+        else {
+            lowFPSStartedAt = 0L
         }
 
         robot.loop()
         allButtons.forEach { it.update() }
-
 
         if (controlsAreTouched()) {
             cancelAuto()
