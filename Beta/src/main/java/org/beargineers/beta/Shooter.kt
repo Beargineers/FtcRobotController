@@ -41,10 +41,9 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
 
     var feederTransferring = false
     var stopFeederAt: Long = 0
+    var pausedFeederFlag: Boolean = false
 
     var flywheelEnabled = false
-
-    var feederShooting = false
 
     var maxTicks = 0
 
@@ -85,13 +84,12 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     }
 
     fun getReadyForShoot(){
-        if (!feederShooting) {
+        if (!isShooting()) {
             feederTransferring = true
         }
     }
     fun launch() {
         feeder.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        feederShooting = true
         stopFeederAt = System.currentTimeMillis() + (SHOOTING_TIME_SECONDS * 1000).toLong()
         (robot as BetaRobot).intake.onShoot()
     }
@@ -100,31 +98,35 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
 
     override fun loop() {
         val dt = loopTime.milliseconds()
-        val now = System.currentTimeMillis()
 
+        if (pausedFeederFlag) {
+            pausedFeederFlag = false
+            stopFeederAt += dt.toLong()
+        }
         loopTime.reset()
 
-        if (feederShooting || feederTransferring) {
+        val now = System.currentTimeMillis()
+
+        if (isShooting() || feederTransferring) {
             val ballDistance = shooterBallDetector.getDistance(DistanceUnit.CM)
             if(feederTransferring && ballDistance < shooterBallDetectorThreshold){
                 feederTransferring = false
             }
-            if (feederShooting && ballDistance < shooterBallDetectorThreshold) {
+            if (isShooting() && ballDistance < shooterBallDetectorThreshold) {
                 stopFeederAt = now + stopFeederDelay
             }
         }
 
-        if (feederShooting && now >= stopFeederAt) {
-            feederShooting = false
+        if (isShooting() && now >= stopFeederAt) {
             stopFeederAt = 0L
         }
 
         val flywheelPoweredUp = abs(pid.error()) < SHOOTER_ERROR_MARGIN
-        if (feederShooting && !flywheelPoweredUp) {
-            stopFeederAt += dt.toLong()
+        if (isShooting() && !flywheelPoweredUp) {
+            pausedFeederFlag = true
         }
 
-        feeder.power = if (feederShooting && flywheelPoweredUp && flywheelEnabled || feederTransferring) 1.0 else 0.0
+        feeder.power = if (isShooting() && flywheelPoweredUp && flywheelEnabled || feederTransferring) 1.0 else 0.0
 
         val nominalPower = when {
             flywheelEnabled -> recommendedFlywheelPower()
@@ -141,5 +143,9 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     override fun stop() {
         enableFlywheel(false)
         feeder.power = 0.0
+    }
+
+    fun isShooting(): Boolean {
+        return stopFeederAt != 0L
     }
 }
