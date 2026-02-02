@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
  * updates regardless of environmental conditions.
  */
 interface RelativeLocalizer {
-    fun getPosition(): Position
+    fun getPosition(oldPosition: Position): Position
 
     fun updatePositionEstimate(position: Position)
 
@@ -71,7 +71,7 @@ class FusionLocalizer(
         }
         else {
             telemetry.addData("Vision", "✗ odometry only")
-            updateCurrentPosition(relativeLocalizer.getPosition())
+            updateCurrentPosition(relativeLocalizer.getPosition(RobotOpMode.lastKnownPosition))
         }
     }
 

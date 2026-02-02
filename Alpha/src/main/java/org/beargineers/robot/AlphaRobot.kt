@@ -94,6 +94,4 @@ class AlphaRobot(opMode: RobotOpMode<DecodeRobot>) : BaseRobot(opMode), DecodeRo
     override fun warnDriverON() {
     }
 
-    override fun warnDriverOFF() {
-    }
 }

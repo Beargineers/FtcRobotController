@@ -14,10 +14,14 @@ object PinpointConfig {
     val pinpoint_yEncoderDirection by config(DcMotorSimple.Direction.FORWARD)
 
     val pinpoint_yawScalar by config(0.0)
+
+    val pinpoint_forwardErrorCorrection by config(0.0)
+    val pinpoint_rightErrorCorrection by config(0.0)
 }
 
 class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
     private val pinpoint by hardware<GoBildaPinpointDriver>()
+    private var correction = Position.zero()
 
 
     override fun init() {
@@ -56,14 +60,51 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
         }
     }
 
-    override fun getPosition(): Position {
-        with(pinpoint) {
-            return Position(
+    override fun getPosition(oldPosition: Position): Position {
+        val newEstimate =with(pinpoint) {
+             Position(
                 x = getPosX(DistanceUnit.CM).cm,
                 y = getPosY(DistanceUnit.CM).cm,
                 heading = getHeading(AngleUnit.DEGREES).degrees
             )
         }
+
+        /*
+        correction += errorCorrection(oldPosition, newEstimate)
+
+        telemetry.addData("Correction", correction)
+        */
+
+        return newEstimate
+    }
+
+    fun errorCorrection(oldPos: Position, newPos: Position): RelativePosition {
+        val (deltaX, deltaY, deltaH) = newPos - oldPos
+
+        val N = 10
+        val dx = deltaX / N.toDouble()
+        val dy = deltaY / N.toDouble()
+        val dh = deltaH / N.toDouble()
+
+        val magnitude = hypot(dx, dy)
+        val absoluteH = atan2(dy,dx)
+
+        var deltaForward = 0.cm
+        var deltaRight = 0.cm
+        var heading = oldPos.heading
+
+        repeat(N) {
+            val relHeading = absoluteH - heading
+            heading += dh
+            deltaForward += magnitude * cos(relHeading)
+            deltaRight += magnitude * sin(relHeading)
+        }
+
+        return RelativePosition(
+            deltaForward * PinpointConfig.pinpoint_forwardErrorCorrection,
+            deltaRight * PinpointConfig.pinpoint_rightErrorCorrection,
+            0.degrees
+        )
     }
 
     override fun getVelocity(): RelativePosition {

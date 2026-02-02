@@ -106,7 +106,7 @@ class MecanumEncodersLocalizers(robot: BaseRobot, val wheels: MecanumDrive) : Ha
         return currentVelocity
     }
 
-    override fun getPosition(): Position {
+    override fun getPosition(oldPosition: Position): Position {
         return currentPositionEstimate
     }
 

@@ -63,6 +63,4 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override fun warnDriverON() {
     }
 
-    override fun warnDriverOFF() {
-    }
 }

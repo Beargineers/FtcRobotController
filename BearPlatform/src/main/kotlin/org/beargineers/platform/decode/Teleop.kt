@@ -118,6 +118,10 @@ open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
         button( gamepad1::x){
             robot.assumePosition(Position.zero())
         }
+
+        button(gamepad1::b) {
+            robot.lowFpsMode(false)
+        }
     }
 
     override fun bearStart() {

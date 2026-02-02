@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
+import org.beargineers.platform.counter
 import org.beargineers.platform.decode.IntakeMode
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
@@ -48,13 +49,18 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
             }
         }
 
-        if (mode == IntakeMode.ON && !bot.isShooting() && artifacts < 3 && !bot.lowFPSMode) {
-            ballCounter.update { ballDetector.getDistance(DistanceUnit.CM) }
+        if (!bot.lowFPSMode) {
+            if (mode == IntakeMode.ON && !bot.isShooting() && artifacts < 3 && !bot.lowFPSMode) {
+                ballCounter.update { ballDetector.getDistance(DistanceUnit.CM) }
+            }
+
+            telemetry.addData("Artifacts", artifacts)
+
+            bot.ledIndicator.setBasePattern(counter(artifacts, 'G'))
         }
-
-        telemetry.addData("Artifacts", artifacts)
-
-        LedIndicator.LedMods.ledCounter = artifacts
+        else {
+            telemetry.addData("Artifacts", "Low FPS!!!")
+        }
     }
     fun onShoot(){
         artifacts = 0
