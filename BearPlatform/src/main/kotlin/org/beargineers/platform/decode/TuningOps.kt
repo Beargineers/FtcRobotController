@@ -127,10 +127,10 @@ class Tune_automationTimingCheck: TestOp() {
             followPathAndShoot(pathTo(launchPoint, robot.locations.INITIAL_SHOT_SPEED))
             val secondScoop = robot.scoopSpikePath(2)
 
-            drive(secondScoop.take(2) + robot.openRampPath())
+            drive(secondScoop + robot.openRampPath())
 
             wait(1.seconds)
-            followPathAndShoot(secondScoop.drop(2) + pathTo(launchPoint))
+            followPathAndShoot(pathTo(launchPoint))
             // Far shooting zone
             scoopAndShoot(3, launchPoint)
             scoopAndShoot(1, launchPoint)
