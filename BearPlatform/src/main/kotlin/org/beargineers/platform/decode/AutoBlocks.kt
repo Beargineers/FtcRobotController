@@ -1,7 +1,6 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
@@ -24,7 +23,9 @@ import org.beargineers.platform.drive
 import org.beargineers.platform.followPath
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.tilePosition
+import org.beargineers.platform.times
 import org.beargineers.platform.wait
+import kotlin.math.sign
 import kotlin.time.Duration.Companion.seconds
 
 object AutoPositions {
@@ -90,19 +91,10 @@ private fun PhaseBuilder<DecodeRobot>.shoot() {
     waitForShootingCompletion()
 }
 
+abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
+    abstract val program: String
 
-open class DecodeAutoStrategy(override val alliance: Alliance, val zone: ShootingZones) : PhasedAutonomous<DecodeRobot>() {
-    val startingPoint = (if (zone == ShootingZones.FRONT) {
-        AutoPositions.NORTH_START
-    } else {
-        AutoPositions.SOUTH_START
-    }).mirrorForAlliance(alliance)
-
-    val shootingPoint = (if (zone == ShootingZones.FRONT) {
-        AutoPositions.NORTH_SHOOTING
-    } else {
-        AutoPositions.SOUTH_SHOOTING
-    }).mirrorForAlliance(alliance)
+    private var operatingIn: Char = 'N'
 
     override fun PhaseBuilder<DecodeRobot>.phases() {
         doWhile("AUTO") {
@@ -111,7 +103,7 @@ open class DecodeAutoStrategy(override val alliance: Alliance, val zone: Shootin
             }
 
             looping {
-                autoStrategy(startingPoint, shootingPoint)
+                interpretProgram()
             }
 
             then {
@@ -120,44 +112,157 @@ open class DecodeAutoStrategy(override val alliance: Alliance, val zone: Shootin
                     enableFlywheel(false)
                 }
                 action {
-                    driveToTarget(if (zone == ShootingZones.FRONT) locations.OPEN_RAMP_APPROACH else AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance))
+                    driveToTarget(when (operatingIn) {
+                        'F' -> locations.OPEN_RAMP_APPROACH
+                        'B' -> AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance)
+                        else -> error("Unknown operating in: $operatingIn")
+                    })
                 }
             }
         }
     }
 
-    override fun bearInit() {
-        super.bearInit()
+    private fun PhaseBuilder<DecodeRobot>.interpretProgram() {
+        val startingPoint = when(program.first()) {
+            'F' -> AutoPositions.NORTH_START
+            'B' -> AutoPositions.SOUTH_START
+            else -> error("Program should start from either F or B to indicate starting position. Actual symbol: ${program.first()}")
+        }.mirrorForAlliance(alliance)
 
-        telemetry.addLine("Ensure robot is in position: $startingPoint")
-    }
-}
+        var shootingPoint = Position.zero()
+        val path = mutableListOf<Waypoint>()
+        var initialLoadReleased = false
+        val collectedSet = mutableSetOf<Char>()
+        var lastKnownPosition = Position.zero()
 
-@PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.autoStrategy(startingPoint: Position, launchPoint: Position) {
-    assumeRobotPosition(startingPoint)
-    doOnce {
-        enableFlywheel(true)
-    }
-
-    shootInitialLoad(launchPoint)
-
-    if (launchPoint.x.cm() < 0) {
-        // Near shooting zone
-        val secondScoop = robot.scoopSpikePath(2)
-        drive(secondScoop.take(2) + robot.openRampPath())
-        wait(1.seconds)
-        followPathAndShoot(secondScoop.drop(2) + pathTo(launchPoint))
-        // Far shooting zone
-        scoopAndShoot(3, launchPoint)
-        scoopAndShoot(1, launchPoint)
-    }
-    else {
-        scoopAndShoot(1, launchPoint)
-        // Far shooting zone
-        repeat(5) {
-            scoopFromBoxAndShoot(launchPoint)
+        fun pathToShooting(): List<Waypoint> {
+            return buildList {
+                if (operatingIn == 'F') {
+                    if ('1' !in collectedSet && lastKnownPosition.x > robot.spikeStart(1).x ||
+                        '2' !in collectedSet && lastKnownPosition.x > robot.spikeStart(2).x ||
+                        '3' !in collectedSet && lastKnownPosition.x > robot.spikeStart(3).x) {
+                        addAll(pathTo(lastKnownPosition.copy(y = shootingPoint.y)))
+                    }
+                }
+                else {
+                    if ('1' !in collectedSet && lastKnownPosition.x < robot.spikeStart(1).x ||
+                        '2' !in collectedSet && lastKnownPosition.x < robot.spikeStart(2).x ||
+                        '3' !in collectedSet && lastKnownPosition.x < robot.spikeStart(3).x) {
+                        addAll(pathTo(lastKnownPosition.copy(y = shootingPoint.y)))
+                    }
+                }
+                addAll(pathTo(shootingPoint))
+            }
         }
+
+        fun shootIfNeeded() {
+            if (!initialLoadReleased) {
+                shootInitialLoad(shootingPoint)
+                lastKnownPosition = shootingPoint
+                initialLoadReleased = true
+
+                if (path.isNotEmpty()) {
+                    error("Path should be empty before we shoot initial load")
+                }
+            }
+
+            if (path.isNotEmpty()) {
+                path.addAll(pathToShooting())
+                followPathAndShoot(path.toList())
+                lastKnownPosition = path.last().target
+                path.clear()
+            }
+        }
+
+        fun followPathIfNeeded() {
+            if (path.isNotEmpty()) {
+                drive(path.toList())
+                lastKnownPosition = path.last().target
+                path.clear()
+            }
+        }
+
+        assumeRobotPosition(startingPoint)
+        lastKnownPosition = startingPoint
+
+        doOnce {
+            enableFlywheel(true)
+        }
+
+        for (c in program) {
+            when (c) {
+                'F' -> {
+                    operatingIn = 'F'
+                    shootingPoint = AutoPositions.NORTH_SHOOTING.mirrorForAlliance(alliance)
+                }
+
+                'B' -> {
+                    operatingIn = 'B'
+                    shootingPoint = AutoPositions.SOUTH_SHOOTING.mirrorForAlliance(alliance)
+                }
+
+                '0' -> {
+                    shootIfNeeded()
+                    scoopFromBoxAndShoot(shootingPoint)
+                    lastKnownPosition = shootingPoint
+                    collectedSet += '0'
+                }
+
+                '1' -> {
+                    shootIfNeeded()
+                    path.addAll(robot.scoopSpikePath(1))
+                    collectedSet += '1'
+                }
+
+                '2' -> {
+                    shootIfNeeded()
+                    path.addAll(robot.scoopSpikePath(2).take(2))
+                    collectedSet += '2'
+                }
+
+                '3' -> {
+                    shootIfNeeded()
+                    path.addAll(robot.scoopSpikePath(3))
+                    collectedSet += '3'
+                }
+
+                '4' -> {
+                    shootIfNeeded()
+                    openRampAndCollect()
+                    lastKnownPosition = robot.openRampCollectPath().last().target
+                    followPathAndShoot(pathToShooting())
+                    collectedSet += '4'
+                }
+
+                '/' -> {
+                    shootIfNeeded()
+                }
+
+                'R' -> {
+                    val pathNotEmpty = path.isNotEmpty()
+                    path.addAll(robot.openRampPath())
+                    followPathIfNeeded()
+                    wait(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
+                    if (pathNotEmpty) {
+                        followPathAndShoot(pathToShooting())
+                    }
+                }
+
+                'P' -> {
+                    pushAllianceBot(startingPoint)
+                }
+
+                ' ' -> {
+                    // Do nothing
+                }
+
+                else -> {
+                    error("Unknown command symbol: $c")
+                }
+            }
+        }
+
+        shootIfNeeded()
     }
 }
 
@@ -177,6 +282,14 @@ fun DecodeRobot.openRampCollectPath(): List<Waypoint> {
             addWaypoint(OPEN_RAMP_COLLECT, OPEN_RAMP_SPEED)
         }
     }
+}
+
+fun PhaseBuilder<DecodeRobot>.pushAllianceBot(startingPoint: Position) {
+    drive(pathTo(
+        startingPoint.shift(0.cm, startingPoint.y.cm().sign * 30.cm),
+        positionTolerance = 4.cm,
+        headingTolerance = 3.degrees
+    ))
 }
 
 fun PhaseBuilder<DecodeRobot>.openRamp() {
