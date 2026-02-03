@@ -10,8 +10,9 @@ import org.beargineers.platform.action
 import org.beargineers.platform.doOnce
 import org.beargineers.platform.pathTo
 
-open class ConstructAuto(alliance: Alliance) :
-    PhasedAutonomous<DecodeRobot>(alliance) {
+@Autonomous(group = "Construct")
+class ConstructAuto() : PhasedAutonomous<DecodeRobot>() {
+    override lateinit var alliance: Alliance
     override fun bearInit() {
         button(gamepad1::a) {
             if (runningActionSelection) {
@@ -53,6 +54,14 @@ open class ConstructAuto(alliance: Alliance) :
     lateinit var launchPosition: Position
     lateinit var endPosition: Position
     val valueChoices = listOf(
+        Choice("Alliance", listOf(
+            Option.FOption("Red"){
+                alliance = Alliance.RED
+            },
+            Option.FOption("Blue"){
+                alliance = Alliance.BLUE
+            }
+        )),
         Choice(   "starting point:", listOf(
             Option.FOption("close"){
                 startingPoint = AutoPositions.NORTH_START.mirrorForAlliance(robot)
@@ -183,9 +192,3 @@ open class ConstructAuto(alliance: Alliance) :
         }
     }
 }
-
-@Autonomous(group = "Construct")
-class ConstructBlue : ConstructAuto(Alliance.BLUE)
-
-@Autonomous(group = "Construct")
-class ConstructRed : ConstructAuto(Alliance.RED)

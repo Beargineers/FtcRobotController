@@ -28,7 +28,9 @@ import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
 
 abstract class TestOp() :
-    PhasedAutonomous<DecodeRobot>(Alliance.BLUE)
+    PhasedAutonomous<DecodeRobot>() {
+    override val alliance = Alliance.BLUE
+}
 
 @Autonomous(group = "Tune")
 class Tune_TwoTileLoop : TestOp() {

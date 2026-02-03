@@ -8,7 +8,8 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 
 
-abstract class RobotOpMode<T : Robot>(val alliance: Alliance) : OpMode() {
+abstract class RobotOpMode<T : Robot>() : OpMode() {
+    abstract val alliance: Alliance
     protected val allButtons = mutableListOf<Button>()
 
     val robot by lazy {
