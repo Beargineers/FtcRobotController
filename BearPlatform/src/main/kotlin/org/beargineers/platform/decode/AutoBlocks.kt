@@ -91,7 +91,7 @@ private fun PhaseBuilder<DecodeRobot>.shoot() {
 }
 
 
-open class DecodeAutoStrategy(alliance: Alliance, val zone: ShootingZones) : PhasedAutonomous<DecodeRobot>(alliance) {
+open class DecodeAutoStrategy(override val alliance: Alliance, val zone: ShootingZones) : PhasedAutonomous<DecodeRobot>() {
     val startingPoint = (if (zone == ShootingZones.FRONT) {
         AutoPositions.NORTH_START
     } else {

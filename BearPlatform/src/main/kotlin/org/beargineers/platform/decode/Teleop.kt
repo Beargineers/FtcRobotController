@@ -12,7 +12,7 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.sin
 import kotlin.math.abs
 
-open class Driving(alliance: Alliance) : RobotOpMode<DecodeRobot>(alliance) {
+open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>() {
     val POSITIONAL_GAIN by config(60)
     val ROTATIONAL_GAIN by config(20)
 
