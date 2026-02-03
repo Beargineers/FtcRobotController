@@ -136,7 +136,7 @@ if (absolutePose != null && absolutePose.confidence > 0.7) {
 
 ### PhasedAutonomous
 
-Framework for phase-based autonomous routines. See [PhasedAutonomous.kt](PhasedAutonomous.kt) for comprehensive documentation.
+Framework for phase-based autonomous routines. See [PhasedAutonomous.kt](PhasedAutonomous.kt) for comprehensive documentation. For the pseudo-code based autonomous DSL used by the Decode robot, see [decode/Auto.md](decode/Auto.md).
 
 ```kotlin
 @Autonomous(name = "Red South")

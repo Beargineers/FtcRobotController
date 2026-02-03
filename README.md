@@ -28,8 +28,8 @@ Reusable robotics framework library providing:
 
 See [BearPlatform documentation](BearPlatform/src/main/kotlin/org/beargineers/platform/README.md) for architecture details.
 
-### TeamCode
-Team-specific robot code built on BearPlatform:
+### Alpha, Beta, Straffer
+Team (and robot) -specific code built on BearPlatform:
 - Robot hardware configuration
 - Autonomous routines
 - TeleOp modes
