@@ -44,10 +44,6 @@ fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
     return buildPath {
         addWaypoint(spikeStart(spike))
         addWaypoint(spikeEnd(spike), locations.SPIKE_SCOOPING_SPEED)
-
-        if (spike == 2) {
-            addWaypoint(spikeStart(spike))
-        }
     }
 }
 
@@ -216,7 +212,7 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
 
                 '2' -> {
                     shootIfNeeded()
-                    path.addAll(robot.scoopSpikePath(2).take(2))
+                    path.addAll(robot.scoopSpikePath(2))
                     collectedSet += '2'
                 }
 
