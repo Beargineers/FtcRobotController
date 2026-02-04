@@ -17,6 +17,7 @@ fun cursorLocation(): Location{
 
 private val locationHistorySize by config(50)
 private val PANELS_FIELD_FPS by config(3)
+private val PANELS_SHOW_PATH by config(false)
 
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
@@ -127,11 +128,13 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             moveCursor(cp.x.inch() + 3 * cos(cp.heading), cp.y.inch() + 3 * sin(cp.heading))
             circle(1.0)
 
-            setStyle("", "#4CAF50", 0.75)
+            if (PANELS_SHOW_PATH) {
+                setStyle("", "#4CAF50", 0.75)
 
-            for ((prev, next) in locationHistory.zipWithNext()) {
-                moveCursor(prev.x.inch(), prev.y.inch())
-                line(next.x.inch(), next.y.inch())
+                for ((prev, next) in locationHistory.zipWithNext()) {
+                    moveCursor(prev.x.inch(), prev.y.inch())
+                    line(next.x.inch(), next.y.inch())
+                }
             }
 
             update()
