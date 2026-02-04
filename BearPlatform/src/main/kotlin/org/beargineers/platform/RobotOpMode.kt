@@ -75,7 +75,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         loopTimer.reset()
         telemetry.addData("FPS", "%.1f", fps)
 
-        if (fps < 25 && elapsedTime.seconds() > 3) {
+        if (fps < 20 && elapsedTime.seconds() > 3) {
             val now = System.currentTimeMillis()
             if (lowFPSStartedAt == 0L) {
                 lowFPSStartedAt = now
