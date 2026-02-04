@@ -2,171 +2,76 @@ package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import org.beargineers.platform.Alliance
+import org.beargineers.platform.Selector
+import org.beargineers.platform.Selector.Choice
+import org.beargineers.platform.Selector.Option
 
 @Autonomous(group = "Construct")
 class ConstructAuto() : ProgrammedAuto() {
     override lateinit var alliance: Alliance
-
-    override fun bearInit() {
-        button(gamepad1::a) {
-            if (runningActionSelection) {
-                selectedActionsList.add(actionOptions[optionHighlight % actionOptions.size])
-            } else if (selectedValueList.size < valueChoices.size) {
-                selectedValueList.add(valueChoices[selectedValueList.size].list[optionHighlight % valueChoices[selectedValueList.size].list.size])
-                if (selectedValueList.size == valueChoices.size){
-                    runningActionSelection = true
-                }
-            }
-        }
-        button(gamepad1::dpad_down) {
-            optionHighlight += 1
-        }
-        button(gamepad1::dpad_up) {
-            optionHighlight -= 1
-        }
-        button(gamepad1::x) {
-            if (runningActionSelection && selectedActionsList.isNotEmpty()) {
-                runningActionSelection = false
-            }
-        }
-        button(gamepad1::b) {
-            if (selectedActionsList.isNotEmpty()) {
-                selectedActionsList.removeAt(selectedActionsList.lastIndex)
-            }else if (selectedValueList.isNotEmpty()){
-                selectedValueList.removeAt(selectedValueList.lastIndex)
-            }
-        }
-
-    }
-    class Option(val name: String, val f: () -> Unit)
-
-    class Choice(val name: String, val list: List<Option>)
     private val programBuilder = StringBuilder()
     override val program: String get() = programBuilder.toString()
 
-    val valueChoices = listOf(
-        Choice("Alliance", listOf(
-            Option("Red"){
-                alliance = Alliance.RED
-            },
-            Option("Blue"){
-                alliance = Alliance.BLUE
-            }
-        )),
+    private fun buildChoices(): Choice {
+        val actions = mutableListOf<Option>()
+        val actionChoice = Choice("Actions", actions)
 
-        Choice("Starting Point", listOf(
-            Option("Front"){
+        fun action(name: String, code: Char) {
+            actions.add(Option(name, actionChoice) {
+                programBuilder.append(code)
+            })
+        }
+
+        action("Collect 1", '1')
+        action("Collect 2", '2')
+        action("Collect 3", '3')
+        action("Collect from the Box", '0')
+        action("Collect from the Ramp", '4')
+        action("Open Ramp", 'R')
+        action("Push Alliance Bot", 'B')
+        action("Shoot the Load", '/')
+        action("All next shootings from the Front", 'F')
+        action("All next shootings from the Back", 'B')
+
+        val startingPointChoice = Choice("Starting Point", listOf(
+            Option("Front", actionChoice) {
                 programBuilder.append('F')
             },
-            Option("Back"){
+            Option("Back", actionChoice) {
                 programBuilder.append('B')
             }
-        )),
-    )
+        ))
 
-    val actionOptions = listOf(
-        Option("Collect 1") {
-            programBuilder.append('1')
-        },
+        val allianceChoice = Choice("Alliance", listOf(
+            Option("Red", startingPointChoice) {
+                alliance = Alliance.RED
+            },
+            Option("Blue", startingPointChoice) {
+                alliance = Alliance.BLUE
+            }
+        ))
 
-        Option("Collect 2") {
-            programBuilder.append('2')
-        },
+        return allianceChoice
+    }
 
-        Option("Collect 3") {
-            programBuilder.append('3')
-        },
-
-        Option("Collect from the Box") {
-            programBuilder.append('0')
-        },
-
-        Option("Collect from the Ramp") {
-            programBuilder.append('4')
-        },
-
-        Option("Open Ramp") {
-            programBuilder.append('R')
-        },
-
-        Option("Push Alliance Bot") {
-            programBuilder.append('B')
-        },
-
-        Option("Shoot the load") {
-            programBuilder.append("/")
-        },
-
-        Option("All next shootings from the Front") {
-            programBuilder.append('F')
-        },
-
-        Option("All next shootings from the Back") {
-            programBuilder.append('B')
+    private val selector = Selector(buildChoices()) {
+        for ((choice, option) in it) {
+            option.f()
         }
-    )
+    }
 
-    val selectedValueList = mutableListOf<Option>()
-    val selectedActionsList = mutableListOf<Option>()
-    var optionHighlight = 1
-    var runningActionSelection = false
-
-    fun Int.th(): String {
-        return when ("$this".last().digitToInt()) {
-            1 -> "${this}st"
-            2 -> "${this}nd"
-            3 -> "${this}rd"
-            else -> "${this}th"
+    override fun bearInit() {
+        with(selector) {
+            buttons()
         }
     }
 
     override fun init_loop() {
-        allButtons.forEach { it.update() }
-        telemetry.addLine("dpad up/down, A select, B undo, X save program")
-        // displays selections
-        for ((i, choice) in valueChoices.withIndex()){
-            telemetry.addData(choice.name, if (selectedValueList.size > i){selectedValueList[i].name}else{""})
+        val active = with(selector) {
+            update()
         }
-        for (i in 0..<selectedActionsList.size) {
-            telemetry.addLine((i + 1).th() + ": " + selectedActionsList[i].name)
-        }
-        telemetry.addLine("")
-
-        if (runningActionSelection) {   // displays action choices
-            telemetry.addLine("Select Action:")
-            for ((i, choice) in actionOptions.withIndex()) {
-                if (i == (optionHighlight % actionOptions.size)) {
-                    telemetry.addLine("> " + choice.name)
-                } else {
-                    telemetry.addLine("  " + choice.name)
-                }
-            }
-        } else if (selectedValueList.size < valueChoices.size) {     // displays value choices
-            telemetry.addLine("Please select the ${valueChoices[selectedValueList.size].name}:")
-            for ((i, option) in valueChoices[selectedValueList.size].list.withIndex()) {
-                if (i == (optionHighlight % valueChoices[selectedValueList.size].list.size)) {
-                    telemetry.addLine("> " + option.name)
-                } else {
-                    telemetry.addLine("  " + option.name)
-                }
-            }
-        } else {
-            saveProgram()
-            telemetry.addLine("Auto program is saved: $program")
-        }
-    }
-
-    private var programIsSaved = false
-    private fun saveProgram() {
-        if (!programIsSaved) {
-            programIsSaved = true
-            for (choice in selectedValueList) {
-                choice.f()
-            }
-
-            for (choice in selectedActionsList) {
-                choice.f()
-            }
+        if (!active) {
+            telemetry.addLine("Program '$program' is saved. Ready to START")
         }
     }
 }

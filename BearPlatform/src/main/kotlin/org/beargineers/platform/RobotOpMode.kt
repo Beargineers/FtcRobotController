@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime
 
 abstract class RobotOpMode<T : Robot>() : OpMode() {
     abstract val alliance: Alliance
-    protected val allButtons = mutableListOf<Button>()
+    val allButtons = mutableListOf<Button>()
 
     val robot by lazy {
         Config.defaultConfigText(hardwareMap.appContext.resources.openRawResource(RobotFactory.instance.configResource).reader().readText())
