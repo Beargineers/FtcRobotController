@@ -7,7 +7,7 @@ import org.beargineers.platform.Selector.Choice
 import org.beargineers.platform.Selector.Option
 import org.beargineers.platform.config
 
-@Autonomous
+@Autonomous(group = "Construct")
 class CatalogueAuto: ProgrammedAuto() {
     val ProgramCatalogue by config("F123")
     override lateinit var alliance: Alliance
