@@ -207,18 +207,21 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
                 '1' -> {
                     shootIfNeeded()
                     path.addAll(robot.scoopSpikePath(1))
+                    lastKnownPosition = path.last().target
                     collectedSet += '1'
                 }
 
                 '2' -> {
                     shootIfNeeded()
                     path.addAll(robot.scoopSpikePath(2))
+                    lastKnownPosition = path.last().target
                     collectedSet += '2'
                 }
 
                 '3' -> {
                     shootIfNeeded()
                     path.addAll(robot.scoopSpikePath(3))
+                    lastKnownPosition = path.last().target
                     collectedSet += '3'
                 }
 
