@@ -227,8 +227,16 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
 
                 '4' -> {
                     shootIfNeeded()
-                    openRampAndCollect()
-                    lastKnownPosition = robot.openRampCollectPath().last().target
+                    val rampPath = buildPath {
+                        val farApproach =
+                            robot.locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = robot.spikeStart(1).y)
+                        addWaypoint(farApproach)
+                        addWaypoint(robot.locations.OPEN_RAMP_COLLECT_APPROACH, positionTolerance = 1.cm, headingTolerance = 1.degrees)
+                        addWaypoint(robot.locations.OPEN_RAMP_COLLECT, robot.locations.OPEN_RAMP_SPEED)
+                    }
+                    drive(rampPath)
+                    wait(1.seconds)
+                    lastKnownPosition = robot.locations.OPEN_RAMP_COLLECT
                     followPathAndShoot(pathToShooting())
                     collectedSet += '4'
                 }
