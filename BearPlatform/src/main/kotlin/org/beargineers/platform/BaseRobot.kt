@@ -55,7 +55,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         val lateral = abs(vel.lateral())
         val angular = abs(vel.angular().normalize())
 
-        return lateral > PathFollowingConfig.positionTolerance || angular > PathFollowingConfig.headingTolerance
+        return lateral > PathFollowingConfig.positionToleranceToStop || angular > PathFollowingConfig.headingToleranceToStop
     }
 
     @Suppress("UNCHECKED_CAST")

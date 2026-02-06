@@ -12,6 +12,8 @@ fun <T: Robot> T.followPath(path: List<Waypoint>): Boolean {
 }
 
 object PathFollowingConfig {
+    val positionToleranceToStop by config(3.cm)
+    val headingToleranceToStop by config(10.degrees)
     val positionTolerance by config(2.cm)
     val headingTolerance by config(1.degrees)
 
