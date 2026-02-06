@@ -169,7 +169,7 @@ fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones, position
         }
     } else { // RED side
         if (cp.y > cp.x) {
-            Location((cp.y - cp.x)*0.5, -(cp.y - cp.x)*0.5)
+            Location(-(cp.y - cp.x)*0.5, (cp.y - cp.x)*0.5)
         }else{
             Location(0.cm, 0.cm)
         }
