@@ -49,7 +49,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             lookAtGoalBtnClickedAt = System.currentTimeMillis()
         }
 
-        button(gamepad1::dpad_right) {
+        button({gamepad1.dpad_right || gamepad1.right_trigger > 0.1}) {
             lookAtGoal = true
             auto("Going to shooting zone") {
                 goToShootingZoneAndShoot(if (opMode.alliance == Alliance.BLUE){ShootingZones.FRONT} else {
@@ -57,7 +57,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             }
         }
 
-        button(gamepad1::dpad_left){
+        button({gamepad1.dpad_left || gamepad1.left_trigger > 0.1}){
             lookAtGoal = true
             auto("Going to shooting zone") {
                 goToShootingZoneAndShoot(if (opMode.alliance == Alliance.BLUE){ShootingZones.BACK} else {
@@ -195,7 +195,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
     private fun commandedRotation(): Angle {
         return (ROTATIONAL_GAIN * (gamepad1.right_stick_x +
-                (gamepad1.right_trigger - gamepad1.left_trigger) * 0.5).normalize()).degrees
+                (0/*gamepad1.right_trigger - gamepad1.left_trigger*/) * 0.5).normalize()).degrees
     }
 
 
