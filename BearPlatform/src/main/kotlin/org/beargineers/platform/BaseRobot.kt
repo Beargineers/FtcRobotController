@@ -52,8 +52,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun isMoving(): Boolean {
         val vel = currentVelocity
-        val lateral = vel.lateral()
-        val angular = vel.angular()
+        val lateral = abs(vel.lateral())
+        val angular = abs(vel.angular().normalize())
 
         return lateral > PathFollowingConfig.positionTolerance || angular > PathFollowingConfig.headingTolerance
     }
