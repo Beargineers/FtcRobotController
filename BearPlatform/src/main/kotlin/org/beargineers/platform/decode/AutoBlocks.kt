@@ -38,6 +38,7 @@ object AutoPositions {
     val BOX_SCOOP_SPEED by config(1.0)
 
     val OPEN_RAMP_WAIT_TIME by config(0.01)
+    val COLLECT_FROM_RAMP_WAIT_TIME by config(1.5)
 }
 
 fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
@@ -313,7 +314,16 @@ fun PhaseBuilder<DecodeRobot>.openRampAndCollect() {
     val path = robot.openRampCollectPath()
     drive(path.take(1))
     drive(path.drop(1))
-    wait(1.seconds)
+
+    doWhile("Wait for the artifacts") {
+        condition { artifactsCount < 3 }
+        looping {
+            wait(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
+        }
+        then {
+            // Do nothing
+        }
+    }
 }
 
 @PhaseDsl
