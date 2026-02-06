@@ -23,17 +23,20 @@ class CatalogueAuto: ProgrammedAuto() {
             Program(name, code)
         }
 
-        val programOptions = programs.map {
-            Option("${it.name} (${it.code})", null) {
-                selectedProgram = it
-            }
+        val front = programs.filter { it.code.startsWith('F') }
+        val back = programs.filter { it.code.startsWith('B') }
+
+        fun choice(programs: List<Program>): Choice {
+            return Choice("Program", programs.map {
+                Option("${it.name} (${it.code})", null) {
+                    selectedProgram = it
+                }
+            })
         }
-        val frontPrograms = Choice("Program", programOptions.filter { it.name.startsWith('F') })
-        val backPrograms = Choice("Program", programOptions.filter { it.name.startsWith('B') })
 
         val startingPointChoice = Choice("Starting Point", listOf(
-            Option("Front", frontPrograms) {},
-            Option("Back", backPrograms) {}
+            Option("Front", choice(front)) {},
+            Option("Back", choice(back)) {}
         ))
 
         val allianceChoice = Choice("Alliance", listOf(
