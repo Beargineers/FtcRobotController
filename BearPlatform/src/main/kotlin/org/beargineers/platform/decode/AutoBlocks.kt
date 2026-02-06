@@ -50,8 +50,8 @@ fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
 
 fun DecodeRobot.scoopBoxPath(shift: Distance): List<Waypoint> {
     return buildPath {
-        addWaypoint(AutoPositions.BOX_APPROACH.shift(-shift, 0.cm).mirrorForAlliance(alliance))
-        addWaypoint(AutoPositions.BOX_SCOOP.shift(-shift, 0.cm).mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED)
+        addWaypoint(AutoPositions.BOX_APPROACH.shift(-shift, 0.cm).rotate(if (shift == 0.cm) -20.degrees else 0.degrees).mirrorForAlliance(alliance))
+        addWaypoint(AutoPositions.BOX_SCOOP.shift(-shift, 0.cm).rotate(if (shift == 0.cm) -20.degrees else 0.degrees).mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED)
     }
 }
 
@@ -71,7 +71,7 @@ fun PhaseBuilder<DecodeRobot>.scoopFromBoxAndShoot(launchPose: Position) {
 
         looping {
             action {
-                followPath(scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(40.cm))
+                followPath(scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
             }
         }
 
