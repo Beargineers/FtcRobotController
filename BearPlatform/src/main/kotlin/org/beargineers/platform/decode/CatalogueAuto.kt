@@ -7,16 +7,25 @@ import org.beargineers.platform.Selector.Choice
 import org.beargineers.platform.Selector.Option
 import org.beargineers.platform.config
 
+data class Program(val name: String, val code: String)
+
 @Autonomous(group = "Construct")
 class CatalogueAuto: ProgrammedAuto() {
     val ProgramCatalogue by config("F123")
     override lateinit var alliance: Alliance
-    override lateinit var program: String
+    override val program: String get() = selectedProgram.code
+    lateinit var selectedProgram: Program
+
 
     private fun buildChoices(): Choice {
-        val programOptions = ProgramCatalogue.split(',').map {
-            Option(it.trim(), null) {
-                program = it.trim()
+        val programs = ProgramCatalogue.split(',').map {it.trim()}.map {
+            val (code, name) = if (it.contains(':')) it.split(':') else listOf(it, it)
+            Program(name, code)
+        }
+
+        val programOptions = programs.map {
+            Option("${it.name} (${it.code})", null) {
+                selectedProgram = it
             }
         }
         val frontPrograms = Choice("Program", programOptions.filter { it.name.startsWith('F') })
@@ -59,7 +68,7 @@ class CatalogueAuto: ProgrammedAuto() {
         }
 
         if (!active) {
-            telemetry.addLine("Program '$program' selected. Ready to START")
+            telemetry.addLine("Program '${selectedProgram.name}' (${selectedProgram.code}) selected. Ready to START")
         }
     }
 }
