@@ -28,7 +28,7 @@ class ConstructAuto() : ProgrammedAuto() {
         action("Collect from the Box", '0')
         action("Collect from the Ramp", '4')
         action("Open Ramp", 'R')
-        action("Push Alliance Bot", 'B')
+        action("Push Alliance Bot", 'P')
         action("Shoot the Load", '/')
         action("All next shootings from the Front", 'F')
         action("All next shootings from the Back", 'B')
