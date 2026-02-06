@@ -133,11 +133,13 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
 
         fun pathToShooting(): List<Waypoint> {
             return buildList {
+                var addedBackPath = false
                 if (operatingIn == 'F') {
                     if ('1' !in collectedSet && lastKnownPosition.x > robot.spikeStart(1).x ||
                         '2' !in collectedSet && lastKnownPosition.x > robot.spikeStart(2).x ||
                         '3' !in collectedSet && lastKnownPosition.x > robot.spikeStart(3).x) {
                         addAll(pathTo(lastKnownPosition.copy(y = shootingPoint.y)))
+                        addedBackPath = true
                     }
                 }
                 else {
@@ -145,8 +147,15 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
                         '2' !in collectedSet && lastKnownPosition.x < robot.spikeStart(2).x ||
                         '3' !in collectedSet && lastKnownPosition.x < robot.spikeStart(3).x) {
                         addAll(pathTo(lastKnownPosition.copy(y = shootingPoint.y)))
+                        addedBackPath = true
                     }
                 }
+
+                if (!addedBackPath && (lastKnownPosition.distanceTo(robot.locations.OPEN_RAMP_COLLECT) < 10.cm ||
+                    lastKnownPosition.distanceTo(robot.locations.OPEN_RAMP) < 10.cm)) {
+                    addAll(pathTo(lastKnownPosition + RelativePosition(-15.cm, 0.cm, 0.degrees)))
+                }
+
                 addAll(pathTo(shootingPoint))
             }
         }
@@ -227,15 +236,10 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
 
                 '4' -> {
                     shootIfNeeded()
-                    val rampPath = buildPath {
-                        val farApproach =
-                            robot.locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = robot.spikeStart(1).y)
-                        addWaypoint(farApproach)
-                        addWaypoint(robot.locations.OPEN_RAMP_COLLECT_APPROACH, positionTolerance = 1.cm, headingTolerance = 1.degrees)
-                        addWaypoint(robot.locations.OPEN_RAMP_COLLECT, robot.locations.OPEN_RAMP_SPEED)
-                    }
-                    drive(rampPath)
-                    wait(1.seconds)
+                    val farApproach =
+                        robot.locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = robot.spikeStart(1).y)
+                    drive(pathTo(farApproach))
+                    openRampAndCollect()
                     lastKnownPosition = robot.locations.OPEN_RAMP_COLLECT
                     followPathAndShoot(pathToShooting())
                     collectedSet += '4'
