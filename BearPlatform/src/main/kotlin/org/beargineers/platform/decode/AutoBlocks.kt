@@ -96,7 +96,7 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
         doWhile("AUTO") {
             condition {
-                opMode.elapsedTime.seconds() < 29
+                opMode.elapsedTime.seconds() < 29.5
             }
 
             looping {
