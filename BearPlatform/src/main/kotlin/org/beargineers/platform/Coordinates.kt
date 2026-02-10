@@ -244,6 +244,31 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
     }
 }
 
+data class RobotCentricLocation(val forward: Distance, val right: Distance) {
+    override fun toString(): String {
+        return String.format(Locale.getDefault(), "%s %s", forward, right)
+    }
+
+    operator fun plus(other: RobotCentricLocation): RobotCentricLocation {
+        return RobotCentricLocation(forward + other.forward, right + other.right)
+    }
+
+    companion object {
+        fun zero(): RobotCentricLocation {
+            return RobotCentricLocation(0.cm, 0.cm)
+        }
+
+        fun forward(d: Distance): RobotCentricLocation {
+            return RobotCentricLocation(d, 0.cm)
+        }
+
+        fun right(d: Distance): RobotCentricLocation {
+            return RobotCentricLocation(0.cm, d)
+        }
+    }
+}
+
+
 data class RobotCentricPosition(val forward: Distance, val right: Distance, val turn: Angle) {
     operator fun plus(other: RobotCentricPosition): RobotCentricPosition {
         return RobotCentricPosition(forward + other.forward, right + other.right, turn + other.turn)
@@ -280,37 +305,25 @@ data class RobotCentricPosition(val forward: Distance, val right: Distance, val 
     }
 }
 
-fun Location.toAbsolute(cp: Position): Location {
-    val magnitude = hypot(x, y)
-    val absoluteH = atan2(y,x)
-    val absH = absoluteH + cp.heading - 90.degrees
+fun RobotCentricLocation.toFieldCentric(atPosition: Position): Location {
+    val magnitude = hypot(right, forward)
+    val absoluteH = atan2(right,forward)
+    val absH = absoluteH + atPosition.heading - 90.degrees
     val absX = cos(absH)*magnitude
     val absY = sin(absH)*magnitude
-    return Location(absX + cp.x, absY + cp.y)
+    return Location(absX + atPosition.x, absY + atPosition.y)
 }
 
-fun Location.toRelative(cp: Position): Location {
-    val x = x - cp.x
-    val y = y - cp.y
-    val magnitude = hypot(x, y)
-    val absoluteH = atan2(y,x)
-    val relH = absoluteH - cp.heading
-    val relX = cos(relH)*magnitude
-    val relY = sin(relH)*magnitude
-    return Location(relX, relY)
-}
-
-fun Location.toRobotFrame(r: Robot): Location {
+fun Location.toRobotCentric(atPosition: Position): RobotCentricLocation {
     // Translate to robot's origin
-    val cp = r.currentPosition
-    val dx = x - cp.x
-    val dy = y - cp.y
+    val dx = x - atPosition.x
+    val dy = y - atPosition.y
 
     // Rotate to robot's frame (heading = 0 means facing along positive field X)
     // In robot frame: +x is forward, +y is right
-    val theta = cp.heading
+    val theta = atPosition.heading
     val robotX = cos(theta) * dx + sin(theta) * dy
     val robotY = sin(theta) * dx - cos(theta) * dy
 
-    return Location(robotX, robotY)
+    return RobotCentricLocation(robotX, robotY)
 }

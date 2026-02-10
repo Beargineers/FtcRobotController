@@ -41,15 +41,15 @@ class RobotLocations(val robot: Robot) {
         override fun build(robot: Robot) = RobotLocations(robot)
     }
 
-    val lf_wheel: Location get() = Location(-RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm, RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(robot.currentPosition)
-    val rf_wheel: Location get() = Location(RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm, RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(robot.currentPosition)
-    val lb_wheel: Location get() = Location(-RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm, -RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(robot.currentPosition)
-    val rb_wheel: Location get() = Location(RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm, -RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm).toAbsolute(robot.currentPosition)
+    val lf_wheel: Location get() = RobotCentricLocation(RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm, -RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm).toFieldCentric(robot.currentPosition)
+    val rf_wheel: Location get() = RobotCentricLocation(RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm, RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm).toFieldCentric(robot.currentPosition)
+    val lb_wheel: Location get() = RobotCentricLocation(-RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm, -RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm).toFieldCentric(robot.currentPosition)
+    val rb_wheel: Location get() = RobotCentricLocation(-RobotDimensions.ROBOT_WHEELBASE_LENGTH/2.cm, RobotDimensions.ROBOT_WHEELBASE_WIDTH/2.cm).toFieldCentric(robot.currentPosition)
 
-    val lf_corner: Location get() = Location((RobotDimensions.ROBOT_WIDTH / 2).cm, RobotDimensions.ROBOT_FRONT_OFFSET.cm).toAbsolute(robot.currentPosition)
-    val rf_corner: Location get() = Location(-(RobotDimensions.ROBOT_WIDTH / 2).cm, RobotDimensions.ROBOT_FRONT_OFFSET.cm).toAbsolute(robot.currentPosition)
-    val lb_corner: Location get() = Location((RobotDimensions.ROBOT_WIDTH / 2).cm, -RobotDimensions.ROBOT_BACK_OFFSET.cm).toAbsolute(robot.currentPosition)
-    val rb_corner: Location get() = Location(-(RobotDimensions.ROBOT_WIDTH / 2).cm, -RobotDimensions.ROBOT_BACK_OFFSET.cm).toAbsolute(robot.currentPosition)
+    val lf_corner: Location get() = RobotCentricLocation(RobotDimensions.ROBOT_FRONT_OFFSET.cm, (RobotDimensions.ROBOT_WIDTH / 2).cm).toFieldCentric(robot.currentPosition)
+    val rf_corner: Location get() = RobotCentricLocation(RobotDimensions.ROBOT_FRONT_OFFSET.cm, -(RobotDimensions.ROBOT_WIDTH / 2).cm).toFieldCentric(robot.currentPosition)
+    val lb_corner: Location get() = RobotCentricLocation(-RobotDimensions.ROBOT_BACK_OFFSET.cm, (RobotDimensions.ROBOT_WIDTH / 2).cm).toFieldCentric(robot.currentPosition)
+    val rb_corner: Location get() = RobotCentricLocation(-RobotDimensions.ROBOT_BACK_OFFSET.cm, -(RobotDimensions.ROBOT_WIDTH / 2).cm).toFieldCentric(robot.currentPosition)
 }
 
 object RobotDimensions {

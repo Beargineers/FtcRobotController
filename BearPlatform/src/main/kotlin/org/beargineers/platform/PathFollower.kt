@@ -88,7 +88,7 @@ internal class PathFollower(
             return update()
         }
 
-        val (dForward, dRight) = currentTarget.location().toRobotFrame(robot)
+        val (dForward, dRight) = currentTarget.location().toRobotCentric(robot.currentPosition)
 
         val driveError = dForward.cm()
         val translationalError = dRight.cm()
