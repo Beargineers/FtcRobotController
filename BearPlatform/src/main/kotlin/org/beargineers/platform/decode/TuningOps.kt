@@ -10,8 +10,8 @@ import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
-import org.beargineers.platform.RelativePosition
 import org.beargineers.platform.Robot
+import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.cm
@@ -36,14 +36,14 @@ abstract class TestOp() :
 class Tune_TwoTileLoop : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
         repeat(5) {
-            driveRelative(RelativePosition.forward(48.inch))
-            driveRelative(RelativePosition.turnCCW(90.degrees))
-            driveRelative(RelativePosition.forward(48.inch))
-            driveRelative(RelativePosition.turnCCW(90.degrees))
-            driveRelative(RelativePosition.forward(48.inch))
-            driveRelative(RelativePosition.turnCCW(90.degrees))
-            driveRelative(RelativePosition.forward(48.inch))
-            driveRelative(RelativePosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
         }
     }
 }
@@ -52,7 +52,7 @@ class Tune_TwoTileLoop : TestOp() {
 class Tune_OneTileLeft : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
         wait(3.seconds)
-        driveRelative(RelativePosition.right(-24.inch))
+        driveRelative(RobotCentricPosition.right(-24.inch))
     }
 }
 
@@ -60,7 +60,7 @@ class Tune_OneTileLeft : TestOp() {
 class Tune_Turn90CCW : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
         wait(3.seconds)
-        driveRelative(RelativePosition.turnCCW(90.degrees))
+        driveRelative(RobotCentricPosition.turnCCW(90.degrees))
     }
 }
 
