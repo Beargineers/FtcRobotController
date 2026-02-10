@@ -8,7 +8,7 @@ import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
-import org.beargineers.platform.RelativePosition
+import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
@@ -154,7 +154,7 @@ abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
 
                 if (!addedBackPath && (lastKnownPosition.distanceTo(robot.locations.OPEN_RAMP_COLLECT) < 10.cm ||
                     lastKnownPosition.distanceTo(robot.locations.OPEN_RAMP) < 10.cm)) {
-                    addAll(pathTo(lastKnownPosition + RelativePosition(-15.cm, 0.cm, 0.degrees)))
+                    addAll(pathTo(lastKnownPosition + RobotCentricPosition(-15.cm, 0.cm, 0.degrees)))
                 }
 
                 addAll(pathTo(shootingPoint))
@@ -353,7 +353,7 @@ fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZon
         waypoints.addAll(buildPath {
             if (currentPosition.distanceTo(locations.OPEN_RAMP_COLLECT) < 10.cm ||
                 currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
-                addWaypoint(currentPosition + RelativePosition(-15.cm, 0.cm, 0.degrees))
+                addWaypoint(currentPosition + RobotCentricPosition(-15.cm, 0.cm, 0.degrees))
             }
 
             val targetLocation = closestPointInShootingZone(shootingZone)

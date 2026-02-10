@@ -3,8 +3,8 @@ package org.beargineers.platform
 import org.firstinspires.ftc.robotcore.external.Func
 import org.firstinspires.ftc.robotcore.external.Telemetry
 
-class TestOpMode : RobotOpMode<Robot>(Alliance.RED) {
-
+class TestOpMode : RobotOpMode<Robot>() {
+    override val alliance: Alliance = Alliance.RED
 }
 
 class TestRobot(override val opMode: TestOpMode) : Robot {
@@ -59,7 +59,7 @@ class TestRobot(override val opMode: TestOpMode) : Robot {
 
     override val currentPosition: Position
         get() = TODO("Not yet implemented")
-    override val currentVelocity: RelativePosition
+    override val currentVelocity: RobotCentricPosition
         get() = TODO("Not yet implemented")
     override var targetSpeed: Double
         get() = TODO("Not yet implemented")

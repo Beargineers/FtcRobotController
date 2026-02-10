@@ -34,7 +34,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override val currentPosition: Position get() = localizer.getPosition()
 
-    override val currentVelocity: RelativePosition get() = localizer.getVelocity()
+    override val currentVelocity: RobotCentricPosition get() = localizer.getVelocity()
     override var targetSpeed: Double = 1.0
 
     private val locationHistory = ArrayDeque<Location>(locationHistorySize)
@@ -52,7 +52,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun isMoving(): Boolean {
         val vel = currentVelocity
-        val lateral = abs(vel.lateral())
+        val lateral = abs(vel.linear())
         val angular = abs(vel.angular().normalize())
 
         return lateral > PathFollowingConfig.positionToleranceToStop || angular > PathFollowingConfig.headingToleranceToStop

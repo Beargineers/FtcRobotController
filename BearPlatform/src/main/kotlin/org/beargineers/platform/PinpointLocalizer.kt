@@ -78,7 +78,7 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
         return newEstimate
     }
 
-    fun errorCorrection(oldPos: Position, newPos: Position): RelativePosition {
+    fun errorCorrection(oldPos: Position, newPos: Position): RobotCentricPosition {
         val (deltaX, deltaY, deltaH) = newPos - oldPos
 
         val N = 10
@@ -100,15 +100,15 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
             deltaRight += magnitude * sin(relHeading)
         }
 
-        return RelativePosition(
+        return RobotCentricPosition(
             deltaForward * PinpointConfig.pinpoint_forwardErrorCorrection,
             deltaRight * PinpointConfig.pinpoint_rightErrorCorrection,
             0.degrees
         )
     }
 
-    override fun getVelocity(): RelativePosition {
-        return RelativePosition(
+    override fun getVelocity(): RobotCentricPosition {
+        return RobotCentricPosition(
             pinpoint.getVelX(DistanceUnit.CM).cm,
             pinpoint.getVelY(DistanceUnit.CM).cm,
             pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES).degrees,
