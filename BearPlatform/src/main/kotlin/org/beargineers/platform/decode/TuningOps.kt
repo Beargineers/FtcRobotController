@@ -5,12 +5,12 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.AutonomousPhase
 import org.beargineers.platform.BaseRobot
-import org.beargineers.platform.Location
 import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
 import org.beargineers.platform.Robot
+import org.beargineers.platform.RobotCentricLocation
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.assumeRobotPosition
@@ -23,7 +23,7 @@ import org.beargineers.platform.driveRelative
 import org.beargineers.platform.inch
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.tilePosition
-import org.beargineers.platform.toAbsolute
+import org.beargineers.platform.toFieldCentric
 import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
 
@@ -75,9 +75,9 @@ object TuneConfig {
 class Tune_driveK: TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases(){
         doTuning(tilePosition("B1:90"), {
-            Location(0.cm, TuneConfig.tuneDistance).toAbsolute(it).withHeading(it.heading)
+            RobotCentricLocation(TuneConfig.tuneDistance, 0.cm).toFieldCentric(it).withHeading(it.heading)
         },{
-            Location(0.cm, -TuneConfig.tuneDistance).toAbsolute(it).withHeading(it.heading)
+            RobotCentricLocation(-TuneConfig.tuneDistance, 0.cm).toFieldCentric(it).withHeading(it.heading)
         }){it.drive_K}
     }
 }
@@ -86,9 +86,9 @@ class Tune_driveK: TestOp() {
 class Tune_translationK: TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases(){
         doTuning(tilePosition("B2:180"), {
-            Location(-TuneConfig.tuneDistance, 0.cm).toAbsolute(it).withHeading(it.heading)
+            RobotCentricLocation(0.cm, -TuneConfig.tuneDistance).toFieldCentric(it).withHeading(it.heading)
         },{
-            Location(TuneConfig.tuneDistance, 0.cm).toAbsolute(it).withHeading(it.heading)
+            RobotCentricLocation(0.cm, TuneConfig.tuneDistance).toFieldCentric(it).withHeading(it.heading)
         }){it.translational_K}
     }
 }
