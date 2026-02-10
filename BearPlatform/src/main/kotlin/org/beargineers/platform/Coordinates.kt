@@ -215,7 +215,7 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
         return Position(x - other.x, y - other.y, heading - other.heading).normalizeHeading()
     }
 
-    operator fun plus(other: RelativePosition): Position {
+    operator fun plus(other: RobotCentricPosition): Position {
         return Position(
             x = x + other.forward * cos(heading) + other.right * sin(heading),
             y = y + other.forward * sin(heading) - other.right * cos(heading),
@@ -241,6 +241,42 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
 
     fun distanceTo(other: Location) : Distance {
         return hypot(x - other.x, y - other.y)
+    }
+}
+
+data class RobotCentricPosition(val forward: Distance, val right: Distance, val turn: Angle) {
+    operator fun plus(other: RobotCentricPosition): RobotCentricPosition {
+        return RobotCentricPosition(forward + other.forward, right + other.right, turn + other.turn)
+    }
+
+    override fun toString(): String {
+        return String.format(Locale.getDefault(), "(%s %s) %s", forward, right, turn)
+    }
+
+    fun linear(): Distance {
+        return hypot(forward, right)
+    }
+
+    fun angular(): Angle {
+        return turn
+    }
+
+    companion object {
+        fun zero(): RobotCentricPosition {
+            return RobotCentricPosition(0.cm, 0.cm, 0.degrees)
+        }
+
+        fun forward(d: Distance): RobotCentricPosition {
+            return RobotCentricPosition(d, 0.cm, 0.degrees)
+        }
+
+        fun right(d: Distance): RobotCentricPosition {
+            return RobotCentricPosition(0.cm, d, 0.degrees)
+        }
+
+        fun turnCCW(angle: Angle): RobotCentricPosition {
+            return RobotCentricPosition(0.cm, 0.cm, angle)
+        }
     }
 }
 

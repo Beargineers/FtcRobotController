@@ -12,7 +12,7 @@ class IndicatingRelativeLocalizer(val localizer: RelativeLocalizer, val led: Led
         localizer.updatePositionEstimate(position)
     }
 
-    override fun getVelocity(): RelativePosition {
+    override fun getVelocity(): RobotCentricPosition {
         return localizer.getVelocity()
     }
 }

@@ -27,7 +27,7 @@ interface Robot {
 
     val currentPosition: Position
 
-    val currentVelocity: RelativePosition
+    val currentVelocity: RobotCentricPosition
 
     var targetSpeed: Double
 

@@ -146,8 +146,8 @@ class LLPinpointLocalizer(robot: BaseRobot) : Localizer, Hardware(robot) {
         }
     }
 
-    override fun getVelocity(): RelativePosition {
-        return RelativePosition(
+    override fun getVelocity(): RobotCentricPosition {
+        return RobotCentricPosition(
             pinpoint.getVelX(DistanceUnit.CM).cm,
             pinpoint.getVelY(DistanceUnit.CM).cm,
             pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES).degrees,

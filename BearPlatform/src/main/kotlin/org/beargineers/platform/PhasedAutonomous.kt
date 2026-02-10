@@ -230,7 +230,7 @@ fun PhaseBuilder<*>.drive(waypoints: List<Waypoint>) {
     phase(GotoPositionViaPhase(waypoints))
 }
 
-class DriveRelative<R: Robot>(val movement: RelativePosition) : AutonomousPhase<R> {
+class DriveRelative<R: Robot>(val movement: RobotCentricPosition) : AutonomousPhase<R> {
     lateinit var targetPosition: Position
 
     override fun R.initPhase() {
@@ -243,7 +243,7 @@ class DriveRelative<R: Robot>(val movement: RelativePosition) : AutonomousPhase<
 }
 
 @PhaseDsl
-fun <R: Robot> PhaseBuilder<R>.driveRelative(movement: RelativePosition) {
+fun <R: Robot> PhaseBuilder<R>.driveRelative(movement: RobotCentricPosition) {
     phase(DriveRelative(movement))
 }
 

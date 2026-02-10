@@ -99,10 +99,10 @@ class MecanumEncodersLocalizers(robot: BaseRobot, val wheels: MecanumDrive) : Ha
     private var lastRb: Int = 0
     private var lastYaw: Double? = null
 
-    private var currentVelocity: RelativePosition = RelativePosition.zero()
+    private var currentVelocity: RobotCentricPosition = RobotCentricPosition.zero()
     private var previousTime: Long? = null
 
-    override fun getVelocity(): RelativePosition {
+    override fun getVelocity(): RobotCentricPosition {
         return currentVelocity
     }
 
@@ -127,14 +127,14 @@ class MecanumEncodersLocalizers(robot: BaseRobot, val wheels: MecanumDrive) : Ha
         val now = System.currentTimeMillis()
 
         if (previousTime == null) {
-            currentVelocity = RelativePosition.zero()
+            currentVelocity = RobotCentricPosition.zero()
         }
         else {
             val timeDelta = (now - previousTime!!) / 1000.0
             val robotDelta = calculateRobotPositionDelta()
             val positionDelta = positionChange(robotDelta)
             currentPositionEstimate += positionDelta
-            currentVelocity = RelativePosition(robotDelta.forward / timeDelta, robotDelta.right / timeDelta, robotDelta.turn / timeDelta)
+            currentVelocity = RobotCentricPosition(robotDelta.forward / timeDelta, robotDelta.right / timeDelta, robotDelta.turn / timeDelta)
         }
 
         previousTime = now
@@ -152,7 +152,7 @@ class MecanumEncodersLocalizers(robot: BaseRobot, val wheels: MecanumDrive) : Ha
         return yawRadians
     }
 
-    private fun calculateRobotPositionDelta(): RelativePosition {
+    private fun calculateRobotPositionDelta(): RobotCentricPosition {
         val yaw = getYawFromQuaternionInRadians()
         val deltaYaw = yaw - (lastYaw ?: yaw)
 
@@ -172,7 +172,7 @@ class MecanumEncodersLocalizers(robot: BaseRobot, val wheels: MecanumDrive) : Ha
         val forward = WheelsConfig.cm_per_tick_forward * (deltaLF + deltaRF + deltaLB + deltaRB) / 4
         val right = WheelsConfig.cm_per_tick_strafe * (deltaLF - deltaRF + deltaRB - deltaLB) / (4 * sqrt(2.0))
 
-        return RelativePosition(
+        return RobotCentricPosition(
             forward = forward.cm,
             right = right.cm,
             turn = deltaYaw.radians
@@ -198,7 +198,7 @@ class MecanumEncodersLocalizers(robot: BaseRobot, val wheels: MecanumDrive) : Ha
      *
      * @return Pose2D representing the change in position and orientation
      */
-    private fun positionChange(move: RelativePosition): Position {
+    private fun positionChange(move: RobotCentricPosition): Position {
         val (forward, right, deltaYaw) = move
 
         val N = 10.0
