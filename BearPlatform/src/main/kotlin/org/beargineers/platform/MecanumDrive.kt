@@ -72,20 +72,22 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot), Drivetrain {
 
         val lfP = (power * cos / max + turn) / scale
         val rfP = (power * sin / max - turn) / scale
-        val lrp = (power * sin / max + turn) / scale
+        val lbp = (power * sin / max + turn) / scale
         val rbp = (power * cos / max - turn) / scale
 
-        setMotorPowers(lfP, rfP, lrp, rbp)
+        fun normalize(v: Double) = roundMotorPower(v) * ticksPerSecond
+        lf.velocity = normalize(lfP * WheelsConfig.lf_correction)
+        rf.velocity = normalize(rfP * WheelsConfig.rf_correction)
+        lb.velocity = normalize(lbp * WheelsConfig.lb_correction)
+        rb.velocity = normalize(rbp * WheelsConfig.rb_correction)
     }
 
-    private fun setMotorPowers(lfP: Double, rfP: Double, lrp: Double, rbp: Double) {
-        lf.power = roundMotorPower(lfP * WheelsConfig.lf_correction)
-        rf.power = roundMotorPower(rfP * WheelsConfig.rf_correction)
-        lb.power = roundMotorPower(lrp * WheelsConfig.lb_correction)
-        rb.power = roundMotorPower(rbp * WheelsConfig.rb_correction)
+    override fun stop() {
+        lf.power = 0.0
+        rf.power = 0.0
+        lb.power = 0.0
+        rb.power = 0.0
     }
-
-    override fun stop() = setMotorPowers(0.0, 0.0, 0.0, 0.0)
 }
 
 class MecanumEncodersLocalizers(robot: BaseRobot, val wheels: MecanumDrive) : Hardware(robot), RelativeLocalizer {
