@@ -3,14 +3,12 @@ package org.beargineers.platform
 import kotlin.math.min
 import kotlin.math.sqrt
 
-private val N = 20
-
-private class DoubleNormalDistribution {
-    private val data = DoubleArray(N)
+public class DoubleNormalDistribution(val maxSamples:Int = 20) {
+    private val data = DoubleArray(maxSamples)
     var n: Int = 0
 
     fun update(d: Double) {
-        data[n++ % N] = d
+        data[n++ % maxSamples] = d
     }
 
     fun result(): Pair<Double, Double> {
@@ -19,7 +17,7 @@ private class DoubleNormalDistribution {
         var delta: Double
         var delta2: Double
 
-        val last = min(n, N) - 1
+        val last = min(n, maxSamples) - 1
 
         for (i in 0..last) {
             val d = data[i]
