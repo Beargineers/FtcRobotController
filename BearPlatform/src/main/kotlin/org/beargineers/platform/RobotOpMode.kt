@@ -66,14 +66,17 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
     var lowFPSStartedAt = 0L
 
+    val fpsDist = DoubleNormalDistribution(100)
+
     final override fun loop() {
         for (hub in allHubs) {
             hub.clearBulkCache()
         }
 
-        val fps = 1000 / loopTimer.milliseconds()
+        fpsDist.update(1000 / loopTimer.milliseconds())
         loopTimer.reset()
-        telemetry.addData("FPS", "%.1f", fps)
+        val (fps, std) = fpsDist.result()
+        telemetry.addData("FPS", "%.1f, STD=%.1f", fps, std)
 
         if (fps < 20 && elapsedTime.seconds() > 3) {
             val now = System.currentTimeMillis()
