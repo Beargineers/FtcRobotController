@@ -73,7 +73,7 @@ class ArtifactsVision(robot: BaseRobot) : Hardware(robot) {
         .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
         .setRoi(ImageRegion.asUnityCenterCoordinates(-0.75, 0.75, 0.75, -0.75))
         .setDrawContours(true) // Show contours on the Stream Preview
-        .setBoxFitColor(0) // Disable the drawing of rectangles
+        //.setBoxFitColor(0) // Disable the drawing of rectangles
         .setCircleFitColor(Color.rgb(255, 255, 0)) // Draw a circle
         .setBlurSize(5) // Smooth the transitions between different colors in image
         // the following options have been added to fill in perimeter holes.
