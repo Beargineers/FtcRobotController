@@ -1,5 +1,7 @@
 package org.beargineers.platform
 
+import org.beargineers.platform.decode.DecodeRobot
+import org.beargineers.platform.decode.IntakeMode
 import org.firstinspires.ftc.robotcore.external.Func
 import org.firstinspires.ftc.robotcore.external.Telemetry
 
@@ -7,9 +9,51 @@ class TestOpMode : RobotOpMode<Robot>() {
     override val alliance: Alliance = Alliance.RED
 }
 
-class TestRobot(override val opMode: TestOpMode) : Robot {
-    override fun <T : Any> getPart(part: Part<T>): T {
+class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
+    val localizer = TestLocalizer()
+
+    override fun intakeMode(mode: IntakeMode) {
         TODO("Not yet implemented")
+    }
+
+    override val intakeMode: IntakeMode
+        get() = TODO("Not yet implemented")
+
+    override fun launch() {
+        TODO("Not yet implemented")
+    }
+
+    override fun getReadyForShoot() {
+        TODO("Not yet implemented")
+    }
+
+    override fun enableFlywheel(on: Boolean) {
+        TODO("Not yet implemented")
+    }
+
+    override fun isShooting(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun adjustShooting(distance: Double, angle: Double) {
+        TODO("Not yet implemented")
+    }
+
+    override fun warnDriverON() {
+        TODO("Not yet implemented")
+    }
+
+    override val shootingAngleCorrection: Angle
+        get() = TODO("Not yet implemented")
+    override val artifactsCount: Int
+        get() = TODO("Not yet implemented")
+
+    val parts = mutableMapOf<Part<*>, Any>()
+    @Suppress("UNCHECKED_CAST")
+    override fun <T:Any> getPart(part: Part<T>): T {
+        return parts.getOrPut(part) {
+            part.build(this)
+        } as T
     }
 
     override fun driveToTarget(target: Position): Boolean {
@@ -40,7 +84,7 @@ class TestRobot(override val opMode: TestOpMode) : Robot {
     }
 
     override fun assumePosition(position: Position) {
-        TODO("Not yet implemented")
+        localizer.setStartingPosition(position)
     }
 
     override fun stop() {
@@ -58,9 +102,9 @@ class TestRobot(override val opMode: TestOpMode) : Robot {
     override val telemetry: Telemetry = TestTelemetry()
 
     override val currentPosition: Position
-        get() = TODO("Not yet implemented")
+        get() = localizer.currentPosition
     override val currentVelocity: RobotCentricPosition
-        get() = TODO("Not yet implemented")
+        get() = localizer.getVelocity()
     override var targetSpeed: Double
         get() = TODO("Not yet implemented")
         set(value) {}
@@ -175,5 +219,23 @@ class TestTelemetry : Telemetry {
 
     override fun log(): Telemetry.Log? {
         return null
+    }
+}
+
+class TestLocalizer : Localizer {
+    var currentPosition: Position = Position.zero()
+    override fun setStartingPosition(position: Position) {
+        currentPosition = position
+    }
+
+    override fun update() {
+    }
+
+    override fun getPosition(): Position {
+        return currentPosition
+    }
+
+    override fun getVelocity(): RobotCentricPosition {
+        return RobotCentricPosition.zero()
     }
 }
