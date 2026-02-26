@@ -5,7 +5,7 @@ import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import kotlin.time.Duration.Companion.milliseconds
 
-class PhasesTest {
+class PhasesTest : RobotTest() {
     @Test
     fun testPar() {
         val log = StringBuilder()
@@ -23,14 +23,11 @@ class PhasesTest {
             }
         }
 
-        val op = TestOpMode()
-        val r = TestRobot(op)
-
         val time = ElapsedTime()
         with(phase) {
-            r.initPhase()
+            robot.initPhase()
             while (true) {
-                if (!r.loopPhase(time)) break
+                if (!robot.loopPhase(time)) break
             }
         }
 
