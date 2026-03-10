@@ -312,7 +312,7 @@ data class RobotCentricPosition(val forward: Distance, val right: Distance, val 
 fun RobotCentricLocation.toFieldCentric(atPosition: Position): Location {
     val magnitude = hypot(right, forward)
     val absoluteH = atan2(right,forward)
-    val absH = absoluteH + atPosition.heading - 90.degrees
+    val absH = absoluteH + atPosition.heading
     val absX = cos(absH)*magnitude
     val absY = sin(absH)*magnitude
     return Location(absX + atPosition.x, absY + atPosition.y)
