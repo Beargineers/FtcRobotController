@@ -117,15 +117,11 @@ public final class TuningOpModes {
             List<EncoderGroup> encoderGroups = new ArrayList<>();
             List<EncoderRef> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
             List<EncoderRef> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
-            if (md.localizer instanceof PinpointLocalizer) {
-                PinpointView pv = makePinpointView((PinpointLocalizer) md.localizer);
-                encoderGroups.add(new PinpointEncoderGroup(pv));
-                parEncs.add(new EncoderRef(0, 0));
-                perpEncs.add(new EncoderRef(0, 1));
-                lazyImu = new PinpointIMU(pv);
-            } else {
-                throw new RuntimeException("unknown localizer: " + md.localizer.getClass().getName());
-            }
+            PinpointView pv = makePinpointView((PinpointLocalizer) md.localizer);
+            encoderGroups.add(new PinpointEncoderGroup(pv));
+            parEncs.add(new EncoderRef(0, 0));
+            perpEncs.add(new EncoderRef(0, 1));
+            lazyImu = new PinpointIMU(pv);
 
             return new DriveView(
                 DriveType.MECANUM,
