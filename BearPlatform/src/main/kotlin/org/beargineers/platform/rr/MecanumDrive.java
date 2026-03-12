@@ -11,6 +11,7 @@ import com.acmerobotics.roadrunner.Actions;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
 import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.HolonomicController;
+import com.acmerobotics.roadrunner.IdentityPoseMap;
 import com.acmerobotics.roadrunner.MecanumKinematics;
 import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.MotorFeedforward;
@@ -24,6 +25,7 @@ import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.TimeTrajectory;
 import com.acmerobotics.roadrunner.TimeTurn;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.VelConstraint;
@@ -41,12 +43,15 @@ import org.beargineers.platform.rr.messages.DriveCommandMessage;
 import org.beargineers.platform.rr.messages.MecanumCommandMessage;
 import org.beargineers.platform.rr.messages.PoseMessage;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 @Config
 public final class MecanumDrive {
+
+    public static final int POSE_HISTORY_COUNT = 100;
+
     public static class Params {
         // drive model parameters
         public double inPerTick = 0.001986031578;
@@ -97,7 +102,7 @@ public final class MecanumDrive {
     public final VoltageSensor voltageSensor;
 
     public final Localizer localizer;
-    private final LinkedList<Pose2d> poseHistory = new LinkedList<>();
+    private final ArrayDeque<Pose2d> poseHistory = new ArrayDeque<>(POSE_HISTORY_COUNT);
 
     private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
@@ -338,7 +343,7 @@ public final class MecanumDrive {
         PoseVelocity2d vel = localizer.update();
         poseHistory.add(localizer.getPose());
         
-        while (poseHistory.size() > 100) {
+        while (poseHistory.size() >= POSE_HISTORY_COUNT) {
             poseHistory.removeFirst();
         }
 
