@@ -368,6 +368,21 @@ public final class MecanumDrive {
         c.strokePolyline(xPoints, yPoints);
     }
 
+    public MovesBuilder movesBuilder(Position startPosition) {
+        Pose2d beginPose = new Pose2d(startPosition.getX().inch(), startPosition.getY().inch(), startPosition.getHeading().radians());
+
+        return new MovesBuilder(new TrajectoryBuilder(
+                new TrajectoryBuilderParams(
+                        1e-6,
+                        new ProfileParams(
+                                0.25, 0.1, 1e-2
+                        )
+                ),
+                beginPose, 0.0,
+                defaultVelConstraint, defaultAccelConstraint,
+                new IdentityPoseMap()));
+    }
+
     public TrajectoryActionBuilder actionBuilder(Pose2d beginPose) {
         return new TrajectoryActionBuilder(
                 TurnAction::new,
