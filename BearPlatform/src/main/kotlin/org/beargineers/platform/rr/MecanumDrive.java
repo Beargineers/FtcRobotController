@@ -39,6 +39,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
+import org.beargineers.platform.Position;
 import org.beargineers.platform.rr.messages.DriveCommandMessage;
 import org.beargineers.platform.rr.messages.MecanumCommandMessage;
 import org.beargineers.platform.rr.messages.PoseMessage;
@@ -49,9 +50,6 @@ import java.util.List;
 
 @Config
 public final class MecanumDrive {
-
-    public static final int POSE_HISTORY_COUNT = 100;
-
     public static class Params {
         // drive model parameters
         public double inPerTick = 0.001986031578;
@@ -102,7 +100,7 @@ public final class MecanumDrive {
     public final VoltageSensor voltageSensor;
 
     public final Localizer localizer;
-    private final ArrayDeque<Pose2d> poseHistory = new ArrayDeque<>(POSE_HISTORY_COUNT);
+    private final ArrayDeque<Pose2d> poseHistory = new ArrayDeque<>(100);
 
     private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
@@ -343,7 +341,7 @@ public final class MecanumDrive {
         PoseVelocity2d vel = localizer.update();
         poseHistory.add(localizer.getPose());
         
-        while (poseHistory.size() >= POSE_HISTORY_COUNT) {
+        while (poseHistory.size() >= 100) {
             poseHistory.removeFirst();
         }
 
