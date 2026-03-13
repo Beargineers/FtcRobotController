@@ -1,5 +1,4 @@
 include ':FtcRobotController'
 include ':BearPlatform'
-include ':Alpha'
 include ':Strafer'
 include ':Beta'
