@@ -1,26 +1,26 @@
-package org.beargineers.platform.rr.tuning;
+package org.beargineers.platform.rr.tuning
 
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.acmerobotics.roadrunner.Pose2d
+import com.acmerobotics.roadrunner.ftc.runBlocking
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import org.beargineers.platform.Alliance
+import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Robot
+import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.rr.MecanumDrive
 
-import org.beargineers.platform.rr.MecanumDrive;
+@Autonomous(group = "Tune")
+class ManualFeedbackTuner : RobotOpMode<Robot>() {
+    val DISTANCE: Double = 64.0
+    override val alliance: Alliance get() = Alliance.RED
+    val drive = MecanumDrive(robot as BaseRobot)
 
-public final class ManualFeedbackTuner extends LinearOpMode {
-    public static double DISTANCE = 64;
-
-    @Override
-    public void runOpMode() throws InterruptedException {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-
-        waitForStart();
-
-        while (opModeIsActive()) {
-            Actions.runBlocking(
-                drive.actionBuilder(new Pose2d(0, 0, 0))
-                        .lineToX(DISTANCE)
-                        .lineToX(0)
-                        .build());
-        }
+    override fun bearLoop() {
+        runBlocking(
+            drive.actionBuilder(Pose2d(0.0, 0.0, 0.0))
+                .lineToX(DISTANCE)
+                .lineToX(0.0)
+                .build()
+        )
     }
 }
