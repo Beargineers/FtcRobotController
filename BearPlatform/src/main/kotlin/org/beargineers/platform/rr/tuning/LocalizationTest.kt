@@ -1,46 +1,28 @@
-package org.beargineers.platform.rr.tuning;
+package org.beargineers.platform.rr.tuning
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.PoseVelocity2d;
-import com.acmerobotics.roadrunner.Vector2d;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.acmerobotics.roadrunner.PoseVelocity2d
+import com.acmerobotics.roadrunner.Vector2d
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import org.beargineers.platform.Alliance
+import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Robot
+import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.rr.MecanumDrive
 
-import org.beargineers.platform.rr.Drawing;
-import org.beargineers.platform.rr.MecanumDrive;
+@Autonomous(group = "Tune")
+class LocalizationTest() : RobotOpMode<Robot>() {
+    val drive = MecanumDrive(robot as BaseRobot)
+    override val alliance: Alliance get() = Alliance.RED
 
-public class LocalizationTest extends LinearOpMode {
-    @Override
-    public void runOpMode() throws InterruptedException {
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-
-        waitForStart();
-
-        while (opModeIsActive()) {
-            drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(
-                            -gamepad1.left_stick_y,
-                            -gamepad1.left_stick_x
-                    ),
-                    -gamepad1.right_stick_x
-            ));
-
-            drive.updatePoseEstimate();
-
-            Pose2d pose = drive.localizer.getPose();
-            telemetry.addData("x", pose.position.x);
-            telemetry.addData("y", pose.position.y);
-            telemetry.addData("heading (deg)", Math.toDegrees(pose.heading.toDouble()));
-            telemetry.update();
-
-            TelemetryPacket packet = new TelemetryPacket();
-            packet.fieldOverlay().setStroke("#3F51B5");
-            Drawing.drawRobot(packet.fieldOverlay(), pose);
-            FtcDashboard.getInstance().sendTelemetryPacket(packet);
-        }
+    override fun bearLoop() {
+        drive.setDrivePowers(
+            PoseVelocity2d(
+                Vector2d(
+                    -gamepad1.left_stick_y.toDouble(),
+                    -gamepad1.left_stick_x.toDouble()
+                ),
+                -gamepad1.right_stick_x.toDouble()
+            )
+        )
     }
 }
