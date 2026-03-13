@@ -1,179 +1,190 @@
-package org.beargineers.platform.rr.tuning;
+package org.beargineers.platform.rr.tuning
 
-import androidx.annotation.NonNull;
+import com.acmerobotics.dashboard.FtcDashboard
+import com.acmerobotics.dashboard.config.reflection.ReflectionConfig
+import com.acmerobotics.dashboard.config.variable.CustomVariable
+import com.acmerobotics.roadrunner.MotorFeedforward
+import com.acmerobotics.roadrunner.Pose2d
+import com.acmerobotics.roadrunner.ftc.AngularRampLogger
+import com.acmerobotics.roadrunner.ftc.DeadWheelDirectionDebugger
+import com.acmerobotics.roadrunner.ftc.DriveType
+import com.acmerobotics.roadrunner.ftc.DriveView
+import com.acmerobotics.roadrunner.ftc.DriveViewFactory
+import com.acmerobotics.roadrunner.ftc.EncoderGroup
+import com.acmerobotics.roadrunner.ftc.EncoderRef
+import com.acmerobotics.roadrunner.ftc.ForwardPushTest
+import com.acmerobotics.roadrunner.ftc.ForwardRampLogger
+import com.acmerobotics.roadrunner.ftc.LateralRampLogger
+import com.acmerobotics.roadrunner.ftc.ManualFeedforwardTuner
+import com.acmerobotics.roadrunner.ftc.MecanumMotorDirectionDebugger
+import com.acmerobotics.roadrunner.ftc.PinpointEncoderGroup
+import com.acmerobotics.roadrunner.ftc.PinpointIMU
+import com.acmerobotics.roadrunner.ftc.PinpointView
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.OpModeManager
+import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar
+import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.beargineers.platform.RobotCentricPosition
+import org.beargineers.platform.inch
+import org.beargineers.platform.radians
+import org.beargineers.platform.rr.MecanumDrive
+import org.beargineers.platform.rr.PinpointLocalizer
+import org.beargineers.platform.rr.SimpleLocalizer
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
-import com.acmerobotics.roadrunner.MotorFeedforward;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ftc.AngularRampLogger;
-import com.acmerobotics.roadrunner.ftc.DeadWheelDirectionDebugger;
-import com.acmerobotics.roadrunner.ftc.DriveType;
-import com.acmerobotics.roadrunner.ftc.DriveView;
-import com.acmerobotics.roadrunner.ftc.DriveViewFactory;
-import com.acmerobotics.roadrunner.ftc.EncoderGroup;
-import com.acmerobotics.roadrunner.ftc.EncoderRef;
-import com.acmerobotics.roadrunner.ftc.ForwardPushTest;
-import com.acmerobotics.roadrunner.ftc.ForwardRampLogger;
-import com.acmerobotics.roadrunner.ftc.LateralRampLogger;
-import com.acmerobotics.roadrunner.ftc.LazyImu;
-import com.acmerobotics.roadrunner.ftc.ManualFeedforwardTuner;
-import com.acmerobotics.roadrunner.ftc.MecanumMotorDirectionDebugger;
-import com.acmerobotics.roadrunner.ftc.PinpointEncoderGroup;
-import com.acmerobotics.roadrunner.ftc.PinpointIMU;
-import com.acmerobotics.roadrunner.ftc.PinpointView;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+object TuningOpModes {
+    const val GROUP: String = "quickstart"
+    const val DISABLED: Boolean = false
 
-import org.beargineers.platform.rr.MecanumDrive;
-import org.beargineers.platform.rr.PinpointLocalizer;
-import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
-import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-public final class TuningOpModes {
-    public static final String GROUP = "quickstart";
-    public static final boolean DISABLED = false;
-
-    private TuningOpModes() {}
-
-    private static OpModeMeta metaForClass(Class<? extends OpMode> cls) {
-        return new OpModeMeta.Builder()
-                .setName(cls.getSimpleName())
-                .setGroup(GROUP)
-                .setFlavor(OpModeMeta.Flavor.TELEOP)
-                .build();
+    private fun metaForClass(cls: Class<out OpMode?>): OpModeMeta? {
+        return OpModeMeta.Builder()
+            .setName(cls.getSimpleName())
+            .setGroup(GROUP)
+            .setFlavor(OpModeMeta.Flavor.TELEOP)
+            .build()
     }
 
-    private static PinpointView makePinpointView(PinpointLocalizer pl) {
-        return new PinpointView() {
-            GoBildaPinpointDriver.EncoderDirection parDirection = pl.initialParDirection;
-            GoBildaPinpointDriver.EncoderDirection perpDirection = pl.initialPerpDirection;
+    private fun makePinpointView(pl: PinpointLocalizer): PinpointView {
+        return object : PinpointView {
+            private var driverParDirection: GoBildaPinpointDriver.EncoderDirection = pl.initialParDirection
+            private var driverPerpDirection: GoBildaPinpointDriver.EncoderDirection = pl.initialPerpDirection
 
-            @Override
-            public void update() {
-                pl.driver.update();
+            override var parDirection: DcMotorSimple.Direction
+                get() = if (driverParDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD) DcMotorSimple.Direction.FORWARD else DcMotorSimple.Direction.REVERSE
+                set(value) {
+                    driverParDirection =
+                        if (value == DcMotorSimple.Direction.FORWARD) GoBildaPinpointDriver.EncoderDirection.FORWARD else GoBildaPinpointDriver.EncoderDirection.REVERSED
+                    pl.driver.setEncoderDirections(driverParDirection, driverPerpDirection)
+                }
+
+            override var perpDirection: DcMotorSimple.Direction
+                get() = if (driverPerpDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD) DcMotorSimple.Direction.FORWARD else DcMotorSimple.Direction.REVERSE
+                set(value) {
+                    driverPerpDirection =
+                        if (value == DcMotorSimple.Direction.FORWARD) GoBildaPinpointDriver.EncoderDirection.FORWARD else GoBildaPinpointDriver.EncoderDirection.REVERSED
+                    pl.driver.setEncoderDirections(driverParDirection, driverPerpDirection)
+                }
+
+            override fun update() {
+                pl.driver.update()
             }
 
-            @Override
-            public int getParEncoderPosition() {
-                return pl.driver.getEncoderX();
+            override fun getParEncoderPosition(): Int {
+                return pl.driver.encoderX
             }
 
-            @Override
-            public int getPerpEncoderPosition() {
-                return pl.driver.getEncoderY();
+            override fun getPerpEncoderPosition(): Int {
+                return pl.driver.encoderY
             }
 
-            @Override
-            public float getHeadingVelocity(UnnormalizedAngleUnit unit) {
-                return (float) pl.driver.getHeadingVelocity(unit);
+            override fun getHeadingVelocity(unit: UnnormalizedAngleUnit): Float {
+                return pl.driver.getHeadingVelocity(unit).toFloat()
             }
+        }
+    }
 
-            @Override
-            public void setParDirection(@NonNull DcMotorSimple.Direction direction) {
-                parDirection = direction == DcMotorSimple.Direction.FORWARD ?
-                        GoBildaPinpointDriver.EncoderDirection.FORWARD :
-                        GoBildaPinpointDriver.EncoderDirection.REVERSED;
-                pl.driver.setEncoderDirections(parDirection, perpDirection);
-            }
+    class SimplePinpointLocalizer(val pl: PinpointLocalizer) : SimpleLocalizer {
+        override val currentPosition: org.beargineers.platform.Position get()  {
+            val pose = pl.pose
+            return org.beargineers.platform.Position(pose.position.x.inch, pose.position.y.inch, pose.heading.log().radians)
+        }
 
-            @Override
-            public DcMotorSimple.Direction getParDirection() {
-                return parDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD ?
-                        DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
-            }
-
-            @Override
-            public void setPerpDirection(@NonNull DcMotorSimple.Direction direction) {
-                perpDirection = direction == DcMotorSimple.Direction.FORWARD ?
-                        GoBildaPinpointDriver.EncoderDirection.FORWARD :
-                        GoBildaPinpointDriver.EncoderDirection.REVERSED;
-                pl.driver.setEncoderDirections(parDirection, perpDirection);
-            }
-
-            @Override
-            public DcMotorSimple.Direction getPerpDirection() {
-                return perpDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD ?
-                        DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
-            }
-        };
+        override val currentVelocity: RobotCentricPosition get() {
+            val vel = pl.update()
+            return RobotCentricPosition(vel.linearVel.x.inch, vel.linearVel.y.inch, vel.angVel.radians)
+        }
     }
 
     @OpModeRegistrar
-    public static void register(OpModeManager manager) {
-        if (DISABLED) return;
+    fun register(manager: OpModeManager) {
+        if (DISABLED) return
 
-        DriveViewFactory dvf = hardwareMap -> {
-            MecanumDrive md = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
-            LazyImu lazyImu;
+        val dvf: DriveViewFactory = object : DriveViewFactory {
+            override fun make(h: HardwareMap): DriveView {
+                val pl = PinpointLocalizer(h, Pose2d(0.0, 0.0, 0.0))
 
-            List<EncoderGroup> encoderGroups = new ArrayList<>();
-            List<EncoderRef> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
-            List<EncoderRef> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
-            PinpointView pv = makePinpointView((PinpointLocalizer) md.localizer);
-            encoderGroups.add(new PinpointEncoderGroup(pv));
-            parEncs.add(new EncoderRef(0, 0));
-            perpEncs.add(new EncoderRef(0, 1));
-            lazyImu = new PinpointIMU(pv);
+                val md = MecanumDrive(h, SimplePinpointLocalizer(pl))
 
-            return new DriveView(
-                DriveType.MECANUM,
+                val encoderGroups = mutableListOf<EncoderGroup>()
+                val leftEncs = mutableListOf<EncoderRef>()
+                val rightEncs = mutableListOf<EncoderRef>()
+                val parEncs = mutableListOf<EncoderRef>()
+                val perpEncs = mutableListOf<EncoderRef>()
+                val pv = makePinpointView(pl)
+                encoderGroups.add(PinpointEncoderGroup(pv))
+                parEncs.add(EncoderRef(0, 0))
+                perpEncs.add(EncoderRef(0, 1))
+                val lazyImu = PinpointIMU(pv)
+
+                return DriveView(
+                    DriveType.MECANUM,
                     MecanumDrive.PARAMS.inPerTick,
                     MecanumDrive.PARAMS.maxWheelVel,
                     MecanumDrive.PARAMS.minProfileAccel,
                     MecanumDrive.PARAMS.maxProfileAccel,
                     encoderGroups,
-                    Arrays.asList(
-                            md.leftFront,
-                            md.leftBack
-                    ),
-                    Arrays.asList(
-                            md.rightFront,
-                            md.rightBack
-                    ),
+                    listOf(md.leftFront, md.leftBack),
+                    listOf(md.rightFront, md.rightBack),
                     leftEncs,
                     rightEncs,
                     parEncs,
                     perpEncs,
                     lazyImu,
                     md.voltageSensor,
-                    () -> new MotorFeedforward(MecanumDrive.PARAMS.kS,
+                    {
+                        MotorFeedforward(
+                            MecanumDrive.PARAMS.kS,
                             MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick,
-                            MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick),
+                            MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick
+                        )
+                    },
                     0
-            );
-        };
-
-        manager.register(metaForClass(AngularRampLogger.class), new AngularRampLogger(dvf));
-        manager.register(metaForClass(ForwardPushTest.class), new ForwardPushTest(dvf));
-        manager.register(metaForClass(ForwardRampLogger.class), new ForwardRampLogger(dvf));
-        manager.register(metaForClass(LateralRampLogger.class), new LateralRampLogger(dvf));
-        manager.register(metaForClass(ManualFeedforwardTuner.class), new ManualFeedforwardTuner(dvf));
-        manager.register(metaForClass(MecanumMotorDirectionDebugger.class), new MecanumMotorDirectionDebugger(dvf));
-        manager.register(metaForClass(DeadWheelDirectionDebugger.class), new DeadWheelDirectionDebugger(dvf));
-
-        manager.register(metaForClass(ManualFeedbackTuner.class), ManualFeedbackTuner.class);
-        manager.register(metaForClass(SplineTest.class), SplineTest.class);
-        manager.register(metaForClass(LocalizationTest.class), LocalizationTest.class);
-
-        FtcDashboard.getInstance().withConfigRoot(configRoot -> {
-            for (Class<?> c : Arrays.asList(
-                    AngularRampLogger.class,
-                    ForwardRampLogger.class,
-                    LateralRampLogger.class,
-                    ManualFeedforwardTuner.class,
-                    MecanumMotorDirectionDebugger.class,
-                    ManualFeedbackTuner.class
-            )) {
-                configRoot.putVariable(c.getSimpleName(), ReflectionConfig.createVariableFromClass(c));
+                )
             }
-        });
+        }
+
+        manager.register(metaForClass(AngularRampLogger::class.java), AngularRampLogger(dvf))
+        manager.register(metaForClass(ForwardPushTest::class.java), ForwardPushTest(dvf))
+        manager.register(metaForClass(ForwardRampLogger::class.java), ForwardRampLogger(dvf))
+        manager.register(metaForClass(LateralRampLogger::class.java), LateralRampLogger(dvf))
+        manager.register(
+            metaForClass(ManualFeedforwardTuner::class.java),
+            ManualFeedforwardTuner(dvf)
+        )
+        manager.register(
+            metaForClass(MecanumMotorDirectionDebugger::class.java),
+            MecanumMotorDirectionDebugger(dvf)
+        )
+        manager.register(
+            metaForClass(DeadWheelDirectionDebugger::class.java),
+            DeadWheelDirectionDebugger(dvf)
+        )
+
+        manager.register(
+            metaForClass(ManualFeedbackTuner::class.java),
+            ManualFeedbackTuner::class.java
+        )
+        manager.register(metaForClass(SplineTest::class.java), SplineTest::class.java)
+        manager.register(metaForClass(LocalizationTest::class.java), LocalizationTest::class.java)
+
+        FtcDashboard.getInstance()
+            .withConfigRoot { configRoot: CustomVariable ->
+                for (c in listOf(
+                    AngularRampLogger::class.java,
+                    ForwardRampLogger::class.java,
+                    LateralRampLogger::class.java,
+                    ManualFeedforwardTuner::class.java,
+                    MecanumMotorDirectionDebugger::class.java,
+                    ManualFeedbackTuner::class.java
+                )) {
+                    configRoot.putVariable(
+                        c.getSimpleName(),
+                        ReflectionConfig.createVariableFromClass(c)
+                    )
+                }
+            }
     }
 }
