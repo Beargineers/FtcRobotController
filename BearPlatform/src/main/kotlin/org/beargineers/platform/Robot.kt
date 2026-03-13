@@ -8,7 +8,6 @@ interface Robot {
     fun driveToTarget(target: Position): Boolean
 
     fun drive(forwardPower: Double, rightPower: Double, turnPower: Double)
-    fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double)
 
     fun stopDriving()
 

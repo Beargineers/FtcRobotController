@@ -68,14 +68,6 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         TODO("Not yet implemented")
     }
 
-    override fun driveByPowerAndAngle(
-        theta: Double,
-        power: Double,
-        turn: Double
-    ) {
-        TODO("Not yet implemented")
-    }
-
     override fun stopDriving() {
     }
 

@@ -1,22 +1,18 @@
-package org.beargineers.platform.rr;
+package org.beargineers.platform.rr
 
-import com.acmerobotics.dashboard.canvas.Canvas;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.dashboard.canvas.Canvas
+import com.acmerobotics.roadrunner.Pose2d
 
-public final class Drawing {
-    private Drawing() {}
+object Drawing {
+    fun drawRobot(c: Canvas, t: Pose2d) {
+        val ROBOT_RADIUS = 9.0
 
+        c.setStrokeWidth(1)
+        c.strokeCircle(t.position.x, t.position.y, ROBOT_RADIUS)
 
-    public static void drawRobot(Canvas c, Pose2d t) {
-        final double ROBOT_RADIUS = 9;
-
-        c.setStrokeWidth(1);
-        c.strokeCircle(t.position.x, t.position.y, ROBOT_RADIUS);
-
-        Vector2d halfv = t.heading.vec().times(0.5 * ROBOT_RADIUS);
-        Vector2d p1 = t.position.plus(halfv);
-        Vector2d p2 = p1.plus(halfv);
-        c.strokeLine(p1.x, p1.y, p2.x, p2.y);
+        val halfv = t.heading.vec().times(0.5 * ROBOT_RADIUS)
+        val p1 = t.position.plus(halfv)
+        val p2 = p1.plus(halfv)
+        c.strokeLine(p1.x, p1.y, p2.x, p2.y)
     }
 }

@@ -6,6 +6,7 @@ import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
+import org.beargineers.platform.rr.RRPathFollower
 
 
 abstract class RobotOpMode<T : Robot>() : OpMode() {
@@ -153,13 +154,13 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
                 right_stick_x.touched() || right_stick_y.touched()
     }
 
-    private var currentFollower: PathFollower? = null
+    private var currentFollower: RRPathFollower? = null
 
     fun followPath(waypoints: List<Waypoint>): Boolean {
         // Check if this is a new path (different instance)
         if (currentFollower?.path != waypoints) {
             // Create new PathFollower for this path
-            currentFollower = PathFollower(
+            currentFollower = RRPathFollower(
                 robot = robot as BaseRobot,
                 path = waypoints,
                 startPosition = robot.currentPosition
