@@ -1,18 +1,18 @@
-package org.beargineers.platform.rr.messages;
+package org.beargineers.platform.rr.messages
 
-import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Pose2d
 
-public final class PoseMessage {
-    public long timestamp;
-    public double x;
-    public double y;
-    public double heading;
+class PoseMessage(pose: Pose2d) {
+    var timestamp: Long
+    var x: Double
+    var y: Double
+    var heading: Double
 
-    public PoseMessage(Pose2d pose) {
-        this.timestamp = System.nanoTime();
-        this.x = pose.position.x;
-        this.y = pose.position.y;
-        this.heading = pose.heading.toDouble();
+    init {
+        this.timestamp = System.nanoTime()
+        this.x = pose.position.x
+        this.y = pose.position.y
+        this.heading = pose.heading.toDouble()
     }
 }
 

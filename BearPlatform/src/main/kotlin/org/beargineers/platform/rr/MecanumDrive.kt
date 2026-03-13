@@ -16,9 +16,11 @@ import com.acmerobotics.roadrunner.PoseVelocity2d
 import com.acmerobotics.roadrunner.PoseVelocity2dDual
 import com.acmerobotics.roadrunner.ProfileAccelConstraint
 import com.acmerobotics.roadrunner.ProfileParams
+import com.acmerobotics.roadrunner.SequentialAction
 import com.acmerobotics.roadrunner.Time
 import com.acmerobotics.roadrunner.TimeTrajectory
 import com.acmerobotics.roadrunner.TimeTurn
+import com.acmerobotics.roadrunner.Trajectory
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder
 import com.acmerobotics.roadrunner.TrajectoryBuilder
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams
@@ -26,7 +28,6 @@ import com.acmerobotics.roadrunner.TurnConstraints
 import com.acmerobotics.roadrunner.Vector2d
 import com.acmerobotics.roadrunner.VelConstraint
 import com.acmerobotics.roadrunner.ftc.DownsampledWriter
-import com.acmerobotics.roadrunner.ftc.FlightRecorder.write
 import com.acmerobotics.roadrunner.ftc.throwIfModulesAreOutdated
 import com.acmerobotics.roadrunner.now
 import com.acmerobotics.roadrunner.range
@@ -120,10 +121,10 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
     
     private val poseHistory = ArrayDeque<Pose2d>(100)
 
-    private val estimatedPoseWriter = DownsampledWriter("ESTIMATED_POSE", 50000000)
-    private val targetPoseWriter = DownsampledWriter("TARGET_POSE", 50000000)
-    private val driveCommandWriter = DownsampledWriter("DRIVE_COMMAND", 50000000)
-    private val mecanumCommandWriter = DownsampledWriter("MECANUM_COMMAND", 50000000)
+    private val estimatedPoseWriter = DownsampledWriter("ESTIMATED_POSE", 50000000).nullWriter()
+    private val targetPoseWriter = DownsampledWriter("TARGET_POSE", 50000000).nullWriter()
+    private val driveCommandWriter = DownsampledWriter("DRIVE_COMMAND", 50000000).nullWriter()
+    private val mecanumCommandWriter = DownsampledWriter("MECANUM_COMMAND", 50000000).nullWriter()
 
     init {
         throwIfModulesAreOutdated(hardwareMap)
@@ -152,7 +153,7 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next()
 
-        write("MECANUM_PARAMS", PARAMS)
+        //FlightRecorder.write("MECANUM_PARAMS", PARAMS)
     }
     
     private fun getPose(): Pose2d {
@@ -314,7 +315,7 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
                 .compute(txWorldTarget, getPose(), robotVelRobot)
             driveCommandWriter.write(DriveCommandMessage(command))
 
-            val wheelVels = kinematics.inverse<Time>(command)
+            val wheelVels = kinematics.inverse(command)
             val voltage = voltageSensor.getVoltage()
             val feedforward = MotorFeedforward(
                 PARAMS.kS,
@@ -405,6 +406,10 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
         )
     }
 
+    fun followAction(trajectories: List<Trajectory>): Action {
+        return SequentialAction(trajectories.map { FollowTrajectoryAction(TimeTrajectory(it)) })
+    }
+
     fun actionBuilder(beginPose: Pose2d): TrajectoryActionBuilder {
         return TrajectoryActionBuilder(
             { turn: TimeTurn -> TurnAction(turn) },
@@ -425,4 +430,10 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
         
         var PARAMS: Params = Params()
     }
+}
+
+fun DownsampledWriter.nullWriter() = NullWriter(this)
+
+class NullWriter(val writer: DownsampledWriter) {
+    fun write(msg: Any) {}
 }

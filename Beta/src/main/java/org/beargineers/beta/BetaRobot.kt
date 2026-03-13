@@ -2,12 +2,12 @@ package org.beargineers.beta
 
 import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Drivetrain
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.IndicatingRelativeLocalizer
 import org.beargineers.platform.LedIndicator
 import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
-import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.blink
@@ -18,10 +18,30 @@ import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
 import kotlin.time.Duration.Companion.seconds
 
+class NullDrive : Drivetrain {
+    override fun stop() {
+
+    }
+
+    override fun drive(
+        forwardPower: Double,
+        rightPower: Double,
+        turnPower: Double
+    ) {
+    }
+
+    override fun driveByPowerAndAngle(
+        theta: Double,
+        power: Double,
+        turn: Double
+    ) {
+    }
+}
+
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     var lowFPSMode = false
     private var manualAngleCorrection = 0.0
-    override val drive = MecanumDrive(this)
+    override val drive = NullDrive()
     override fun adjustShooting(distance: Double, angle: Double) {
         shooter.manualPowerAdjustment += distance
         manualAngleCorrection += angle

@@ -6,6 +6,7 @@ import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.robotcore.util.ElapsedTime
+import org.beargineers.platform.rr.MecanumDrive
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import kotlin.math.PI
 import kotlin.math.cosh
@@ -21,6 +22,8 @@ private val PANELS_SHOW_PATH by config(false)
 
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
+
+    val mecanumDrive = MecanumDrive(this)
 
     abstract val localizer: Localizer
     val allHardware = mutableListOf<Hardware>()
@@ -182,10 +185,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
      */
     override fun driveToTarget(target: Position): Boolean {
         return followPath(pathTo(target))
-    }
-
-    override fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
-        drive.driveByPowerAndAngle(theta, power, turn)
     }
 
     override fun drive(

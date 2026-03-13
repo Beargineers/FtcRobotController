@@ -1,19 +1,15 @@
-package org.beargineers.platform.rr.messages;
+package org.beargineers.platform.rr.messages
 
-public final class MecanumCommandMessage {
-    public long timestamp;
-    public double voltage;
-    public double leftFrontPower;
-    public double leftBackPower;
-    public double rightBackPower;
-    public double rightFrontPower;
+class MecanumCommandMessage(
+    var voltage: Double,
+    var leftFrontPower: Double,
+    var leftBackPower: Double,
+    var rightBackPower: Double,
+    var rightFrontPower: Double
+) {
+    var timestamp: Long
 
-    public MecanumCommandMessage(double voltage, double leftFrontPower, double leftBackPower, double rightBackPower, double rightFrontPower) {
-        this.timestamp = System.nanoTime();
-        this.voltage = voltage;
-        this.leftFrontPower = leftFrontPower;
-        this.leftBackPower = leftBackPower;
-        this.rightBackPower = rightBackPower;
-        this.rightFrontPower = rightFrontPower;
+    init {
+        this.timestamp = System.nanoTime()
     }
 }

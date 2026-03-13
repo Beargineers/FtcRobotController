@@ -88,7 +88,7 @@ object TuningOpModes {
 
     class SimplePinpointLocalizer(val pl: PinpointLocalizer) : SimpleLocalizer {
         override val currentPosition: org.beargineers.platform.Position get()  {
-            val pose = pl.pose
+            val pose = pl.getPose()
             return org.beargineers.platform.Position(pose.position.x.inch, pose.position.y.inch, pose.heading.log().radians)
         }
 
