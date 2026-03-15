@@ -56,10 +56,6 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         } as T
     }
 
-    override fun driveToTarget(target: Position): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun drive(
         forwardPower: Double,
         rightPower: Double,
