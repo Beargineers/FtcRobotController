@@ -3,6 +3,7 @@ package org.beargineers.platform.decode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
+import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.cm
@@ -155,19 +156,13 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         telemetry.addData("Goal locked", if (lookAtGoal) "YES" else "NO")
 
-        if (!fpvDrive) {
+        val delta = if (!fpvDrive) {
             val sign = if (alliance == Alliance.BLUE) -1 else 1
 
             val dx = gamepad1.left_stick_x.toDouble() * POSITIONAL_GAIN * sign
             val dy = gamepad1.left_stick_y.toDouble() * POSITIONAL_GAIN * -sign
 
-            val heading: Angle = commandedHeading()
-
-            val deltaPosition = Position(dx.cm, dy.cm, heading - robot.currentPosition.heading)
-
-            val targetPosition = robot.currentPosition.plus(deltaPosition)
-            robot.targetSpeed = if (slow) slowCoeff else 1.0
-            robot.driveToTarget(targetPosition)
+            Location(dx.cm, dy.cm)
         } else {
             val h = robot.currentPosition.heading - robot.shootingAngleCorrectionForMovement()
             val forward = -gamepad1.left_stick_y.normalize().cm
@@ -175,14 +170,15 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN.toDouble()
             val dy = (forward * sin(h) - strafe * cos(h)) * POSITIONAL_GAIN.toDouble()
 
-            val heading: Angle = commandedHeading()
-
-            val deltaPosition = Position(dx, dy, heading - robot.currentPosition.heading)
-
-            val targetPosition = robot.currentPosition.plus(deltaPosition)
-            robot.targetSpeed = if (slow) slowCoeff else 1.0
-            robot.driveToTarget(targetPosition)
+            Location(dx, dy)
         }
+
+        val heading: Angle = commandedHeading()
+        val deltaPosition = Position(delta.x, delta.y, heading - robot.currentPosition.heading)
+
+        val targetPosition = robot.currentPosition.plus(deltaPosition)
+        robot.targetSpeed = if (slow) slowCoeff else 1.0
+        robot.driveToTarget(targetPosition)
     }
 
     private fun commandedHeading(): Angle {
