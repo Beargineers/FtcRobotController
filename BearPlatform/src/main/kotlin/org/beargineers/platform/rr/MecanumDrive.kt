@@ -6,7 +6,6 @@ import com.acmerobotics.roadrunner.AccelConstraint
 import com.acmerobotics.roadrunner.Action
 import com.acmerobotics.roadrunner.AngularVelConstraint
 import com.acmerobotics.roadrunner.HolonomicController
-import com.acmerobotics.roadrunner.IdentityPoseMap
 import com.acmerobotics.roadrunner.MecanumKinematics
 import com.acmerobotics.roadrunner.MinVelConstraint
 import com.acmerobotics.roadrunner.MotorFeedforward
@@ -16,13 +15,10 @@ import com.acmerobotics.roadrunner.PoseVelocity2d
 import com.acmerobotics.roadrunner.PoseVelocity2dDual
 import com.acmerobotics.roadrunner.ProfileAccelConstraint
 import com.acmerobotics.roadrunner.ProfileParams
-import com.acmerobotics.roadrunner.SequentialAction
 import com.acmerobotics.roadrunner.Time
 import com.acmerobotics.roadrunner.TimeTrajectory
 import com.acmerobotics.roadrunner.TimeTurn
-import com.acmerobotics.roadrunner.Trajectory
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder
-import com.acmerobotics.roadrunner.TrajectoryBuilder
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams
 import com.acmerobotics.roadrunner.TurnConstraints
 import com.acmerobotics.roadrunner.Vector2d
@@ -388,26 +384,13 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
     }
 
     fun movesBuilder(startPosition: Position): MovesBuilder {
-        val beginPose =
-            Pose2d(startPosition.x.inch(), startPosition.y.inch(), startPosition.heading.radians())
-
-        return MovesBuilder(
-            TrajectoryBuilder(
-                TrajectoryBuilderParams(
-                    1e-6,
-                    ProfileParams(
-                        0.25, 0.1, 1e-2
-                    )
-                ),
-                beginPose, 0.0,
-                defaultVelConstraint, defaultAccelConstraint,
-                IdentityPoseMap()
+        return MovesBuilder(actionBuilder(
+            Pose2d(
+                startPosition.x.inch(),
+                startPosition.y.inch(),
+                startPosition.heading.radians()
             )
-        )
-    }
-
-    fun followAction(trajectories: List<Trajectory>): Action {
-        return SequentialAction(trajectories.map { FollowTrajectoryAction(TimeTrajectory(it)) })
+        ))
     }
 
     fun actionBuilder(beginPose: Pose2d): TrajectoryActionBuilder {

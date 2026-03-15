@@ -29,11 +29,15 @@ class RRPathFollower(
                     prev = next
                     hasMoves = true
                 }
+                else if (next.heading != prev.heading) {
+                    turnTo(next.heading)
+                    hasMoves = true
+                }
             }
         }
 
         action = if (hasMoves) {
-            robot.mecanumDrive.followAction(movesBuilder.build())
+            movesBuilder.build()
         } else {
             NullAction()
         }
