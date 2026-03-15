@@ -48,7 +48,6 @@ class Tune_TwoTileLoop : TestOp() {
 @Autonomous(group = "Tune")
 class Tune_OneTileLeft : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
-        wait(3.seconds)
         driveRelative(RobotCentricPosition.right(-24.inch))
     }
 }
@@ -56,7 +55,6 @@ class Tune_OneTileLeft : TestOp() {
 @Autonomous(group = "Tune")
 class Tune_Turn90CCW : TestOp() {
     override fun PhaseBuilder<DecodeRobot>.phases() {
-        wait(3.seconds)
         driveRelative(RobotCentricPosition.turnCCW(90.degrees))
     }
 }

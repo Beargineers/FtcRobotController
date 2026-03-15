@@ -2,7 +2,8 @@ package org.beargineers.platform.rr
 
 import com.acmerobotics.roadrunner.AccelConstraint
 import com.acmerobotics.roadrunner.Pose2d
-import com.acmerobotics.roadrunner.TrajectoryBuilder
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder
+import com.acmerobotics.roadrunner.TurnConstraints
 import com.acmerobotics.roadrunner.Vector2d
 import com.acmerobotics.roadrunner.VelConstraint
 import org.beargineers.platform.Angle
@@ -10,9 +11,11 @@ import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 
-class MovesBuilder(private var rrBuilder: TrajectoryBuilder) {
+class MovesBuilder(private var rrBuilder: TrajectoryActionBuilder) {
     var curVelocityContsraint: VelConstraint? = null
     var curAccelerationConstraint: AccelConstraint? = null
+
+    var curTurnConstraints: TurnConstraints? = null
 
     fun setTangent(r: Angle) {
         rrBuilder = rrBuilder.setTangent(r.radians())
@@ -22,16 +25,23 @@ class MovesBuilder(private var rrBuilder: TrajectoryBuilder) {
         rrBuilder = rrBuilder.setReversed(reversed)
     }
 
-    fun constrainVelocity(velConstraint: VelConstraint, body: () -> Unit) {
-        val old = curVelocityContsraint
-        body()
-        curVelocityContsraint = old
-    }
+    fun withConstraints(
+        velConstraint: VelConstraint? = null,
+        accelConstraint: AccelConstraint? = null,
+        turnConstraints: TurnConstraints? = null, body: () -> Unit
+    ) {
+        val oldVel = curVelocityContsraint
+        val oldAccel = curAccelerationConstraint
+        val oldTurn = curTurnConstraints
+        if (velConstraint != null) curVelocityContsraint = velConstraint
+        if (accelConstraint != null) curAccelerationConstraint = accelConstraint
+        if (turnConstraints != null) curTurnConstraints = turnConstraints
 
-    fun constrainAcceleration(accelConstraint: AccelConstraint, body: () -> Unit) {
-        val old = curAccelerationConstraint
         body()
-        curAccelerationConstraint = old
+
+        curVelocityContsraint = oldVel
+        curAccelerationConstraint = oldAccel
+        curTurnConstraints = oldTurn
     }
 
     fun lineToX(posX: Distance) {
@@ -99,6 +109,10 @@ class MovesBuilder(private var rrBuilder: TrajectoryBuilder) {
 
     fun splineToSplineHeading(position: Position, tangent: Angle) {
         rrBuilder = rrBuilder.splineToSplineHeading(position.toPose2D(), tangent.radians(), curVelocityContsraint, curAccelerationConstraint)
+    }
+
+    fun turnTo(angle: Angle) {
+        rrBuilder = rrBuilder.turnTo(angle.radians(), curTurnConstraints)
     }
 
     fun build() = rrBuilder.build()
