@@ -7,6 +7,8 @@ data class Waypoint(
     val headingTolerance: Angle?
 )
 
+fun <T: Robot> T.driveToTarget(target: Position): Boolean = followPath(pathTo(target))
+
 fun <T: Robot> T.followPath(path: List<Waypoint>): Boolean {
     return opMode.followPath(path)
 }
