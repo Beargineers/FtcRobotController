@@ -30,6 +30,7 @@ import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.inch
 import org.beargineers.platform.radians
 import org.beargineers.platform.rr.MecanumDrive
+import org.beargineers.platform.rr.MecanumTuning
 import org.beargineers.platform.rr.PinpointLocalizer
 import org.beargineers.platform.rr.SimpleLocalizer
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
@@ -121,10 +122,10 @@ object TuningOpModes {
 
                 return DriveView(
                     DriveType.MECANUM,
-                    MecanumDrive.PARAMS.inPerTick,
-                    MecanumDrive.PARAMS.maxWheelVel,
-                    MecanumDrive.PARAMS.minProfileAccel,
-                    MecanumDrive.PARAMS.maxProfileAccel,
+                    MecanumTuning.inPerTick,
+                    MecanumTuning.maxWheelVel.inch(),
+                    MecanumTuning.minProfileAccel.inch(),
+                    MecanumTuning.maxProfileAccel.inch(),
                     encoderGroups,
                     listOf(md.leftFront, md.leftBack),
                     listOf(md.rightFront, md.rightBack),
@@ -136,9 +137,9 @@ object TuningOpModes {
                     md.voltageSensor,
                     {
                         MotorFeedforward(
-                            MecanumDrive.PARAMS.kS,
-                            MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick,
-                            MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick
+                            MecanumTuning.kS,
+                            MecanumTuning.kV / MecanumTuning.inPerTick,
+                            MecanumTuning.kA / MecanumTuning.inPerTick
                         )
                     },
                     0
