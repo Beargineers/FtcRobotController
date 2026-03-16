@@ -22,7 +22,7 @@ The official FTC SDK module. Contains the Robot Controller app and core FTC libr
 Reusable robotics framework library providing:
 - Hardware abstraction with property delegates
 - Base robot class with position tracking and navigation
-- Phased autonomous system with composite pattern
+- Coroutine-based autonomous routines with structured concurrency
 - OpMode base classes for TeleOp and Autonomous
 - Alliance system for field position mirroring
 
