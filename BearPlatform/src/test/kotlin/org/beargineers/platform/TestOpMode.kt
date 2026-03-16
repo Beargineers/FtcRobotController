@@ -7,6 +7,10 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 
 class TestOpMode : RobotOpMode<Robot>() {
     override val alliance: Alliance = Alliance.RED
+
+    override suspend fun Robot.autoProgram() {
+        // Do nothing by default
+    }
 }
 
 class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
@@ -56,7 +60,7 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         } as T
     }
 
-    override fun drive(
+    override fun motorPowers(
         forwardPower: Double,
         rightPower: Double,
         turnPower: Double

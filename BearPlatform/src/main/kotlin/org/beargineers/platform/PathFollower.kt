@@ -124,7 +124,7 @@ internal class PathFollower(
         val turnPower = -headingPID.result().dezeroify()
 
         robot.targetSpeed = currentWaypoint.speed
-        robot.drive(forwardPower,strafePower, turnPower)
+        robot.motorPowers(forwardPower,strafePower, turnPower)
 
         return true
     }

@@ -13,11 +13,10 @@ import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.degrees
+import org.beargineers.platform.drivePath
+import org.beargineers.platform.driveRelative
 import org.beargineers.platform.inch
 import org.beargineers.platform.pathTo
-import org.beargineers.platform.runAuto
-import org.beargineers.platform.s_driveRelative
-import org.beargineers.platform.s_followPath
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.toFieldCentric
 import kotlin.time.Duration.Companion.seconds
@@ -30,14 +29,14 @@ abstract class TestOp : RobotOpMode<DecodeRobot>() {
 class Tune_TwoTileLoop : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
         repeat(5) {
-            s_driveRelative(RobotCentricPosition.forward(48.inch))
-            s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
-            s_driveRelative(RobotCentricPosition.forward(48.inch))
-            s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
-            s_driveRelative(RobotCentricPosition.forward(48.inch))
-            s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
-            s_driveRelative(RobotCentricPosition.forward(48.inch))
-            s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            driveRelative(RobotCentricPosition.forward(48.inch))
+            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
         }
     }
 }
@@ -45,14 +44,14 @@ class Tune_TwoTileLoop : TestOp() {
 @Autonomous(group = "Tune")
 class Tune_OneTileLeft : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
-        s_driveRelative(RobotCentricPosition.right(-24.inch))
+        driveRelative(RobotCentricPosition.right(-24.inch))
     }
 }
 
 @Autonomous(group = "Tune")
 class Tune_Turn90CCW : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
-        s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+        driveRelative(RobotCentricPosition.turnCCW(90.degrees))
     }
 }
 
@@ -113,24 +112,20 @@ class Tune_automationTimingCheck: TestOp() {
 
             assumePosition(startingPoint)
 
-            runAuto {
-                followPathAndShoot(pathTo(launchPoint, locations.INITIAL_SHOT_SPEED))
-            }
+            followPathAndShoot(pathTo(launchPoint, locations.INITIAL_SHOT_SPEED))
 
             val secondScoop = scoopSpikePath(2)
-            s_followPath(secondScoop + openRampPath())
+            drivePath(secondScoop + openRampPath())
 
             delay(1.seconds)
-            runAuto {
-                followPathAndShoot(pathTo(launchPoint))
-                // Far shooting zone
-                scoopAndShoot(3, launchPoint)
-                scoopAndShoot(1, launchPoint)
-            }
+            followPathAndShoot(pathTo(launchPoint))
+            // Far shooting zone
+            scoopAndShoot(3, launchPoint)
+            scoopAndShoot(1, launchPoint)
 
             println("TUNING_TIMER: ${timer.milliseconds().toInt()} ms drive: ${(robot as BaseRobot).drive_K} translation: ${(robot as BaseRobot).translational_K} heading: ${(robot as BaseRobot).heading_K} drive2: ${(robot as BaseRobot).drive_K2}")
 
-            s_followPath(pathTo(startingPoint))
+            drivePath(pathTo(startingPoint))
         }
     }
 }
@@ -148,7 +143,7 @@ private suspend fun DecodeRobot.doTuning(
         val forth = pathTo(shift(currentPosition))
 
         val timer = System.currentTimeMillis()
-        s_followPath(forth)
+        drivePath(forth)
 
         val error = forth.first().target.distanceTo(currentPosition)
         println("TUNETIME: ${System.currentTimeMillis() - timer} ERROR: ${error.cm()}cm PID: ${coeff((this as BaseRobot))}}")
@@ -156,7 +151,7 @@ private suspend fun DecodeRobot.doTuning(
         delay(0.5.seconds)
 
         val back = pathTo(shiftBack(currentPosition), speed = locations.INITIAL_SHOT_SPEED)
-        s_followPath(back)
+        drivePath(back)
 
         delay(0.5.seconds)
 
@@ -175,7 +170,7 @@ translational_K=0.025, 0.002, 0.0035, 0.3
 class Tune_C1ToC6Forward : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
         assumePosition(tilePosition("C1:180"))
-        s_followPath(pathTo(tilePosition("C6:180")))
+        drivePath(pathTo(tilePosition("C6:180")))
     }
 }
 
@@ -183,6 +178,6 @@ class Tune_C1ToC6Forward : TestOp() {
 class Tune_B1ToB6Left : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
         assumePosition(tilePosition("B1:90"))
-        s_followPath(pathTo(tilePosition("B6:90")))
+        drivePath(pathTo(tilePosition("B6:90")))
     }
 }
