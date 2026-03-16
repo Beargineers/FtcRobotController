@@ -1,6 +1,7 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlinx.coroutines.CoroutineScope
 import kotlin.time.Duration
 
 /**
@@ -621,44 +622,13 @@ class PhaseBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
 }
 
 abstract class PhasedAutonomous<R: Robot>() : RobotOpMode<R>() {
-    val rootPhase by lazy {
-        val builder = PhaseBuilder<R>(this)
-        with(builder) {
-            phases()
-        }
-        SequentialPhase("Plan", builder.build())
-    }
-
     abstract fun PhaseBuilder<R>.phases()
 
-    /** Whether the root phase has been initialized */
-    private var initialized = false
-
-    /** Timer tracking elapsed time for the entire autonomous */
-    private val totalTime = ElapsedTime()
-
-    override fun bearLoop() {
-        super.bearLoop()
-
-        // Initialize the root phase on first loop
-        if (!initialized) {
-            with(rootPhase) {
-                robot.initPhase()
-            }
-            totalTime.reset()
-            initialized = true
-            telemetry.addData("Phase", rootPhase.name())
+    override suspend fun CoroutineScope.autoProgram() {
+        robot.runAuto {
+            phases()
         }
 
-        // Execute the root phase
-        val continueRunning = with(rootPhase) {
-            robot.loopPhase(totalTime)
-        }
-
-        // Stop when complete
-        if (!continueRunning) {
-            telemetry.addData("Status", "Complete!")
-            stop()
-        }
+        telemetry.addData("Status", "Complete!")
     }
 }
