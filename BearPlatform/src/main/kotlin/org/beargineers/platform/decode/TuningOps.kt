@@ -25,17 +25,11 @@ import kotlin.time.Duration.Companion.seconds
 
 abstract class TestOp : RobotOpMode<DecodeRobot>() {
     override val alliance = Alliance.BLUE
-
-    abstract suspend fun CoroutineScope.run()
-    override fun bearStart() {
-        super.bearStart()
-        loop.submit { run() }
-    }
 }
 
 @Autonomous(group = "Tune")
 class Tune_TwoTileLoop : TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         repeat(5) {
             robot.s_driveRelative(RobotCentricPosition.forward(48.inch))
             robot.s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
@@ -51,14 +45,14 @@ class Tune_TwoTileLoop : TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_OneTileLeft : TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         robot.s_driveRelative(RobotCentricPosition.right(-24.inch))
     }
 }
 
 @Autonomous(group = "Tune")
 class Tune_Turn90CCW : TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         robot.s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
     }
 }
@@ -72,7 +66,7 @@ object TuneConfig {
 
 @Autonomous(group = "Tune")
 class Tune_driveK : TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         robot.doTuning(tilePosition("B1:90"), {
             RobotCentricLocation(TuneConfig.tuneDistance, 0.cm).toFieldCentric(it).withHeading(it.heading)
         },{
@@ -83,7 +77,7 @@ class Tune_driveK : TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_translationK : TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         robot.doTuning(tilePosition("B2:180"), {
             RobotCentricLocation(0.cm, -TuneConfig.tuneDistance).toFieldCentric(it).withHeading(it.heading)
         },{
@@ -94,7 +88,7 @@ class Tune_translationK : TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_headingK: TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         robot.doTuning(tilePosition("B2:180"), {
             it.location().withHeading(it.heading.plus(TuneConfig.tuneAngle))
         },{
@@ -112,7 +106,7 @@ class Tune_headingK: TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_automationTimingCheck: TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         val startingPoint = AutoPositions.NORTH_START.mirrorForAlliance(Alliance.BLUE)
         val launchPoint = AutoPositions.NORTH_SHOOTING.mirrorForAlliance(Alliance.BLUE)
         repeat(1) {
@@ -187,7 +181,7 @@ translational_K=0.025, 0.002, 0.0035, 0.3
 
 @Autonomous(group = "Tune")
 class Tune_C1ToC6Forward : TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         robot.assumePosition(tilePosition("C1:180"))
         robot.s_followPath(pathTo(tilePosition("C6:180")))
     }
@@ -195,7 +189,7 @@ class Tune_C1ToC6Forward : TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_B1ToB6Left : TestOp() {
-    override suspend fun CoroutineScope.run() {
+    override suspend fun CoroutineScope.autoProgram() {
         robot.assumePosition(tilePosition("B1:90"))
         robot.s_followPath(pathTo(tilePosition("B6:90")))
     }

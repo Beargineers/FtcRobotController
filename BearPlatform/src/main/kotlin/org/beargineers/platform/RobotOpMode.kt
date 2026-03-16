@@ -6,6 +6,7 @@ import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlinx.coroutines.CoroutineScope
 import org.beargineers.platform.rr.RRPathFollower
 
 
@@ -50,12 +51,16 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         telemetry.addLine("Initialized")
     }
 
+    abstract suspend fun CoroutineScope.autoProgram()
+
     open fun bearStart() {}
     final override fun start() {
         super.start()
         loopTimer.reset()
 
         bearStart()
+        loop.submit { autoProgram() }
+
         elapsedTime.reset()
     }
 
