@@ -58,7 +58,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         button({gamepad1.dpad_right || gamepad1.right_trigger > 0.1}) {
             lookAtGoal = true
             auto("Going to shooting zone") {
-                goToShootingZoneAndShoot(if (opMode.alliance == Alliance.BLUE){ShootingZones.FRONT} else {
+                goToShootingZoneAndShoot(if (alliance == Alliance.BLUE){ShootingZones.FRONT} else {
                     ShootingZones.BACK})
             }
         }
@@ -66,7 +66,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         button({gamepad1.dpad_left || gamepad1.left_trigger > 0.1}){
             lookAtGoal = true
             auto("Going to shooting zone") {
-                goToShootingZoneAndShoot(if (opMode.alliance == Alliance.BLUE){ShootingZones.BACK} else {
+                goToShootingZoneAndShoot(if (alliance == Alliance.BLUE){ShootingZones.BACK} else {
                     ShootingZones.FRONT})
             }
         }
@@ -95,13 +95,6 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             robot.launch()
             auto("Holding position") {
                 holdPositionLookAtGoal(position.location())
-            }
-        }
-
-        button( gamepad2::a){
-            lookAtGoal = false
-            auto("Going to cursor"){
-                goToCursorLocation()
             }
         }
 
@@ -207,6 +200,6 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 }
 
 @TeleOp
-class RedDriving() : Driving(Alliance.RED)
+class RedDriving : Driving(Alliance.RED)
 @TeleOp
-class BlueDriving() : Driving(Alliance.BLUE)
+class BlueDriving : Driving(Alliance.BLUE)
