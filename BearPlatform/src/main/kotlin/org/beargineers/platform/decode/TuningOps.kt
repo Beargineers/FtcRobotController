@@ -15,6 +15,7 @@ import org.beargineers.platform.config
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveRelative
+import org.beargineers.platform.driveTo
 import org.beargineers.platform.inch
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.tilePosition
@@ -125,7 +126,7 @@ class Tune_automationTimingCheck: TestOp() {
 
             println("TUNING_TIMER: ${timer.milliseconds().toInt()} ms drive: ${(robot as BaseRobot).drive_K} translation: ${(robot as BaseRobot).translational_K} heading: ${(robot as BaseRobot).heading_K} drive2: ${(robot as BaseRobot).drive_K2}")
 
-            drivePath(pathTo(startingPoint))
+            driveTo(startingPoint)
         }
     }
 }
@@ -170,7 +171,7 @@ translational_K=0.025, 0.002, 0.0035, 0.3
 class Tune_C1ToC6Forward : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
         assumePosition(tilePosition("C1:180"))
-        drivePath(pathTo(tilePosition("C6:180")))
+        driveTo(tilePosition("C6:180"))
     }
 }
 
@@ -178,6 +179,6 @@ class Tune_C1ToC6Forward : TestOp() {
 class Tune_B1ToB6Left : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
         assumePosition(tilePosition("B1:90"))
-        drivePath(pathTo(tilePosition("B6:90")))
+        driveTo(tilePosition("B6:90"))
     }
 }
