@@ -1,7 +1,6 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import kotlinx.coroutines.CoroutineScope
 import kotlin.time.Duration
 
 /**
@@ -619,16 +618,4 @@ class PhaseBuilder<R: Robot>(val opMode: RobotOpMode<R>) {
      * @return An immutable list of all phases added to this builder
      */
     internal fun build(): List<AutonomousPhase<R>> = phases.toList()
-}
-
-abstract class PhasedAutonomous<R: Robot>() : RobotOpMode<R>() {
-    abstract fun PhaseBuilder<R>.phases()
-
-    override suspend fun CoroutineScope.autoProgram() {
-        robot.runAuto {
-            phases()
-        }
-
-        telemetry.addData("Status", "Complete!")
-    }
 }
