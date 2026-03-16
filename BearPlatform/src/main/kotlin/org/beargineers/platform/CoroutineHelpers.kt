@@ -1,19 +1,35 @@
 package org.beargineers.platform
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import org.beargineers.platform.rr.RRPathFollower
 
 suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
-    val follower = RRPathFollower(
-        robot = this as BaseRobot,
-        path = waypoints,
-        startPosition = currentPosition
-    )
+    var hasMoves = false
+    val movesBuilder = (this as BaseRobot).mecanumDrive.movesBuilder(currentPosition).apply {
+        var prev = currentPosition
+        for (wp in waypoints) {
+            val next = wp.target
+            if (next.distanceTo(prev) > 0.cm) {
+                val tangent = atan2(next.y - prev.y, next.x - prev.x)
+                setTangent(tangent)
+                splineToSplineHeading(next, tangent)
+                hasMoves = true
+            }
+            else if (next.heading != prev.heading) {
+                turnTo(next.heading)
+                hasMoves = true
+            }
+            prev = next
+        }
+    }
 
-    while (follower.update()) {
-        opMode.loop.nextTick()
+    if (hasMoves) {
+        val action = movesBuilder.build()
+        while (action.run(TelemetryPacket())) {
+            opMode.loop.nextTick()
+        }
     }
 }
 
