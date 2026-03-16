@@ -70,7 +70,7 @@ suspend fun DecodeRobot.pushAllianceBot(startingPoint: Position) {
 suspend fun DecodeRobot.openRamp() {
     drivePath(openRampPath())
     delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
-    drivePath(pathTo(locations.COLLECT_FROM_OPEN_RAMP))
+    driveTo(locations.COLLECT_FROM_OPEN_RAMP)
 }
 
 suspend fun DecodeRobot.openRampAndCollect() {

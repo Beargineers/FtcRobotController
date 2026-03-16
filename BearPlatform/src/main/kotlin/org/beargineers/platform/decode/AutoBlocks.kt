@@ -174,7 +174,7 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
                     shootIfNeeded()
                     val farApproach =
                         robot.locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = robot.spikeStart(1).y)
-                    drivePath(pathTo(farApproach))
+                    driveTo(farApproach)
                     openRampAndCollect()
                     followPathAndShoot(pathToShooting())
                     collectedSet += '4'
