@@ -1,61 +1,65 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.PIDFTCoeffs
-import org.beargineers.platform.PhaseBuilder
-import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricLocation
 import org.beargineers.platform.RobotCentricPosition
+import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
-import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.degrees
-import org.beargineers.platform.doOnce
-import org.beargineers.platform.drive
-import org.beargineers.platform.driveRelative
 import org.beargineers.platform.inch
 import org.beargineers.platform.pathTo
+import org.beargineers.platform.runAuto
+import org.beargineers.platform.s_driveRelative
+import org.beargineers.platform.s_followPath
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.toFieldCentric
-import org.beargineers.platform.wait
 import kotlin.time.Duration.Companion.seconds
 
-abstract class TestOp() :
-    PhasedAutonomous<DecodeRobot>() {
+abstract class TestOp : RobotOpMode<DecodeRobot>() {
     override val alliance = Alliance.BLUE
+
+    abstract suspend fun CoroutineScope.run()
+    override fun bearStart() {
+        super.bearStart()
+        loop.submit { run() }
+    }
 }
 
 @Autonomous(group = "Tune")
 class Tune_TwoTileLoop : TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases() {
+    override suspend fun CoroutineScope.run() {
         repeat(5) {
-            driveRelative(RobotCentricPosition.forward(48.inch))
-            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
-            driveRelative(RobotCentricPosition.forward(48.inch))
-            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
-            driveRelative(RobotCentricPosition.forward(48.inch))
-            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
-            driveRelative(RobotCentricPosition.forward(48.inch))
-            driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            robot.s_driveRelative(RobotCentricPosition.forward(48.inch))
+            robot.s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            robot.s_driveRelative(RobotCentricPosition.forward(48.inch))
+            robot.s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            robot.s_driveRelative(RobotCentricPosition.forward(48.inch))
+            robot.s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+            robot.s_driveRelative(RobotCentricPosition.forward(48.inch))
+            robot.s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
         }
     }
 }
 
 @Autonomous(group = "Tune")
 class Tune_OneTileLeft : TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases() {
-        driveRelative(RobotCentricPosition.right(-24.inch))
+    override suspend fun CoroutineScope.run() {
+        robot.s_driveRelative(RobotCentricPosition.right(-24.inch))
     }
 }
 
 @Autonomous(group = "Tune")
 class Tune_Turn90CCW : TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases() {
-        driveRelative(RobotCentricPosition.turnCCW(90.degrees))
+    override suspend fun CoroutineScope.run() {
+        robot.s_driveRelative(RobotCentricPosition.turnCCW(90.degrees))
     }
 }
 
@@ -67,9 +71,9 @@ object TuneConfig {
 
 
 @Autonomous(group = "Tune")
-class Tune_driveK: TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases(){
-        doTuning(tilePosition("B1:90"), {
+class Tune_driveK : TestOp() {
+    override suspend fun CoroutineScope.run() {
+        robot.doTuning(tilePosition("B1:90"), {
             RobotCentricLocation(TuneConfig.tuneDistance, 0.cm).toFieldCentric(it).withHeading(it.heading)
         },{
             RobotCentricLocation(-TuneConfig.tuneDistance, 0.cm).toFieldCentric(it).withHeading(it.heading)
@@ -78,9 +82,9 @@ class Tune_driveK: TestOp() {
 }
 
 @Autonomous(group = "Tune")
-class Tune_translationK: TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases(){
-        doTuning(tilePosition("B2:180"), {
+class Tune_translationK : TestOp() {
+    override suspend fun CoroutineScope.run() {
+        robot.doTuning(tilePosition("B2:180"), {
             RobotCentricLocation(0.cm, -TuneConfig.tuneDistance).toFieldCentric(it).withHeading(it.heading)
         },{
             RobotCentricLocation(0.cm, TuneConfig.tuneDistance).toFieldCentric(it).withHeading(it.heading)
@@ -90,8 +94,8 @@ class Tune_translationK: TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_headingK: TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases(){
-        doTuning(tilePosition("B2:180"), {
+    override suspend fun CoroutineScope.run() {
+        robot.doTuning(tilePosition("B2:180"), {
             it.location().withHeading(it.heading.plus(TuneConfig.tuneAngle))
         },{
             it.location().withHeading(it.heading.minus(TuneConfig.tuneAngle))
@@ -108,77 +112,70 @@ class Tune_headingK: TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_automationTimingCheck: TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases(){
+    override suspend fun CoroutineScope.run() {
         val startingPoint = AutoPositions.NORTH_START.mirrorForAlliance(Alliance.BLUE)
         val launchPoint = AutoPositions.NORTH_SHOOTING.mirrorForAlliance(Alliance.BLUE)
-
         repeat(1) {
             val timers = ArrayList<Long>()
+            timers.add(System.currentTimeMillis())
 
-            doOnce { timers.add(System.currentTimeMillis()) }
+            robot.assumePosition(startingPoint)
 
-            assumeRobotPosition(startingPoint)
-
-            followPathAndShoot(pathTo(launchPoint, robot.locations.INITIAL_SHOT_SPEED))
-            val secondScoop = robot.scoopSpikePath(2)
-
-            drive(secondScoop + robot.openRampPath())
-
-            wait(1.seconds)
-            followPathAndShoot(pathTo(launchPoint))
-            // Far shooting zone
-            scoopAndShoot(3, launchPoint)
-            scoopAndShoot(1, launchPoint)
-
-            doOnce {
-                println("TUNING_TIMER: ${System.currentTimeMillis() - timers.first()} ms drive: ${(robot as BaseRobot).drive_K} translation: ${(robot as BaseRobot).translational_K} heading: ${(robot as BaseRobot).heading_K} drive2: ${(robot as BaseRobot).drive_K2}" )
+            robot.runAuto {
+                followPathAndShoot(pathTo(launchPoint, this.robot.locations.INITIAL_SHOT_SPEED))
             }
 
-            drive(pathTo(startingPoint))
-        }
+            val secondScoop = robot.scoopSpikePath(2)
+            robot.s_followPath(secondScoop + robot.openRampPath())
 
+            delay(1.seconds)
+            robot.runAuto {
+                followPathAndShoot(pathTo(launchPoint))
+                // Far shooting zone
+                scoopAndShoot(3, launchPoint)
+                scoopAndShoot(1, launchPoint)
+            }
+
+            println("TUNING_TIMER: ${System.currentTimeMillis() - timers.first()} ms drive: ${(robot as BaseRobot).drive_K} translation: ${(robot as BaseRobot).translational_K} heading: ${(robot as BaseRobot).heading_K} drive2: ${(robot as BaseRobot).drive_K2}")
+
+            robot.s_followPath(pathTo(startingPoint))
+        }
     }
 }
 
-private fun PhaseBuilder<DecodeRobot>.doTuning(
+private suspend fun DecodeRobot.doTuning(
     startingPos: Position,
     shift:(pos: Position)->Position,
     shiftBack:(pos: Position)->Position,
     coeff: (robot: BaseRobot)-> PIDFTCoeffs
 ) {
-    assumeRobotPosition(startingPos)
+    assumePosition(startingPos)
 
     repeat(1000) {
 
         val forth = mutableListOf<Waypoint>()
         val back = mutableListOf<Waypoint>()
 
-        doOnce {
-            forth.clear()
-            forth.addAll(pathTo(shift(robot.currentPosition)))
-        }
+        forth.clear()
+        forth.addAll(pathTo(shift(currentPosition)))
         val timer = ArrayList<Long>()
-        doOnce { timer.add(System.currentTimeMillis()) }
-        drive(forth)
-        doOnce {
-            val error = forth.first().target.distanceTo(robot.currentPosition)
-            println("TUNETIME: ${System.currentTimeMillis() - timer.first()} ERROR: ${error.cm()}cm PID: ${coeff((robot as BaseRobot))}}")
+        timer.add(System.currentTimeMillis())
+        s_followPath(forth)
 
-        }
+        val error = forth.first().target.distanceTo(currentPosition)
+        println("TUNETIME: ${System.currentTimeMillis() - timer.first()} ERROR: ${error.cm()}cm PID: ${coeff((this as BaseRobot))}}")
 
-        wait(0.5.seconds)
 
-        doOnce {
-            back.clear()
-            back.addAll(pathTo(shiftBack(robot.currentPosition), speed = robot.locations.INITIAL_SHOT_SPEED))
-        }
+        delay(0.5.seconds)
 
-        drive(back)
+        back.clear()
+        back.addAll(pathTo(shiftBack(currentPosition), speed = locations.INITIAL_SHOT_SPEED))
+        s_followPath(back)
 
-        wait(0.5.seconds)
+        delay(0.5.seconds)
 
-        //drive(pathTo(startingPos))
-        //wait(0.5.seconds)
+        //s_followPath(pathTo(startingPos))
+        //delay(0.5.seconds)
 
         /*
             * heading_K=0.019, 0.0, 0.0015, 0.3
@@ -190,16 +187,16 @@ translational_K=0.025, 0.002, 0.0035, 0.3
 
 @Autonomous(group = "Tune")
 class Tune_C1ToC6Forward : TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases() {
-        assumeRobotPosition(tilePosition("C1:180"))
-        drive(pathTo(tilePosition("C6:180")))
+    override suspend fun CoroutineScope.run() {
+        robot.assumePosition(tilePosition("C1:180"))
+        robot.s_followPath(pathTo(tilePosition("C6:180")))
     }
 }
 
 @Autonomous(group = "Tune")
 class Tune_B1ToB6Left : TestOp() {
-    override fun PhaseBuilder<DecodeRobot>.phases() {
-        assumeRobotPosition(tilePosition("B1:90"))
-        drive(pathTo(tilePosition("B6:90")))
+    override suspend fun CoroutineScope.run() {
+        robot.assumePosition(tilePosition("B1:90"))
+        robot.s_followPath(pathTo(tilePosition("B6:90")))
     }
 }
