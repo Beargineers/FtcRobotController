@@ -14,7 +14,6 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.doWhile
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
-import org.beargineers.platform.followPath
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.times
 import kotlin.math.sign
@@ -54,7 +53,7 @@ suspend fun DecodeRobot.scoopAndShoot(spike: Int, launchPose: Position) {
 
 suspend fun DecodeRobot.scoopFromBoxAndShoot(launchPose: Position) {
     doWhile({ artifactsCount < 3}) {
-        followPath(scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
+        drivePath(scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
     }
 
     followPathAndShoot(pathTo(launchPose))

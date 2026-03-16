@@ -8,9 +8,6 @@ import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.rr.MecanumDrive
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import kotlin.math.PI
-import kotlin.math.cosh
-import kotlin.math.pow
 
 fun cursorLocation(): Location{
     return Location(PanelsField.field.cursorX.inch,PanelsField.field.cursorY.inch)
@@ -164,29 +161,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     override fun stopDriving() {
         drive.stop()
     }
-
-    fun curveToTarget(target: Position, radius: Distance, clockwise: Boolean){
-        val r = radius
-        val cp = currentPosition
-
-        val distanceToTarget = hypot((target.x - cp.x), (target.y - cp.y))
-        val t = cosh(1- 0.5*(distanceToTarget/r).pow(2))
-        val t2: Double = PI/4 - 0.5 * t
-        val curvedDistanceToTarget = t * r
-
-        val vectorHeading = when(clockwise){
-            true -> atan2((target.y - cp.y), (target.x - cp.x)) + ((PI/4).radians - t2.radians)
-            false -> atan2((target.y - cp.y), (target.x - cp.x)) - ((PI/4).radians - t2.radians)
-        }
-
-        val driveTo = Position(
-            curvedDistanceToTarget * cos(vectorHeading),
-            curvedDistanceToTarget * sin(vectorHeading),
-            target.heading)
-
-        driveToTarget(driveTo)
-    }
-
 
     val minimalWheelPower by config(0.12)
 

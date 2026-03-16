@@ -1,6 +1,7 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import kotlinx.coroutines.Job
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Location
@@ -10,7 +11,7 @@ import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
-import org.beargineers.platform.driveToTarget
+import org.beargineers.platform.driveTo
 import org.beargineers.platform.sin
 import kotlin.math.abs
 
@@ -134,6 +135,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 */
     }
 
+    private var driveJob: Job? = null
 
     override fun bearLoop() {
         super.bearLoop()
@@ -176,7 +178,11 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         val targetPosition = robot.currentPosition.plus(deltaPosition)
         robot.targetSpeed = if (slow) slowCoeff else 1.0
-        robot.driveToTarget(targetPosition)
+
+        driveJob?.cancel()
+        driveJob = loop.submit {
+            robot.driveTo(targetPosition)
+        }
     }
 
     private fun commandedHeading(): Angle {
