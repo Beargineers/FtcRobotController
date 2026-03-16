@@ -6,9 +6,9 @@ import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
 import org.beargineers.platform.PhaseBuilder
 import org.beargineers.platform.PhaseDsl
-import org.beargineers.platform.PhasedAutonomous
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricPosition
+import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.action
@@ -19,10 +19,13 @@ import org.beargineers.platform.config
 import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
 import org.beargineers.platform.doOnce
+import org.beargineers.platform.doWhile
 import org.beargineers.platform.drive
 import org.beargineers.platform.driveToTarget
 import org.beargineers.platform.followPath
 import org.beargineers.platform.pathTo
+import org.beargineers.platform.runAuto
+import org.beargineers.platform.s_driveToTarget
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.times
 import org.beargineers.platform.wait
@@ -89,35 +92,26 @@ private fun PhaseBuilder<DecodeRobot>.shoot() {
     waitForShootingCompletion()
 }
 
-abstract class ProgrammedAuto() : PhasedAutonomous<DecodeRobot>() {
+abstract class ProgrammedAuto() : RobotOpMode<DecodeRobot>() {
     abstract val program: String
 
     private var operatingIn: Char = 'N'
 
-    override fun PhaseBuilder<DecodeRobot>.phases() {
-        doWhile("AUTO") {
-            condition {
-                opMode.elapsedTime.seconds() < 29.5
-            }
-
-            looping {
+    override suspend fun DecodeRobot.autoProgram() {
+        doWhile({ robot.opMode.elapsedTime.seconds() < 29.5}) {
+            runAuto {
                 interpretProgram()
             }
-
-            then {
-                doOnce {
-                    intakeMode(IntakeMode.OFF)
-                    enableFlywheel(false)
-                }
-                action {
-                    driveToTarget(when (operatingIn) {
-                        'F' -> locations.OPEN_RAMP_APPROACH
-                        'B' -> AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance)
-                        else -> error("Unknown operating in: $operatingIn")
-                    })
-                }
-            }
         }
+
+        intakeMode(IntakeMode.OFF)
+        enableFlywheel(false)
+
+        s_driveToTarget(when (operatingIn) {
+            'F' -> locations.OPEN_RAMP_APPROACH
+            'B' -> AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance)
+            else -> error("Unknown operating in: $operatingIn")
+        })
     }
 
     private fun PhaseBuilder<DecodeRobot>.interpretProgram() {
