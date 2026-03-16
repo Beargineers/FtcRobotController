@@ -76,31 +76,31 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
         val path = mutableListOf<Waypoint>()
         var initialLoadReleased = false
         val collectedSet = mutableSetOf<Char>()
-        var lastKnownPosition = Position.zero() // TODO use currentPosition instead
 
         fun pathToShooting(): List<Waypoint> {
+            val cp = currentPosition
             return buildList {
                 var addedBackPath = false
                 if (operatingIn == 'F') {
-                    if ('1' !in collectedSet && lastKnownPosition.x > robot.spikeStart(1).x ||
-                        '2' !in collectedSet && lastKnownPosition.x > robot.spikeStart(2).x ||
-                        '3' !in collectedSet && lastKnownPosition.x > robot.spikeStart(3).x) {
-                        addAll(pathTo(lastKnownPosition.copy(y = shootingPoint.y)))
+                    if ('1' !in collectedSet && cp.x > robot.spikeStart(1).x ||
+                        '2' !in collectedSet && cp.x > robot.spikeStart(2).x ||
+                        '3' !in collectedSet && cp.x > robot.spikeStart(3).x) {
+                        addAll(pathTo(cp.copy(y = shootingPoint.y)))
                         addedBackPath = true
                     }
                 }
                 else {
-                    if ('1' !in collectedSet && lastKnownPosition.x < robot.spikeStart(1).x ||
-                        '2' !in collectedSet && lastKnownPosition.x < robot.spikeStart(2).x ||
-                        '3' !in collectedSet && lastKnownPosition.x < robot.spikeStart(3).x) {
-                        addAll(pathTo(lastKnownPosition.copy(y = shootingPoint.y)))
+                    if ('1' !in collectedSet && cp.x < robot.spikeStart(1).x ||
+                        '2' !in collectedSet && cp.x < robot.spikeStart(2).x ||
+                        '3' !in collectedSet && cp.x < robot.spikeStart(3).x) {
+                        addAll(pathTo(cp.copy(y = shootingPoint.y)))
                         addedBackPath = true
                     }
                 }
 
-                if (!addedBackPath && (lastKnownPosition.distanceTo(robot.locations.OPEN_RAMP_COLLECT) < 10.cm ||
-                    lastKnownPosition.distanceTo(robot.locations.OPEN_RAMP) < 10.cm)) {
-                    addAll(pathTo(lastKnownPosition + RobotCentricPosition(-15.cm, 0.cm, 0.degrees)))
+                if (!addedBackPath && (cp.distanceTo(robot.locations.OPEN_RAMP_COLLECT) < 10.cm ||
+                    cp.distanceTo(robot.locations.OPEN_RAMP) < 10.cm)) {
+                    addAll(pathTo(cp + RobotCentricPosition(-15.cm, 0.cm, 0.degrees)))
                 }
 
                 addAll(pathTo(shootingPoint))
@@ -110,7 +110,6 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
         suspend fun shootIfNeeded() {
             if (!initialLoadReleased) {
                 shootInitialLoad(shootingPoint)
-                lastKnownPosition = shootingPoint
                 initialLoadReleased = true
 
                 if (path.isNotEmpty()) {
@@ -121,7 +120,6 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             if (path.isNotEmpty()) {
                 path.addAll(pathToShooting())
                 followPathAndShoot(path.toList())
-                lastKnownPosition = path.last().target
                 path.clear()
             }
         }
@@ -129,14 +127,11 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
         suspend fun followPathIfNeeded() {
             if (path.isNotEmpty()) {
                 drivePath(path.toList())
-                lastKnownPosition = path.last().target
                 path.clear()
             }
         }
 
         assumePosition(startingPoint)
-        lastKnownPosition = startingPoint
-
         enableFlywheel(true)
 
         for (c in program) {
@@ -154,28 +149,24 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
                 '0' -> {
                     shootIfNeeded()
                     scoopFromBoxAndShoot(shootingPoint)
-                    lastKnownPosition = shootingPoint
                     collectedSet += '0'
                 }
 
                 '1' -> {
                     shootIfNeeded()
                     path.addAll(robot.scoopSpikePath(1))
-                    lastKnownPosition = path.last().target
                     collectedSet += '1'
                 }
 
                 '2' -> {
                     shootIfNeeded()
                     path.addAll(robot.scoopSpikePath(2))
-                    lastKnownPosition = path.last().target
                     collectedSet += '2'
                 }
 
                 '3' -> {
                     shootIfNeeded()
                     path.addAll(robot.scoopSpikePath(3))
-                    lastKnownPosition = path.last().target
                     collectedSet += '3'
                 }
 
@@ -185,7 +176,6 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
                         robot.locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = robot.spikeStart(1).y)
                     drivePath(pathTo(farApproach))
                     openRampAndCollect()
-                    lastKnownPosition = robot.locations.OPEN_RAMP_COLLECT
                     followPathAndShoot(pathToShooting())
                     collectedSet += '4'
                 }
