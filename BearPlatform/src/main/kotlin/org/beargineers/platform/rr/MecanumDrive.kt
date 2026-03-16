@@ -30,12 +30,12 @@ import com.acmerobotics.roadrunner.range
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.VoltageSensor
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricPosition
+import org.beargineers.platform.WheelsConfig
 import org.beargineers.platform.rr.messages.DriveCommandMessage
 import org.beargineers.platform.rr.messages.MecanumCommandMessage
 import org.beargineers.platform.rr.messages.PoseMessage
@@ -129,8 +129,6 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO)
         }
 
-        // TODO: make sure your config has motors with these names (or change them)
-        //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
         leftFront = hardwareMap.get(DcMotorEx::class.java, "leftFront")
         leftBack = hardwareMap.get(DcMotorEx::class.java, "leftBack")
         rightBack = hardwareMap.get(DcMotorEx::class.java, "rightBack")
@@ -141,11 +139,10 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE)
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE)
 
-        // TODO: reverse motor directions if needed
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE)
-        leftBack.setDirection(DcMotorSimple.Direction.FORWARD)
-        rightFront.setDirection(DcMotorSimple.Direction.FORWARD)
-        rightBack.setDirection(DcMotorSimple.Direction.REVERSE)
+        leftFront.setDirection(WheelsConfig.lf_direction)
+        leftBack.setDirection(WheelsConfig.lb_direction)
+        rightFront.setDirection(WheelsConfig.rf_direction)
+        rightBack.setDirection(WheelsConfig.rb_direction)
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next()
 
