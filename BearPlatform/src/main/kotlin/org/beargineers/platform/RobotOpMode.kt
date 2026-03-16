@@ -28,6 +28,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     private var auto: AutonomousPhase<T>? = null
     private val autoTimer = ElapsedTime()
     val elapsedTime = ElapsedTime()
+    private val loop = LoopRuntime()
 
 
     open fun bearInit() {}
@@ -60,6 +61,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
     override fun stop() {
         super.stop()
+        loop.stop()
         robot.stop()
     }
 
@@ -112,6 +114,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         }
 
         bearLoop()
+        loop.tick()
     }
 
     fun button(test: () -> Boolean, callback: () -> Unit): Button {
