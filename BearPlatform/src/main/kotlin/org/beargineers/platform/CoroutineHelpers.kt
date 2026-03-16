@@ -1,6 +1,9 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.beargineers.platform.rr.RRPathFollower
 
 suspend fun Robot.s_followPath(waypoints: List<Waypoint>) {
@@ -33,6 +36,19 @@ suspend fun <T:Robot> T.runAuto(b: PhaseBuilder<T>.() -> Unit) {
         val timer = ElapsedTime()
         while (loopPhase(timer)) {
             opMode.loop.nextTick()
+        }
+    }
+}
+
+suspend fun Robot.doWhile(condition: () -> Boolean, block: suspend CoroutineScope.() -> Unit) {
+    coroutineScope {
+        val childJob = launch(block = block)
+        while (childJob.isActive && condition()) {
+            opMode.loop.nextTick()
+        }
+
+        if (childJob.isActive) {
+            childJob.cancel()
         }
     }
 }

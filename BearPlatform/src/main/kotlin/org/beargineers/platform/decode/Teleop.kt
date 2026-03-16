@@ -1,7 +1,6 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import kotlinx.coroutines.CoroutineScope
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Location
@@ -24,7 +23,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     private var lookAtGoal = false
     private var lookAtGoalBtnClickedAt = 0L
 
-    override suspend fun CoroutineScope.autoProgram() {
+    override suspend fun DecodeRobot.autoProgram() {
         // Do nothing automatically
     }
 
