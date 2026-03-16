@@ -1,6 +1,6 @@
 # BearPlatform Framework
 
-Reusable robotics framework for FTC robots. Provides hardware abstraction, position tracking, autonomous phases, and OpMode base classes.
+Reusable robotics framework for FTC robots. Provides hardware abstraction, position tracking, coroutine-based autonomous routines, and OpMode base classes.
 
 ## Core Classes
 
@@ -54,14 +54,18 @@ Position tracking integrates encoder-based odometry with IMU heading using mecan
 
 ### RobotOpMode
 
-Base class for TeleOp and simple autonomous OpModes.
+Base class for TeleOp and Autonomous OpModes.
 
 ```kotlin
 @TeleOp(name = "Main TeleOp")
-class MainTeleOp : RobotOpMode<MyRobot>(Alliance.RED) {
-    override fun createRobot(opMode: RobotOpMode<MyRobot>) = MyRobot(opMode)
+class MainTeleOp : RobotOpMode<MyRobot>() {
+    override val alliance = Alliance.RED
 
-    override fun loop() {
+    override suspend fun MyRobot.autoProgram() {
+        // Optional autonomous sequence started at OpMode start
+    }
+
+    override fun bearLoop() {
         // TeleOp control logic
         robot.drive.drive(
             forwardPower = -gamepad1.left_stick_y.toDouble(),
@@ -74,8 +78,10 @@ class MainTeleOp : RobotOpMode<MyRobot>(Alliance.RED) {
 
 Features:
 - Generic robot type parameter for type-safe access
-- Alliance parameter (RED/BLUE)
+- Alliance property (RED/BLUE)
 - Automatic robot initialization
+- `suspend fun T.autoProgram()` runs in the loop coroutine runtime
+- `auto(name) { ... }` starts cancellable coroutine actions during TeleOp
 - Button helper methods for gamepad input
 
 Button system:
@@ -134,31 +140,23 @@ if (absolutePose != null && absolutePose.confidence > 0.7) {
 }
 ```
 
-### PhasedAutonomous
+### Coroutine Autonomous
 
-Framework for phase-based autonomous routines. See [PhasedAutonomous.kt](PhasedAutonomous.kt) for comprehensive documentation. For the pseudo-code based autonomous DSL used by the Decode robot, see [decode/Auto.md](decode/Auto.md).
+Autonomous routines now use coroutines directly through `RobotOpMode.autoProgram()`. Movement helpers live in [CoroutineHelpers.kt](CoroutineHelpers.kt), runtime scheduling is handled by [LoopRuntime.kt](LoopRuntime.kt), and OpMode integration is in [RobotOpMode.kt](RobotOpMode.kt). For the pseudo-code based autonomous DSL used by the Decode robot, see [decode/Auto.md](decode/Auto.md).
 
 ```kotlin
 @Autonomous(name = "Red South")
-class RedSouth : PhasedAutonomous<MyRobot>(Alliance.RED) {
-    override fun createRobot(opMode: RobotOpMode<MyRobot>) = MyRobot(opMode)
+class RedSouth : RobotOpMode<MyRobot>() {
+    override val alliance = Alliance.RED
 
-    override fun PhaseBuilder<MyRobot>.createPhases() {
+    override suspend fun MyRobot.autoProgram() {
         assumePosition(START_POSITION)
-
         driveTo(SPIKE_LEFT)
-        action { intake.setPower(1.0) }
-        wait(1.seconds)
+        intake.setPower(1.0)
+        delay(1.seconds)
 
-        seq("Score") {
-            driveTo(CHAMBER)
-            action { arm.deploy() }
-            wait(0.5.seconds)
-        }
-
-        par("Deploy and intake") {
-            action { arm.lower() }
-            action { intake.start() }
+        coroutineScope {
+            launch { arm.lower() }
             driveTo(PICKUP_POSITION)
         }
 
@@ -168,11 +166,11 @@ class RedSouth : PhasedAutonomous<MyRobot>(Alliance.RED) {
 ```
 
 Key concepts:
-- **AutonomousPhase** - Interface for custom phases with `initPhase()` and `loopPhase()`
-- **SequentialPhase** - Container for executing phases one after another
-- **ParallelPhase** - Container for executing phases concurrently
-- **DSL functions** - `driveTo()`, `wait()`, `action()`, `composite()`, `parallel()`, `driveRelative()`
-- Built-in phases: WaitPhase, SimpleActionPhase, GotoPosePhase, DriveRelative
+- `autoProgram()` is the entry point for autonomous logic
+- Navigation helpers: `drivePath()`, `driveTo()`, `driveRelative()`
+- `doWhile(condition) { ... }` runs concurrent work while a condition is true
+- `loop.nextTick()` provides explicit frame-to-frame yielding when needed
+- `auto(name) { ... }` and `cancelAuto()` support interruptible assisted actions in TeleOp
 
 ## Coordinate System
 
@@ -241,4 +239,4 @@ Parameters adjustable from Driver Station without rebuilding.
 2. Create Robot class extending BaseRobot
 3. Implement Drivetrain interface for your drive subsystem
 4. Create TeleOp extending RobotOpMode
-5. Create autonomous routines extending PhasedAutonomous
+5. Implement autonomous routines in `suspend fun T.autoProgram()`
