@@ -7,7 +7,9 @@ import com.acmerobotics.roadrunner.Rotation2d
 import com.acmerobotics.roadrunner.Vector2d
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver.DeviceStatus
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.beargineers.platform.PinpointConfig
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import java.util.Objects
@@ -22,16 +24,18 @@ class PinpointLocalizer(hardwareMap: HardwareMap, initialPose: Pose2d) : Localiz
     private var txPinpointRobot = Pose2d(0.0, 0.0, 0.0)
 
     init {
-        // TODO: make sure your config has a Pinpoint device with this name
-        //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
         driver =
-            hardwareMap.get<GoBildaPinpointDriver>(GoBildaPinpointDriver::class.java, "pinpoint")
+            hardwareMap.get(GoBildaPinpointDriver::class.java, "pinpoint")
 
         driver.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-        driver.setOffsets(-3.2, -0.9, DistanceUnit.CM)
+        driver.setOffsets(PinpointConfig.pinpoint_xOffset, PinpointConfig.pinpoint_yOffset, DistanceUnit.CM)
 
-        initialParDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD
-        initialPerpDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED
+        fun DcMotorSimple.Direction.direction(): GoBildaPinpointDriver.EncoderDirection {
+            return if (this == DcMotorSimple.Direction.FORWARD) GoBildaPinpointDriver.EncoderDirection.FORWARD else GoBildaPinpointDriver.EncoderDirection.REVERSED
+        }
+
+        initialParDirection = PinpointConfig.pinpoint_xEncoderDirection.direction()
+        initialPerpDirection = PinpointConfig.pinpoint_yEncoderDirection.direction()
 
         driver.setEncoderDirections(initialParDirection, initialPerpDirection)
 
