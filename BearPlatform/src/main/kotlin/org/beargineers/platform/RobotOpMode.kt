@@ -28,7 +28,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     private var auto: AutonomousPhase<T>? = null
     private val autoTimer = ElapsedTime()
     val elapsedTime = ElapsedTime()
-    private val loop = LoopRuntime()
+    val loop = LoopRuntime()
 
 
     open fun bearInit() {}
