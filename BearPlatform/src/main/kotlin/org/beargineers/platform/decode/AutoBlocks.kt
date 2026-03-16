@@ -1,35 +1,20 @@
 package org.beargineers.platform.decode
 
-import com.qualcomm.robotcore.util.ElapsedTime
-import org.beargineers.platform.AutonomousPhase
+import kotlinx.coroutines.delay
 import org.beargineers.platform.Distance
-import org.beargineers.platform.Location
-import org.beargineers.platform.PhaseBuilder
-import org.beargineers.platform.PhaseDsl
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
-import org.beargineers.platform.abs
-import org.beargineers.platform.action
-import org.beargineers.platform.assumeRobotPosition
 import org.beargineers.platform.buildPath
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
-import org.beargineers.platform.cursorLocation
 import org.beargineers.platform.degrees
-import org.beargineers.platform.doOnce
 import org.beargineers.platform.doWhile
-import org.beargineers.platform.drive
-import org.beargineers.platform.driveToTarget
-import org.beargineers.platform.followPath
+import org.beargineers.platform.drivePath
+import org.beargineers.platform.driveTo
 import org.beargineers.platform.pathTo
-import org.beargineers.platform.runAuto
-import org.beargineers.platform.s_driveToTarget
 import org.beargineers.platform.tilePosition
-import org.beargineers.platform.times
-import org.beargineers.platform.wait
-import kotlin.math.sign
 import kotlin.time.Duration.Companion.seconds
 
 object AutoPositions {
@@ -60,61 +45,27 @@ fun DecodeRobot.scoopBoxPath(shift: Distance): List<Waypoint> {
 }
 
 
-
-@PhaseDsl
-fun PhaseBuilder<DecodeRobot>.scoopAndShoot(spike: Int, launchPose: Position) {
-    seq("Scoop and shoot #$spike") {
-        followPathAndShoot(robot.scoopSpikePath(spike) + pathTo(launchPose))
-    }
-}
-
-@PhaseDsl
-fun PhaseBuilder<DecodeRobot>.scoopFromBoxAndShoot(launchPose: Position) {
-    doWhile("Scoop from BOX and shoot") {
-        condition { artifactsCount < 3 }
-
-        looping {
-            action {
-                followPath(scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
-            }
-        }
-
-        then {
-            followPathAndShoot(pathTo(launchPose))
-        }
-    }
-}
-
-private fun PhaseBuilder<DecodeRobot>.shoot() {
-    doOnce {
-        launch()
-    }
-    waitForShootingCompletion()
-}
-
-abstract class ProgrammedAuto() : RobotOpMode<DecodeRobot>() {
+abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
     abstract val program: String
 
     private var operatingIn: Char = 'N'
 
     override suspend fun DecodeRobot.autoProgram() {
         doWhile({ robot.opMode.elapsedTime.seconds() < 29.5}) {
-            runAuto {
-                interpretProgram()
-            }
+            interpretProgram()
         }
 
         intakeMode(IntakeMode.OFF)
         enableFlywheel(false)
 
-        s_driveToTarget(when (operatingIn) {
+        driveTo(when (operatingIn) {
             'F' -> locations.OPEN_RAMP_APPROACH
             'B' -> AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance)
             else -> error("Unknown operating in: $operatingIn")
         })
     }
 
-    private fun PhaseBuilder<DecodeRobot>.interpretProgram() {
+    private suspend fun DecodeRobot.interpretProgram() {
         val startingPoint = when(program.first()) {
             'F' -> AutoPositions.NORTH_START
             'B' -> AutoPositions.SOUTH_START
@@ -125,7 +76,7 @@ abstract class ProgrammedAuto() : RobotOpMode<DecodeRobot>() {
         val path = mutableListOf<Waypoint>()
         var initialLoadReleased = false
         val collectedSet = mutableSetOf<Char>()
-        var lastKnownPosition = Position.zero()
+        var lastKnownPosition = Position.zero() // TODO use currentPosition instead
 
         fun pathToShooting(): List<Waypoint> {
             return buildList {
@@ -156,7 +107,7 @@ abstract class ProgrammedAuto() : RobotOpMode<DecodeRobot>() {
             }
         }
 
-        fun shootIfNeeded() {
+        suspend fun shootIfNeeded() {
             if (!initialLoadReleased) {
                 shootInitialLoad(shootingPoint)
                 lastKnownPosition = shootingPoint
@@ -175,20 +126,18 @@ abstract class ProgrammedAuto() : RobotOpMode<DecodeRobot>() {
             }
         }
 
-        fun followPathIfNeeded() {
+        suspend fun followPathIfNeeded() {
             if (path.isNotEmpty()) {
-                drive(path.toList())
+                drivePath(path.toList())
                 lastKnownPosition = path.last().target
                 path.clear()
             }
         }
 
-        assumeRobotPosition(startingPoint)
+        assumePosition(startingPoint)
         lastKnownPosition = startingPoint
 
-        doOnce {
-            enableFlywheel(true)
-        }
+        enableFlywheel(true)
 
         for (c in program) {
             when (c) {
@@ -234,7 +183,7 @@ abstract class ProgrammedAuto() : RobotOpMode<DecodeRobot>() {
                     shootIfNeeded()
                     val farApproach =
                         robot.locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = robot.spikeStart(1).y)
-                    drive(pathTo(farApproach))
+                    drivePath(pathTo(farApproach))
                     openRampAndCollect()
                     lastKnownPosition = robot.locations.OPEN_RAMP_COLLECT
                     followPathAndShoot(pathToShooting())
@@ -249,7 +198,7 @@ abstract class ProgrammedAuto() : RobotOpMode<DecodeRobot>() {
                     val pathNotEmpty = path.isNotEmpty()
                     path.addAll(robot.openRampPath())
                     followPathIfNeeded()
-                    wait(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
+                    delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
                     if (pathNotEmpty) {
                         followPathAndShoot(pathToShooting())
                     }
@@ -291,140 +240,3 @@ fun DecodeRobot.openRampCollectPath(): List<Waypoint> {
     }
 }
 
-fun PhaseBuilder<DecodeRobot>.pushAllianceBot(startingPoint: Position) {
-    drive(pathTo(
-        startingPoint.shift(0.cm, startingPoint.y.cm().sign * 30.cm),
-        positionTolerance = 4.cm,
-        headingTolerance = 3.degrees
-    ))
-}
-
-fun PhaseBuilder<DecodeRobot>.openRamp() {
-    drive(robot.openRampPath())
-    wait(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
-    drive(pathTo(robot.locations.COLLECT_FROM_OPEN_RAMP))
-}
-
-fun PhaseBuilder<DecodeRobot>.openRampAndCollect() {
-    val path = robot.openRampCollectPath()
-    drive(path.take(1))
-    drive(path.drop(1))
-
-    doWhile("Wait for the artifacts") {
-        condition { artifactsCount < 3 }
-        looping {
-            wait(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
-        }
-        then {
-            // Do nothing
-        }
-    }
-}
-
-@PhaseDsl
-private fun PhaseBuilder<DecodeRobot>.shootInitialLoad(launchPose: Position) {
-    followPathAndShoot(pathTo(launchPose, robot.locations.INITIAL_SHOT_SPEED))
-}
-
-class WaitForShootingCompletion() : AutonomousPhase<DecodeRobot> {
-    override fun DecodeRobot.initPhase() {
-    }
-
-    override fun DecodeRobot.loopPhase(phaseTime: ElapsedTime): Boolean {
-        return isShooting()
-    }
-}
-
-@PhaseDsl
-fun PhaseBuilder<DecodeRobot>.waitForShootingCompletion() {
-    phase(WaitForShootingCompletion())
-}
-
-fun PhaseBuilder<DecodeRobot>.goToShootingZoneAndShoot(shootingZone: ShootingZones) {
-    val waypoints = mutableListOf<Waypoint>()
-    doOnce {
-        waypoints.clear()
-
-        waypoints.addAll(buildPath {
-            if (currentPosition.distanceTo(locations.OPEN_RAMP_COLLECT) < 10.cm ||
-                currentPosition.distanceTo(locations.OPEN_RAMP) < 10.cm) {
-                addWaypoint(currentPosition + RobotCentricPosition(-15.cm, 0.cm, 0.degrees))
-            }
-
-            val targetLocation = closestPointInShootingZone(shootingZone)
-            addWaypoint(targetLocation.withHeading(headingToGoalFrom(targetLocation)))
-        })
-
-    }
-
-    followPathAndShoot(waypoints)
-}
-
-@PhaseDsl
-fun PhaseBuilder<DecodeRobot>.followPathAndShoot(waypoints: List<Waypoint>) {
-    seq("Follow path and prepare for shooting") {
-        var followingPath = false
-
-        doOnce {
-            followingPath = true
-        }
-
-        par {
-            doWhile("Prepare for shooting") {
-                condition {
-                    followingPath
-                }
-
-                looping {
-                    wait(0.2.seconds)
-                    doOnce {
-                        intakeMode(IntakeMode.ON)
-                    }
-                    wait(0.5.seconds)
-                    doOnce {
-                        getReadyForShoot()
-                    }
-                }
-
-                then {
-                    // Do nothing
-                }
-            }
-
-            action {
-                val waypoints = waypoints.withIndex().map { (i, waypoint) ->
-                    if (i == waypoints.lastIndex) waypoint.copy(
-                        positionTolerance = 3.cm
-                    ) else waypoint
-                }
-                followingPath = followPath(waypoints)
-                followingPath
-            }
-        }
-    }
-
-    shoot()
-}
-
-fun PhaseBuilder<DecodeRobot>.goToCursorLocation(){
-    action{
-        driveToTarget(cursorLocation().withHeading(currentPosition.heading))
-    }
-}
-
-fun PhaseBuilder<DecodeRobot>.park() {
-    action {
-        val parkCoords: Location = locations.PARK
-        val heading = currentPosition.heading
-        val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
-        val parkHeading = squareAngles.minBy { abs(it - heading) }
-        driveToTarget(parkCoords.withHeading(parkHeading))
-    }
-}
-
-fun PhaseBuilder<DecodeRobot>.holdPositionLookAtGoal(location: Location) {
-    action {
-        driveToTarget(location.withHeading(headingToGoalFrom(location)))
-        true // Keep this auto active until it is cancelled by touching gamepad controls
-    }
-}

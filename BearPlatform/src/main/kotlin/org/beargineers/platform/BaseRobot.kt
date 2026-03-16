@@ -153,7 +153,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     }
 
 
-    override fun drive(
+    override fun motorPowers(
         forwardPower: Double,
         rightPower: Double,
         turnPower: Double

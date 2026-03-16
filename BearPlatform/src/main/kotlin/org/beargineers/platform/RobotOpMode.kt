@@ -6,6 +6,7 @@ import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlinx.coroutines.CompletableDeferred
 import org.beargineers.platform.rr.RRPathFollower
 
 
@@ -25,8 +26,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     private val loopTimer = ElapsedTime()
 
 
-    private var auto: AutonomousPhase<T>? = null
-    private val autoTimer = ElapsedTime()
+    private var auto: CompletableDeferred<Unit>? = null
     val elapsedTime = ElapsedTime()
     val loop = LoopRuntime()
 
@@ -106,17 +106,6 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
             cancelAuto()
         }
 
-        if (auto != null) {
-            with(auto!!) {
-                if (robot.loopPhase(autoTimer)) {
-                    telemetry.addLine("Auto: ${name()}")
-                    return
-                } else {
-                    cancelAuto()
-                }
-            }
-        }
-
         bearLoop()
         loop.tick()
     }
@@ -131,20 +120,19 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         allButtons += ToggleButton(name, telemetry, test, callback)
     }
 
-    fun auto(name: String, b: Phases<T>) {
-        val builder = PhaseBuilder<T>(this)
-        builder.b()
-        val phases = builder.build()
-        auto = SequentialPhase(name, phases).also {
-            with(it) {
-                robot.initPhase()
-            }
+    fun auto(name: String, b: suspend T.() -> Unit) {
+        cancelAuto()
+        auto = loop.submit {
+            robot.b()
         }
-        autoTimer.reset()
     }
 
     fun cancelAuto() {
-        auto = null
+        val a = auto
+        if (a != null) {
+            if (a.isActive) a.cancel()
+            auto = null
+        }
     }
 
     fun controlsAreTouched(): Boolean {

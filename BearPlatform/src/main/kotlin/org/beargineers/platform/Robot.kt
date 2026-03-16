@@ -5,7 +5,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 interface Robot {
     fun <T:Any > getPart(part: Part<T>): T
 
-    fun drive(forwardPower: Double, rightPower: Double, turnPower: Double)
+    fun motorPowers(forwardPower: Double, rightPower: Double, turnPower: Double)
 
     fun stopDriving()
 
