@@ -257,6 +257,15 @@ data class RobotCentricLocation(val forward: Distance, val right: Distance) {
         return RobotCentricLocation(forward + other.forward, right + other.right)
     }
 
+    fun rotate(theta: Angle): RobotCentricLocation {
+        return RobotCentricLocation(
+            cos(theta) * forward + sin(theta) * right,
+            sin(theta) * forward - cos(theta) * right
+        )
+    }
+
+    fun withHeading(theta: Angle) = RobotCentricPosition(forward, right, theta)
+
     companion object {
         fun zero(): RobotCentricLocation {
             return RobotCentricLocation(0.cm, 0.cm)
