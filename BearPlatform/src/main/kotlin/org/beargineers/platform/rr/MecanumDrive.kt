@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.VoltageSensor
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Position
+import org.beargineers.platform.RobotCentricLocation
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.WheelsConfig
 import org.beargineers.platform.config
@@ -55,7 +56,13 @@ class SimpleRobotLocalizer(val robot: BaseRobot) : SimpleLocalizer {
     override val currentPosition: Position
         get() = robot.currentPosition
     override val currentVelocity: RobotCentricPosition
-        get() = robot.currentVelocity
+        get() {
+            val cv = robot.currentVelocity
+            val heading = robot.currentPosition.heading
+            val rot = RobotCentricLocation(cv.forward, cv.right).rotate(heading)
+
+            return RobotCentricPosition(rot.forward, -rot.right, cv.turn)
+        }
 }
 
 object MecanumTuning {
