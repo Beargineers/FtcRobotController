@@ -4,10 +4,19 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import org.beargineers.platform.rr.MovesBuilder
+
+suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
+    val movesBuilder = (this as BaseRobot).mecanumDrive.movesBuilder(currentPosition)
+    movesBuilder.apply(moves)
+    val action = movesBuilder.build()
+    while (action.run(TelemetryPacket())) {
+        opMode.loop.nextTick()
+    }
+}
 
 suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
-    var hasMoves = false
-    val movesBuilder = (this as BaseRobot).mecanumDrive.movesBuilder(currentPosition).apply {
+    move {
         var prev = currentPosition
         for (wp in waypoints) {
             val next = wp.target
@@ -15,20 +24,11 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
                 val tangent = atan2(next.y - prev.y, next.x - prev.x)
                 setTangent(tangent)
                 splineToSplineHeading(next, tangent)
-                hasMoves = true
             }
             else if (next.heading != prev.heading) {
                 turnTo(next.heading)
-                hasMoves = true
             }
             prev = next
-        }
-    }
-
-    if (hasMoves) {
-        val action = movesBuilder.build()
-        while (action.run(TelemetryPacket())) {
-            opMode.loop.nextTick()
         }
     }
 }
