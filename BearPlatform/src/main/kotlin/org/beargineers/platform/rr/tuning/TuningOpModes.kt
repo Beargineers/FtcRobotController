@@ -100,6 +100,7 @@ object TuningOpModes {
     }
 
     @OpModeRegistrar
+    @JvmStatic
     fun register(manager: OpModeManager) {
         if (DISABLED) return
 
