@@ -27,7 +27,7 @@ class LoopRuntime {
     val dispatcher: CoroutineDispatcher = object : CoroutineDispatcher() {
         override fun dispatch(context: CoroutineContext, block: Runnable) {
             // enqueue for execution on this loop
-            ready.addLast(block)
+            ready.offer(block)
         }
     }
 
@@ -38,7 +38,7 @@ class LoopRuntime {
      */
     suspend fun nextTick(): Unit =
         suspendCancellableCoroutine { cont ->
-            nextTickWaiters.addLast(cont)
+            nextTickWaiters.offer(cont)
 
             cont.invokeOnCancellation {
                 // O(n), but fine for a minimal example.
@@ -72,8 +72,8 @@ class LoopRuntime {
         // Snapshot waiters so anything that calls nextTick() during this tick
         // resumes on the *following* tick, not this one.
         val toResume = ArrayList<CancellableContinuation<Unit>>(nextTickWaiters.size)
-        while (nextTickWaiters.isNotEmpty()) {
-            toResume += nextTickWaiters.removeFirst()
+        while (true) {
+            toResume += (nextTickWaiters.poll() ?: break)
         }
 
         // Resume through the continuation; execution is routed via dispatcher.
@@ -82,8 +82,8 @@ class LoopRuntime {
         }
 
         var ran = 0
-        while (ready.isNotEmpty()) {
-            val task = ready.removeFirst()
+        while (true) {
+            val task = ready.poll() ?: break
             task.run()
             ran++
         }
