@@ -44,7 +44,7 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     override fun getReadyForShoot() {
-        TODO("Not yet implemented")
+        // TODO("Not yet implemented")
     }
 
     override fun enableFlywheel(on: Boolean) {
