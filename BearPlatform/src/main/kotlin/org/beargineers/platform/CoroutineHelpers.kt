@@ -16,12 +16,17 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
 }
 
 suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
-/*
-    while (opMode.followPath(waypoints)) {
+    val follower = PathFollower(
+        robot = this as BaseRobot,
+        path = waypoints,
+        startPosition = currentPosition
+    )
+
+    while (follower.update()) {
         opMode.loop.nextTick()
     }
-*/
 
+/*
     move {
         var prev = currentPosition
         for (wp in waypoints) {
@@ -37,6 +42,7 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
             prev = next
         }
     }
+*/
 }
 
 suspend fun Robot.driveTo(target: Position) {

@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 
 
 abstract class RobotOpMode<T : Robot>() : OpMode() {
@@ -26,7 +26,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     private val loopTimer = ElapsedTime()
 
 
-    private var auto: CompletableDeferred<Unit>? = null
+    private var auto: Deferred<Unit>? = null
     val elapsedTime = ElapsedTime()
     val loop = LoopRuntime()
 
@@ -165,25 +165,6 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         return left_trigger.touched() || right_trigger.touched() ||
                 left_stick_x.touched() || left_stick_y.touched() ||
                 right_stick_x.touched() || right_stick_y.touched()
-    }
-
-    private var currentFollower: PathFollower? = null
-
-    // TODO: Remove when RR implementation is secured
-    fun followPath(waypoints: List<Waypoint>): Boolean {
-        // Check if this is a new path (different instance)
-        if (currentFollower?.path != waypoints) {
-            // Create new PathFollower for this path
-            currentFollower = PathFollower(
-                robot = robot as BaseRobot,
-                path = waypoints,
-                startPosition = robot.currentPosition
-            )
-        }
-
-        return currentFollower!!.update().also {
-            if (!it) currentFollower = null
-        }
     }
 
     companion object {
