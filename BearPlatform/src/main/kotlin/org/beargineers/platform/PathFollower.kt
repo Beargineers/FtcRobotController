@@ -113,7 +113,11 @@ internal class PathFollower(
 
         fun Double.dezeroify(): Double {
             val min = robot.minimalWheelPower
-            return if (abs(this) > 0.0001 && abs(this) < min) min * sign(this) else this
+            return when {
+                abs(this) < 0.01 -> 0.0
+                abs(this) < min -> min * sign(this)
+                else -> this
+            }
         }
 
 
