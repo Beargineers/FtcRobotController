@@ -1,5 +1,6 @@
 package org.beargineers.platform
 
+import com.acmerobotics.roadrunner.Pose2d
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import java.util.Locale
@@ -340,3 +341,5 @@ fun Location.toRobotCentric(atPosition: Position): RobotCentricLocation {
 
     return RobotCentricLocation(robotX, robotY)
 }
+
+fun Position.toPose2d() = Pose2d(x.inch(), y.inch(), heading.radians())
