@@ -1,12 +1,12 @@
 package org.beargineers.platform
 
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.ArrayDeque
 import kotlin.coroutines.CoroutineContext
@@ -49,16 +49,8 @@ class LoopRuntime {
     /**
      * Convenience boundary for non-coroutine callers that want a result.
      */
-    fun <T> submit(block: suspend CoroutineScope.() -> T): CompletableDeferred<T> {
-        val result = CompletableDeferred<T>(rootJob)
-        scope.launch {
-            try {
-                result.complete(block())
-            } catch (t: Throwable) {
-                result.completeExceptionally(t)
-            }
-        }
-        return result
+    fun <T> submit(block: suspend CoroutineScope.() -> T): Deferred<T> {
+        return scope.async(block = block)
     }
 
     /**
