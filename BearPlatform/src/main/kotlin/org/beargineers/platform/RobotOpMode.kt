@@ -67,6 +67,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
                 println("Auto has failed with ${throwable.message}")
                 throwable.printStackTrace()
                 stop()
+                terminateOpModeNow()
             }
         }
     }
