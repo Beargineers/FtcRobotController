@@ -20,7 +20,7 @@ private val PANELS_SHOW_PATH by config(false)
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     abstract val drive: Drivetrain
 
-    val mecanumDrive = MecanumDrive(this)
+    val mecanumDrive by lazy {  MecanumDrive(this) }
 
     abstract val localizer: Localizer
     val allHardware = mutableListOf<Hardware>()
@@ -67,7 +67,11 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun loop() {
         allHardware.forEach {
-            it.loop()
+            try {
+                it.loop()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         localizer.update()

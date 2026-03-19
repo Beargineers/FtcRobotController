@@ -1,6 +1,7 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
@@ -182,6 +183,15 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         driveJob?.cancel()
         driveJob = loop.submit {
             robot.driveTo(targetPosition)
+        }.apply {
+            invokeOnCompletion { throwable ->
+                if (throwable != null && throwable !is CancellationException) {
+                    telemetry.addLine("DRIVE COROUTINE HAS FAILED")
+                    telemetry.update()
+                    println("Drive coroutine has failed with ${throwable.message}")
+                    throwable.printStackTrace()
+                }
+            }
         }
     }
 

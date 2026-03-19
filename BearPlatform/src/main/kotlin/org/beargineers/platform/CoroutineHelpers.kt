@@ -16,6 +16,12 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
 }
 
 suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
+/*
+    while (opMode.followPath(waypoints)) {
+        opMode.loop.nextTick()
+    }
+*/
+
     move {
         var prev = currentPosition
         for (wp in waypoints) {

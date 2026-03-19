@@ -43,6 +43,9 @@ import org.beargineers.platform.inch
 import org.beargineers.platform.rr.messages.DriveCommandMessage
 import org.beargineers.platform.rr.messages.MecanumCommandMessage
 import org.beargineers.platform.rr.messages.PoseMessage
+import org.beargineers.platform.rr.tuning.TuningOpModes
+import org.beargineers.platform.toPose2d
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.ArrayDeque
 import kotlin.math.ceil
 import kotlin.math.max
@@ -95,8 +98,11 @@ object MecanumTuning {
     val headingVelGain by config(0.0) // shared with turn
 }
 
-class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer) {
-    constructor(robot: BaseRobot) : this(robot.opMode.hardwareMap, SimpleRobotLocalizer(robot))
+class MecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val telemetry: Telemetry? = null) {
+    val pl = PinpointLocalizer(hardwareMap, Position.zero().toPose2d())
+    val localizer = TuningOpModes.SimplePinpointLocalizer(pl)
+
+    constructor(robot: BaseRobot) : this(robot.opMode.hardwareMap, SimpleRobotLocalizer(robot), robot.telemetry)
 
     private val kinematics = MecanumKinematics(
         MecanumTuning.inPerTick * MecanumTuning.trackWidthTicks, MecanumTuning.inPerTick / MecanumTuning.lateralInPerTick
@@ -361,6 +367,10 @@ class MecanumDrive(val hardwareMap: HardwareMap, val localizer: SimpleLocalizer)
 
     fun updatePoseEstimate(): PoseVelocity2d {
         val cv = localizer.currentVelocity
+        val robotCV = loc.currentVelocity
+
+        telemetry?.addData("VEL", "$cv # $robotCV")
+
         poseHistory.add(getPose())
 
         while (poseHistory.size >= 100) {
