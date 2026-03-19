@@ -6,6 +6,7 @@ import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
 
@@ -57,9 +58,17 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         loopTimer.reset()
 
         bearStart()
-        loop.submit { robot.autoProgram() }
-
         elapsedTime.reset()
+
+        loop.submit { robot.autoProgram() }.invokeOnCompletion { throwable ->
+            if (throwable != null && throwable !is CancellationException) {
+                telemetry.addLine("AUTO EXCEPTION")
+                telemetry.update()
+                println("Auto has failed with ${throwable.message}")
+                throwable.printStackTrace()
+                stop()
+            }
+        }
     }
 
     override fun stop() {
@@ -123,6 +132,15 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         cancelAuto()
         auto = loop.submit {
             robot.b()
+        }.apply {
+            invokeOnCompletion { throwable ->
+                if (throwable != null && throwable !is CancellationException) {
+                    telemetry.addLine("AUTO EXCEPTION")
+                    telemetry.update()
+                    println("Auto has failed with ${throwable.message}")
+                    throwable.printStackTrace()
+                }
+            }
         }
     }
 
