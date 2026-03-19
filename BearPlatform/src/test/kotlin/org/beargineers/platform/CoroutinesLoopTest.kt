@@ -1,6 +1,7 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -88,5 +89,26 @@ class CoroutinesLoopTest : RobotTest() {
         }
         repeat(5) {opMode.loop.tick()}
         assert(success)
+    }
+
+    @Test
+    fun testCancellation() {
+        var counter = 0
+        opMode.loop.submit {
+            var job: Job? = null
+
+            repeat(5) {
+                job?.cancel()
+                job = opMode.loop.submit {
+                    while (true) {
+                        counter++
+                        opMode.loop.nextTick()
+                    }
+                }
+            }
+        }
+
+        repeat(5) {opMode.loop.tick()}
+        assert(counter == 5)
     }
 }
