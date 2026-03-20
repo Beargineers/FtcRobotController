@@ -9,6 +9,7 @@ import org.beargineers.platform.Robot
 import org.beargineers.platform.RobotLocations
 import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
+import org.beargineers.platform.between
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.degrees
@@ -102,14 +103,14 @@ fun DecodeRobot.headingToGoalFrom(position: Location): Angle {
 enum class ShootingZones {
     CLOSEST, FRONT, BACK
 }
-fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSEST): Boolean{
+fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSEST): Boolean {
 
-    fun pointInCloseShootingZone(p: Location): Boolean{
-       if (p.x.cm() < 0){
-           return abs(p.x)>(abs(p.y))
-       }else{
-           return false
-       }
+    fun pointInCloseShootingZone(p: Location): Boolean {
+        if (p.x.cm() < 0) {
+            return abs(p.x) > (abs(p.y))
+        } else {
+            return false
+        }
     }
 
     fun pointInFarShootingZone(p: Location): Boolean {
@@ -120,22 +121,30 @@ fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSE
         }
     }
 
-    fun pointInShootingZone(p: Location): Boolean{
+    fun pointInShootingZone(p: Location): Boolean {
         if (shootingZone == ShootingZones.CLOSEST) {
             return (pointInCloseShootingZone(p) || pointInFarShootingZone(p))
-        }else if (shootingZone == ShootingZones.FRONT){// close shooting zone
+        } else if (shootingZone == ShootingZones.FRONT) {// close shooting zone
             return (pointInCloseShootingZone(p))
-        }else{ // far shooting zone
+        } else { // far shooting zone
             return (pointInFarShootingZone(p))
         }
     }
 
     val l = getPart(RobotLocations)
 
-    return pointInShootingZone(l.rf_wheel) ||
-            pointInShootingZone(l.lf_wheel) ||
-            pointInShootingZone(l.rb_wheel) ||
-            pointInShootingZone(l.lb_wheel)
+    val points = listOf(
+        l.rf_corner,
+        l.lf_corner,
+        l.rb_corner,
+        l.rb_corner,
+        l.rf_corner.between(l.lf_corner),
+        l.lf_corner.between(l.lb_corner),
+        l.lb_corner.between(l.rb_corner),
+        l.rb_corner.between(l.rf_corner)
+    )
+
+    return points.any { pointInShootingZone(it) }
 }
 
 fun DecodeRobot.clearForShooting(): Boolean{

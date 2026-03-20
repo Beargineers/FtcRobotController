@@ -342,4 +342,8 @@ fun Location.toRobotCentric(atPosition: Position): RobotCentricLocation {
     return RobotCentricLocation(robotX, robotY)
 }
 
+fun Location.between(other: Location): Location {
+    return Location((other.x + x)/2, (other.y + y)/2)
+}
+
 fun Position.toPose2d() = Pose2d(x.inch(), y.inch(), heading.radians())
