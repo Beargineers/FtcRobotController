@@ -18,11 +18,11 @@ private val PANELS_FIELD_FPS by config(3)
 private val PANELS_SHOW_PATH by config(false)
 
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
-    val drive by lazy { MecanumDrive(this) }
+    val allHardware = mutableListOf<Hardware>()
+    val drive = MecanumDrive(this)
     val rrMecanumDrive by lazy { RRMecanumDrive(this) }
 
     abstract val localizer: Localizer
-    val allHardware = mutableListOf<Hardware>()
 
     override val telemetry: Telemetry get() = opMode.telemetry
 
