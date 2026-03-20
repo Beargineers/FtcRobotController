@@ -68,7 +68,7 @@ class SimpleRobotLocalizer(val robot: BaseRobot) : SimpleLocalizer {
         }
 }
 
-object MecanumTuning {
+object RRMecanumTuning {
     // drive model parameters
     val inPerTick by config(1.0)
     val lateralInPerTick by config(1.0)
@@ -98,27 +98,27 @@ object MecanumTuning {
     val headingVelGain by config(0.0) // shared with turn
 }
 
-class MecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val telemetry: Telemetry? = null) {
+class RRMecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val telemetry: Telemetry? = null) {
     val pl = PinpointLocalizer(hardwareMap, Position.zero().toPose2d())
     val localizer = TuningOpModes.SimplePinpointLocalizer(pl)
 
     constructor(robot: BaseRobot) : this(robot.opMode.hardwareMap, SimpleRobotLocalizer(robot), robot.telemetry)
 
     private val kinematics = MecanumKinematics(
-        MecanumTuning.inPerTick * MecanumTuning.trackWidthTicks, MecanumTuning.inPerTick / MecanumTuning.lateralInPerTick
+        RRMecanumTuning.inPerTick * RRMecanumTuning.trackWidthTicks, RRMecanumTuning.inPerTick / RRMecanumTuning.lateralInPerTick
     )
 
     private val defaultTurnConstraints = TurnConstraints(
-        MecanumTuning.maxAngVel.radians(), -MecanumTuning.maxAngAccel.radians(), MecanumTuning.maxAngAccel.radians()
+        RRMecanumTuning.maxAngVel.radians(), -RRMecanumTuning.maxAngAccel.radians(), RRMecanumTuning.maxAngAccel.radians()
     )
     private val defaultVelConstraint: VelConstraint = MinVelConstraint(
         listOf(
-            kinematics.WheelVelConstraint(MecanumTuning.maxWheelVel.inch()),
-            AngularVelConstraint(MecanumTuning.maxAngVel.radians())
+            kinematics.WheelVelConstraint(RRMecanumTuning.maxWheelVel.inch()),
+            AngularVelConstraint(RRMecanumTuning.maxAngVel.radians())
         )
     )
     private val defaultAccelConstraint: AccelConstraint =
-        ProfileAccelConstraint(MecanumTuning.minProfileAccel.inch(), MecanumTuning.maxProfileAccel.inch())
+        ProfileAccelConstraint(RRMecanumTuning.minProfileAccel.inch(), RRMecanumTuning.maxProfileAccel.inch())
 
     
     val leftFront: DcMotorEx
@@ -229,8 +229,8 @@ class MecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val t
             val robotVelRobot = updatePoseEstimate()
 
             val command: PoseVelocity2dDual<Time> = HolonomicController(
-                MecanumTuning.axialGain, MecanumTuning.lateralGain, MecanumTuning.headingGain,
-                MecanumTuning.axialVelGain, MecanumTuning.lateralVelGain, MecanumTuning.headingVelGain
+                RRMecanumTuning.axialGain, RRMecanumTuning.lateralGain, RRMecanumTuning.headingGain,
+                RRMecanumTuning.axialVelGain, RRMecanumTuning.lateralVelGain, RRMecanumTuning.headingVelGain
             )
                 .compute(txWorldTarget, getPose(), robotVelRobot)
             driveCommandWriter.write(DriveCommandMessage(command))
@@ -239,8 +239,8 @@ class MecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val t
             val voltage = voltageSensor.getVoltage()
 
             val feedforward = MotorFeedforward(
-                MecanumTuning.kS,
-                MecanumTuning.kV / MecanumTuning.inPerTick, MecanumTuning.kA / MecanumTuning.inPerTick
+                RRMecanumTuning.kS,
+                RRMecanumTuning.kV / RRMecanumTuning.inPerTick, RRMecanumTuning.kA / RRMecanumTuning.inPerTick
             )
             val leftFrontPower = feedforward.compute(wheelVels.leftFront) / voltage
             val leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage
@@ -317,8 +317,8 @@ class MecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val t
             val robotVelRobot = updatePoseEstimate()
 
             val command: PoseVelocity2dDual<Time> = HolonomicController(
-                MecanumTuning.axialGain, MecanumTuning.lateralGain, MecanumTuning.headingGain,
-                MecanumTuning.axialVelGain, MecanumTuning.lateralVelGain, MecanumTuning.headingVelGain
+                RRMecanumTuning.axialGain, RRMecanumTuning.lateralGain, RRMecanumTuning.headingGain,
+                RRMecanumTuning.axialVelGain, RRMecanumTuning.lateralVelGain, RRMecanumTuning.headingVelGain
             )
                 .compute(txWorldTarget, getPose(), robotVelRobot)
             driveCommandWriter.write(DriveCommandMessage(command))
@@ -326,8 +326,8 @@ class MecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val t
             val wheelVels = kinematics.inverse(command)
             val voltage = voltageSensor.getVoltage()
             val feedforward = MotorFeedforward(
-                MecanumTuning.kS,
-                MecanumTuning.kV / MecanumTuning.inPerTick, MecanumTuning.kA / MecanumTuning.inPerTick
+                RRMecanumTuning.kS,
+                RRMecanumTuning.kV / RRMecanumTuning.inPerTick, RRMecanumTuning.kA / RRMecanumTuning.inPerTick
             )
             val leftFrontPower = feedforward.compute(wheelVels.leftFront) / voltage
             val leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage

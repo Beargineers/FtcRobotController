@@ -5,7 +5,6 @@ import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.Localizer
-import org.beargineers.platform.MecanumDrive
 import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
@@ -20,7 +19,6 @@ object NoVision : AbsoluteLocalizer {
 }
 
 class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
-    override val drive = MecanumDrive(this)
     val vision = ArtifactsVision(this)
 
     override val localizer: Localizer = FusionLocalizer(telemetry, NoVision, PinpointLocalizer(this))

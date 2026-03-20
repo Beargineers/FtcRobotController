@@ -60,21 +60,6 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         } as T
     }
 
-    override fun motorPowers(
-        forwardPower: Double,
-        rightPower: Double,
-        turnPower: Double
-    ) {
-        TODO("Not yet implemented")
-    }
-
-    override fun stopDriving() {
-    }
-
-    override fun isMoving(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun assumePosition(position: Position) {
         localizer.setStartingPosition(position)
     }
@@ -84,6 +69,10 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
     }
 
     override fun init() {
+        TODO("Not yet implemented")
+    }
+
+    override fun start() {
         TODO("Not yet implemented")
     }
 
