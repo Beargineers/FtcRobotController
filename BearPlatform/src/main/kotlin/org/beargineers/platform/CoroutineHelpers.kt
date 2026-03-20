@@ -7,7 +7,8 @@ import kotlinx.coroutines.launch
 import org.beargineers.platform.rr.MovesBuilder
 
 suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
-    val movesBuilder = (this as BaseRobot).mecanumDrive.movesBuilder(currentPosition)
+    require (WheelsConfig.RoadRunnerEnabled) {"This API is only available in RoadRunner mode"}
+    val movesBuilder = (this as BaseRobot).rrMecanumDrive.movesBuilder(currentPosition)
     movesBuilder.apply(moves)
     val action = movesBuilder.build()
     while (action.run(TelemetryPacket())) {
@@ -16,33 +17,33 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
 }
 
 suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
-    val follower = PathFollower(
-        robot = this as BaseRobot,
-        path = waypoints,
-        startPosition = currentPosition
-    )
-
-    while (follower.update()) {
-        opMode.loop.nextTick()
-    }
-
-/*
-    move {
-        var prev = currentPosition
-        for (wp in waypoints) {
-            val next = wp.target
-            if (next.distanceTo(prev) > 0.cm) {
-                val tangent = atan2(next.y - prev.y, next.x - prev.x)
-                setTangent(tangent)
-                splineToSplineHeading(next, tangent)
+    if (WheelsConfig.RoadRunnerEnabled) {
+        move {
+            var prev = currentPosition
+            for (wp in waypoints) {
+                val next = wp.target
+                if (next.distanceTo(prev) > 0.cm) {
+                    val tangent = atan2(next.y - prev.y, next.x - prev.x)
+                    setTangent(tangent)
+                    splineToSplineHeading(next, tangent)
+                }
+                else if (next.heading != prev.heading) {
+                    turnTo(next.heading)
+                }
+                prev = next
             }
-            else if (next.heading != prev.heading) {
-                turnTo(next.heading)
-            }
-            prev = next
+        }
+    } else {
+        val follower = PathFollower(
+            robot = this as BaseRobot,
+            path = waypoints,
+            startPosition = currentPosition
+        )
+
+        while (follower.update()) {
+            opMode.loop.nextTick()
         }
     }
-*/
 }
 
 suspend fun Robot.driveTo(target: Position) {
