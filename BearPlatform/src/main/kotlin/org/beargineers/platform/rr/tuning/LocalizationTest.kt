@@ -7,15 +7,15 @@ import com.acmerobotics.roadrunner.PoseVelocity2d
 import com.acmerobotics.roadrunner.Vector2d
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import org.beargineers.platform.rr.MecanumDrive
 import org.beargineers.platform.rr.PinpointLocalizer
+import org.beargineers.platform.rr.RRMecanumDrive
 import org.beargineers.platform.rr.tuning.TuningOpModes.SimplePinpointLocalizer
 
 @Autonomous(group = "Tune")
 class LocalizationTest : LinearOpMode() {
     override fun runOpMode() {
         val pl = PinpointLocalizer(hardwareMap, Pose2d(0.0, 0.0, 0.0))
-        val drive = MecanumDrive(hardwareMap,  SimplePinpointLocalizer(pl))
+        val drive = RRMecanumDrive(hardwareMap,  SimplePinpointLocalizer(pl))
 
         telemetry = MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry())
 

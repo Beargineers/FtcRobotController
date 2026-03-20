@@ -5,18 +5,12 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 interface Robot {
     fun <T:Any > getPart(part: Part<T>): T
 
-    fun motorPowers(forwardPower: Double, rightPower: Double, turnPower: Double)
-
-    fun stopDriving()
-
-    fun isMoving(): Boolean
-
     fun assumePosition(position: Position)
 
-    fun stop()
-
     fun init()
+    fun start()
     fun loop()
+    fun stop()
 
     fun lowFpsMode(mode: Boolean) {}
 

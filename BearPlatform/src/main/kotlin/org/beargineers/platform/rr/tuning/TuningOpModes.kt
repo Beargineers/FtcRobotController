@@ -29,9 +29,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.inch
 import org.beargineers.platform.radians
-import org.beargineers.platform.rr.MecanumDrive
-import org.beargineers.platform.rr.MecanumTuning
 import org.beargineers.platform.rr.PinpointLocalizer
+import org.beargineers.platform.rr.RRMecanumDrive
+import org.beargineers.platform.rr.RRMecanumTuning
 import org.beargineers.platform.rr.SimpleLocalizer
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
@@ -108,7 +108,7 @@ object TuningOpModes {
             override fun make(h: HardwareMap): DriveView {
                 val pl = PinpointLocalizer(h, Pose2d(0.0, 0.0, 0.0))
 
-                val md = MecanumDrive(h, SimplePinpointLocalizer(pl))
+                val md = RRMecanumDrive(h, SimplePinpointLocalizer(pl))
 
                 val encoderGroups = mutableListOf<EncoderGroup>()
                 val leftEncs = mutableListOf<EncoderRef>()
@@ -123,10 +123,10 @@ object TuningOpModes {
 
                 return DriveView(
                     DriveType.MECANUM,
-                    MecanumTuning.inPerTick,
-                    MecanumTuning.maxWheelVel.inch(),
-                    MecanumTuning.minProfileAccel.inch(),
-                    MecanumTuning.maxProfileAccel.inch(),
+                    RRMecanumTuning.inPerTick,
+                    RRMecanumTuning.maxWheelVel.inch(),
+                    RRMecanumTuning.minProfileAccel.inch(),
+                    RRMecanumTuning.maxProfileAccel.inch(),
                     encoderGroups,
                     listOf(md.leftFront, md.leftBack),
                     listOf(md.rightFront, md.rightBack),
@@ -138,9 +138,9 @@ object TuningOpModes {
                     md.voltageSensor,
                     {
                         MotorFeedforward(
-                            MecanumTuning.kS,
-                            MecanumTuning.kV / MecanumTuning.inPerTick,
-                            MecanumTuning.kA / MecanumTuning.inPerTick
+                            RRMecanumTuning.kS,
+                            RRMecanumTuning.kV / RRMecanumTuning.inPerTick,
+                            RRMecanumTuning.kA / RRMecanumTuning.inPerTick
                         )
                     },
                     0

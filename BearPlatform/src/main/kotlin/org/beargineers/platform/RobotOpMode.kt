@@ -57,6 +57,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         super.start()
         loopTimer.reset()
 
+        robot.start()
         bearStart()
         elapsedTime.reset()
 

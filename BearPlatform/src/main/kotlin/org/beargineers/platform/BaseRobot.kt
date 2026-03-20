@@ -6,7 +6,7 @@ import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.beargineers.platform.rr.MecanumDrive
+import org.beargineers.platform.rr.RRMecanumDrive
 import org.firstinspires.ftc.robotcore.external.Telemetry
 
 fun cursorLocation(): Location{
@@ -18,9 +18,8 @@ private val PANELS_FIELD_FPS by config(3)
 private val PANELS_SHOW_PATH by config(false)
 
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
-    abstract val drive: Drivetrain
-
-    val mecanumDrive by lazy {  MecanumDrive(this) }
+    val drive by lazy { MecanumDrive(this) }
+    val rrMecanumDrive by lazy { RRMecanumDrive(this) }
 
     abstract val localizer: Localizer
     val allHardware = mutableListOf<Hardware>()
@@ -39,18 +38,23 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     private val locationHistory = ArrayDeque<Location>(locationHistorySize)
 
+    private var hasBeenInitialized = false
 
     override fun init() {
         allHardware.forEach {
             it.init()
         }
+        hasBeenInitialized = true
+    }
+
+    override fun start() {
     }
 
     override fun assumePosition(position: Position) {
         localizer.setStartingPosition(position)
     }
 
-    override fun isMoving(): Boolean {
+    fun isMoving(): Boolean {
         val vel = currentVelocity
         val lateral = abs(vel.linear())
         val angular = abs(vel.angular().normalize())
@@ -151,10 +155,12 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     fun registerHardware(hardware: Hardware) {
         allHardware += hardware
+        if (hasBeenInitialized) {
+            hardware.init()
+        }
     }
 
-
-    override fun motorPowers(
+    fun motorPowers(
         forwardPower: Double,
         rightPower: Double,
         turnPower: Double
@@ -162,7 +168,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         drive.drive(forwardPower, rightPower, turnPower)
     }
 
-    override fun stopDriving() {
+    fun stopDriving() {
         drive.stop()
     }
 
