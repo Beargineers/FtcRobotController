@@ -48,7 +48,7 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot) {
 
         val maxMag = listOf(1.0, lfP, rfP, lbP, rbP).maxOf { abs(it) }
 
-        val limit = robot.targetSpeed * WheelsConfig.topSpeed
+        val limit = WheelsConfig.topSpeed
         fun normalize(v: Double) = roundMotorPower((v / maxMag) * limit) * ticksPerSecond
 
         lf.velocity = normalize(lfP * WheelsConfig.lf_correction)
@@ -58,8 +58,8 @@ class MecanumDrive(robot: BaseRobot) : Hardware(robot) {
     }
 
     fun driveByPowerAndAngle(theta: Double, power: Double, turn: Double) {
-        val power = power * robot.targetSpeed * WheelsConfig.topSpeed
-        val turn = turn * robot.targetSpeed * WheelsConfig.topSpeed
+        val power = power * WheelsConfig.topSpeed
+        val turn = turn * WheelsConfig.topSpeed
 
         val sin = sin(theta + Math.PI / 4)
         val cos = cos(theta + Math.PI / 4)

@@ -46,8 +46,8 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
     }
 }
 
-suspend fun Robot.driveTo(target: Position) {
-    drivePath(pathTo(target))
+suspend fun Robot.driveTo(target: Position, speed: Double = 1.0) {
+    drivePath(pathTo(target, speed))
 }
 
 suspend fun Robot.driveRelative(movement: RobotCentricPosition) {

@@ -35,7 +35,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     override val currentPosition: Position get() = localizer.getPosition()
 
     override val currentVelocity: RobotCentricPosition get() = localizer.getVelocity()
-    override var targetSpeed: Double = 1.0
 
     private val locationHistory = ArrayDeque<Location>(locationHistorySize)
 
