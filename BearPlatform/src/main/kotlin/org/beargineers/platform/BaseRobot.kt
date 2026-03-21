@@ -6,6 +6,7 @@ import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.robotcore.util.ElapsedTime
+import com.qualcomm.robotcore.util.RobotLog
 import org.beargineers.platform.rr.RRMecanumDrive
 import org.firstinspires.ftc.robotcore.external.Telemetry
 
@@ -73,8 +74,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         allHardware.forEach {
             try {
                 it.loop()
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (e: Throwable) {
+                RobotLog.ee(RobotOpMode.TAG, e, "Exception updating hardware")
             }
         }
 

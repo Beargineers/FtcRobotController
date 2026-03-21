@@ -1,6 +1,7 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.util.RobotLog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import org.beargineers.platform.Alliance
@@ -188,8 +189,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
                 if (throwable != null && throwable !is CancellationException) {
                     telemetry.addLine("DRIVE COROUTINE HAS FAILED")
                     telemetry.update()
-                    println("Drive coroutine has failed with ${throwable.message}")
-                    throwable.printStackTrace()
+                    RobotLog.ee(TAG, throwable, "Drive coroutine has failed with ${throwable.message}")
                 }
             }
         }

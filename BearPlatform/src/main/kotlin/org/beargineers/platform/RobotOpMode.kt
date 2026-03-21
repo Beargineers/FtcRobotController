@@ -6,6 +6,7 @@ import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
+import com.qualcomm.robotcore.util.RobotLog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 
@@ -65,8 +66,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
             if (throwable != null && throwable !is CancellationException) {
                 telemetry.addLine("AUTO EXCEPTION")
                 telemetry.update()
-                println("Auto has failed with ${throwable.message}")
-                throwable.printStackTrace()
+                RobotLog.ee(TAG, throwable, "Auto has failed with ${throwable.message}")
                 stop()
                 terminateOpModeNow()
             }
@@ -139,8 +139,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
                 if (throwable != null && throwable !is CancellationException) {
                     telemetry.addLine("AUTO EXCEPTION")
                     telemetry.update()
-                    println("Auto has failed with ${throwable.message}")
-                    throwable.printStackTrace()
+                    RobotLog.ee(TAG, throwable, "Auto has failed with ${throwable.message}")
                 }
             }
         }
@@ -169,6 +168,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     }
 
     companion object {
+        val TAG = "RobotOpMode"
         // This will be used to transfer last known position between different OpModes (like to start Teleop where Auto has finished)
         var lastKnownPosition: Position = Position.zero()
     }
