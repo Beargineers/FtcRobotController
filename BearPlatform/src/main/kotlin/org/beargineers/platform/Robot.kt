@@ -20,8 +20,6 @@ interface Robot {
 
     val currentVelocity: RobotCentricPosition
 
-    var targetSpeed: Double
-
     val opMode: RobotOpMode<*>
 
     val alliance: Alliance get() = opMode.alliance
