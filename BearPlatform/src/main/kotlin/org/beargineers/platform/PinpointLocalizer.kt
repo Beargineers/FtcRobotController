@@ -72,7 +72,7 @@ class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
         /*
         correction += errorCorrection(oldPosition, newEstimate)
 
-        telemetry.addData("Correction", correction)
+        Frame.addData("Correction", correction)
         */
 
         return newEstimate

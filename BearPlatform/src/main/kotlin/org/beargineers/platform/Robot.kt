@@ -1,7 +1,5 @@
 package org.beargineers.platform
 
-import org.firstinspires.ftc.robotcore.external.Telemetry
-
 interface Robot {
     fun <T:Any > getPart(part: Part<T>): T
 
@@ -13,8 +11,6 @@ interface Robot {
     fun stop()
 
     fun lowFpsMode(mode: Boolean) {}
-
-    val telemetry: Telemetry
 
     val currentPosition: Position
 

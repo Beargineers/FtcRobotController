@@ -1,7 +1,5 @@
 package org.beargineers.platform
 
-import org.firstinspires.ftc.robotcore.external.Telemetry
-
 /**
  * Provides relative positioning information - the movement/shift of the robot
  * since the last query. This is typically implemented using odometry sensors
@@ -49,7 +47,6 @@ interface Localizer {
 }
 
 class FusionLocalizer(
-    val telemetry: Telemetry,
     val absoluteLocalizer: AbsoluteLocalizer,
     val relativeLocalizer: RelativeLocalizer
 ) : Localizer {
@@ -65,12 +62,12 @@ class FusionLocalizer(
     override fun update() {
         val pose = absoluteLocalizer.getRobotPose()
         if (pose != null) {
-            telemetry.addData("Vision", "✓ acquired")
+            Frame.addData("Vision", "✓ acquired")
             relativeLocalizer.updatePositionEstimate(pose)
             updateCurrentPosition(pose)
         }
         else {
-            telemetry.addData("Vision", "✗ odometry only")
+            Frame.addData("Vision", "✗ odometry only")
             updateCurrentPosition(relativeLocalizer.getPosition(RobotOpMode.lastKnownPosition))
         }
     }

@@ -72,14 +72,16 @@ class AprilTagWebcam(robot: BaseRobot): Camera(robot) {
     }
 
     fun addTelemetry(detection: AprilTagDetection?) {
-        if (detection != null) {
-            telemetry.addData("Found", "ID %d (%s)", detection.id, detection.metadata.name)
-            telemetry.addData("Range", "%5.1f cm", detection.ftcPose.range)
-            telemetry.addData("Bearing", "%3.0f degrees", detection.ftcPose.bearing)
-            telemetry.addData("Yaw", "%3.0f degrees", detection.ftcPose.yaw)
-            telemetry.addData("x,y,z", "%5.1f,%5.1f,%5.1f cm", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z)
-        } else {
-            telemetry.addData("Found","No april tag to be seen here ¯\\_(ツ)_/¯")
+        with(Frame) {
+            if (detection != null) {
+                addData("Found", "ID %d (%s)", detection.id, detection.metadata.name)
+                addData("Range", "%5.1f cm", detection.ftcPose.range)
+                addData("Bearing", "%3.0f degrees", detection.ftcPose.bearing)
+                addData("Yaw", "%3.0f degrees", detection.ftcPose.yaw)
+                addData("x,y,z", "%5.1f,%5.1f,%5.1f cm", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z)
+            } else {
+                addData("Found","No april tag to be seen here ¯\\_(ツ)_/¯")
+            }
         }
     }
 

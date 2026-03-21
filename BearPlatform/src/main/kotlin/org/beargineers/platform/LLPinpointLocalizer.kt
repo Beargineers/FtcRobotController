@@ -117,12 +117,12 @@ class LLPinpointLocalizer(robot: BaseRobot) : Localizer, Hardware(robot) {
     override fun update() {
         val pose = getRobotPose()
         if (pose != null) {
-            telemetry.addData("Vision", "✓ acquired")
+            Frame.addData("Vision", "✓ acquired")
             updatePositionEstimate(pose)
             updateCurrentPosition(pose)
         }
         else {
-            telemetry.addData("Vision", "✗ odometry only")
+            Frame.addData("Vision", "✗ odometry only")
             updateCurrentPosition(getPosition())
         }
     }

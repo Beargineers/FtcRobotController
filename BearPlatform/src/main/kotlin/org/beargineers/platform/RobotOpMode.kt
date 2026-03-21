@@ -1,12 +1,12 @@
 package org.beargineers.platform
 
 import com.bylazar.panels.Panels
+import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
-import com.qualcomm.robotcore.util.RobotLog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 
@@ -36,6 +36,8 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
     final override fun init() {
         Panels.config.enableLogs = false
+        Frame.telemetry = telemetry
+        Frame.panelsTelemetry = PanelsTelemetry.telemetry
 
         elapsedTime.reset()
 
@@ -48,7 +50,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         robot.init()
 
         bearInit()
-        telemetry.addLine("Initialized")
+        Frame.addLine("Initialized")
     }
 
     abstract suspend fun T.autoProgram()
@@ -64,9 +66,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
         loop.submit { robot.autoProgram() }.invokeOnCompletion { throwable ->
             if (throwable != null && throwable !is CancellationException) {
-                telemetry.addLine("AUTO EXCEPTION")
-                telemetry.update()
-                RobotLog.ee(TAG, throwable, "Auto has failed with ${throwable.message}")
+                Frame.error(throwable, "Auto program has failed")
                 stop()
                 terminateOpModeNow()
             }
@@ -93,7 +93,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         fpsDist.update(1000 / loopTimer.milliseconds())
         loopTimer.reset()
         val (fps, std) = fpsDist.result()
-        telemetry.addData("FPS", "%.1f, STD=%.1f", fps, std)
+        Frame.addData("FPS", "%.1f, STD=%.1f", fps, std)
 
         if (fps < 20 && elapsedTime.seconds() > 3) {
             val now = System.currentTimeMillis()
@@ -127,7 +127,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     }
 
     fun toggleButton(name: String, test: () -> Boolean, callback: (Boolean) -> Unit) {
-        allButtons += ToggleButton(name, telemetry, test, callback)
+        allButtons += ToggleButton(name, test, callback)
     }
 
     fun auto(name: String, b: suspend T.() -> Unit) {
@@ -137,9 +137,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         }.apply {
             invokeOnCompletion { throwable ->
                 if (throwable != null && throwable !is CancellationException) {
-                    telemetry.addLine("AUTO EXCEPTION")
-                    telemetry.update()
-                    RobotLog.ee(TAG, throwable, "Auto has failed with ${throwable.message}")
+                    Frame.error(throwable, "Auto has failed")
                 }
             }
         }
@@ -168,7 +166,6 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     }
 
     companion object {
-        val TAG = "RobotOpMode"
         // This will be used to transfer last known position between different OpModes (like to start Teleop where Auto has finished)
         var lastKnownPosition: Position = Position.zero()
     }

@@ -2,6 +2,7 @@ package org.beargineers.beta
 
 import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Frame
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.IndicatingRelativeLocalizer
 import org.beargineers.platform.LedIndicator
@@ -28,7 +29,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val ledIndicator = LedIndicator(this)
 
     override val localizer: Localizer =
-        FusionLocalizer(telemetry,
+        FusionLocalizer(
             LimelightCam(this),
             IndicatingRelativeLocalizer(PinpointLocalizer(this), ledIndicator)
         )
@@ -76,8 +77,8 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun loop() {
         super.loop()
-        telemetry.addData("Distance to goal", goalDistance())
-        telemetry.addData("Heading to goal error", headingToGoal() - currentPosition.heading)
+        Frame.addData("Distance to goal", goalDistance())
+        Frame.addData("Heading to goal error", headingToGoal() - currentPosition.heading)
     }
 
     override val artifactsCount: Int

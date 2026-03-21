@@ -3,6 +3,7 @@ package org.beargineers.beta
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
+import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.counter
@@ -33,7 +34,7 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
     }
 
     override fun loop() {
-        telemetry.addData("Intake", mode.name)
+        Frame.addData("Intake", mode.name)
 
         intake.power = when (mode) {
             IntakeMode.ON -> {
@@ -54,12 +55,12 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
                 ballCounter.update { ballDetector.getDistance(DistanceUnit.CM) }
             }
 
-            telemetry.addData("Artifacts", artifacts)
+            Frame.addData("Artifacts", artifacts)
 
             bot.ledIndicator.setBasePattern(counter(artifacts, 'G'))
         }
         else {
-            telemetry.addData("Artifacts", "Low FPS!!!")
+            Frame.addData("Artifacts", "Low FPS!!!")
         }
     }
     fun onShoot(){

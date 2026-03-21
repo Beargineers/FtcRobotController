@@ -1,11 +1,11 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.util.RobotLog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
+import org.beargineers.platform.Frame
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
@@ -142,13 +142,13 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     override fun bearLoop() {
         super.bearLoop()
         if (robot.clearForShooting()) {
-            telemetry.addData("", "Can shoot")
+            Frame.addData("Shooting", "Ready")
         }else{
-            telemetry.addData("", "NOT READY FOR SHOOTING")
+            Frame.addData("Shooting", "NOT READY FOR SHOOTING")
         }
         val slow = gamepad1.left_bumper
 
-        telemetry.addData("Mode", if (slow) "SLOW" else "FULL")
+        Frame.addData("Mode", if (slow) "SLOW" else "FULL")
 
         if (commandedRotation().degrees() != 0.0) {
             if (System.currentTimeMillis() - lookAtGoalBtnClickedAt > 500) {
@@ -156,7 +156,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             }
         }
 
-        telemetry.addData("Goal locked", if (lookAtGoal) "YES" else "NO")
+        Frame.addData("Goal locked", if (lookAtGoal) "YES" else "NO")
 
         val delta = if (!fpvDrive) {
             val sign = if (alliance == Alliance.BLUE) -1 else 1
@@ -186,9 +186,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }.apply {
             invokeOnCompletion { throwable ->
                 if (throwable != null && throwable !is CancellationException) {
-                    telemetry.addLine("DRIVE COROUTINE HAS FAILED")
-                    telemetry.update()
-                    RobotLog.ee(TAG, throwable, "Drive coroutine has failed with ${throwable.message}")
+                    Frame.error(throwable, "Drive coroutine has failed")
                 }
             }
         }

@@ -1,7 +1,5 @@
 package org.beargineers.platform
 
-import org.firstinspires.ftc.robotcore.external.Telemetry
-
 open class Button(val test: () -> Boolean) {
     private var pressedAt: Long? = null
     private var onRelease: () -> Unit = {}
@@ -34,7 +32,7 @@ open class Button(val test: () -> Boolean) {
     }
 }
 
-class ToggleButton(val name: String, val telemetry: Telemetry, test: () -> Boolean, val toggleCallback: (Boolean) -> Unit): Button(test) {
+class ToggleButton(val name: String, test: () -> Boolean, val toggleCallback: (Boolean) -> Unit): Button(test) {
     var value: Boolean = false
 
     init {
@@ -46,6 +44,6 @@ class ToggleButton(val name: String, val telemetry: Telemetry, test: () -> Boole
 
     override fun update() {
         super.update()
-        telemetry.addData(name, if (value) "ON" else "OFF")
+        Frame.addData(name, if (value) "ON" else "OFF")
     }
 }

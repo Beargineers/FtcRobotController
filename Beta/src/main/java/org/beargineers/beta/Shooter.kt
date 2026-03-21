@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.PID
 import org.beargineers.platform.PIDFTCoeffs
@@ -75,8 +76,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         pid.updateCoefficients(SHOOTER_PID)
         pid.setTarget(p)
         pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
-        telemetry.addData("Shooter error", pid.error())
-        robot.panelsTelemetry.addData("Shooter error", pid.error())
+        Frame.addData("Shooter error", pid.error())
 
         val v = roundMotorPower(pid.result() + p)
         fly1.power = v

@@ -104,12 +104,12 @@ internal class PathFollower(
         translationalPID.updateError(translationalError)
         headingPID.updateError(headingError)
 
-        robot.panelsTelemetry.addData("DriveE", driveError)
-        robot.panelsTelemetry.addData("TransE", translationalError)
-        robot.panelsTelemetry.addData("HeadE", abs(headingError))
+        Frame.graph("DriveE", driveError)
+        Frame.graph("TransE", translationalError)
+        Frame.graph("HeadE", abs(headingError))
 
-        drivePID.logErrors(robot.panelsTelemetry)
-        drivePID.logOscillation(robot.panelsTelemetry)
+        drivePID.logErrors()
+        drivePID.logOscillation()
 
         fun Double.dezeroify(): Double {
             val min = robot.minimalWheelPower
