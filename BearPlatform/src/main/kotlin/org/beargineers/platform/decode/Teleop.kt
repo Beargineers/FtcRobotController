@@ -179,11 +179,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val deltaPosition = Position(delta.x, delta.y, heading - robot.currentPosition.heading)
 
         val targetPosition = robot.currentPosition.plus(deltaPosition)
-        robot.targetSpeed = if (slow) slowCoeff else 1.0
 
         driveJob?.cancel()
         driveJob = loop.submit {
-            robot.driveTo(targetPosition)
+            robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0)
         }.apply {
             invokeOnCompletion { throwable ->
                 if (throwable != null && throwable !is CancellationException) {

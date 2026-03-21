@@ -116,7 +116,7 @@ internal class PathFollower(
             return when {
                 abs(this) < 0.01 -> 0.0
                 abs(this) < min -> min * sign(this)
-                else -> this
+                else -> this * currentWaypoint.speed
             }
         }
 
@@ -127,7 +127,6 @@ internal class PathFollower(
         val strafePower = translationalPID.result().dezeroify()
         val turnPower = -headingPID.result().dezeroify()
 
-        robot.targetSpeed = currentWaypoint.speed
         robot.motorPowers(forwardPower,strafePower, turnPower)
 
         return true

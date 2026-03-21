@@ -86,9 +86,6 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         get() = localizer.currentPosition
     override val currentVelocity: RobotCentricPosition
         get() = localizer.getVelocity()
-    override var targetSpeed: Double
-        get() = TODO("Not yet implemented")
-        set(value) {}
 }
 
 class TestTelemetry : Telemetry {
