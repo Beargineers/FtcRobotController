@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.VoltageSensor
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Frame
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricLocation
 import org.beargineers.platform.RobotCentricPosition
@@ -45,7 +46,6 @@ import org.beargineers.platform.rr.messages.MecanumCommandMessage
 import org.beargineers.platform.rr.messages.PoseMessage
 import org.beargineers.platform.rr.tuning.TuningOpModes
 import org.beargineers.platform.toPose2d
-import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.ArrayDeque
 import kotlin.math.ceil
 import kotlin.math.max
@@ -98,11 +98,11 @@ object RRMecanumTuning {
     val headingVelGain by config(0.0) // shared with turn
 }
 
-class RRMecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val telemetry: Telemetry? = null) {
+class RRMecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer) {
     val pl = PinpointLocalizer(hardwareMap, Position.zero().toPose2d())
     val localizer = TuningOpModes.SimplePinpointLocalizer(pl)
 
-    constructor(robot: BaseRobot) : this(robot.opMode.hardwareMap, SimpleRobotLocalizer(robot), robot.telemetry)
+    constructor(robot: BaseRobot) : this(robot.opMode.hardwareMap, SimpleRobotLocalizer(robot))
 
     private val kinematics = MecanumKinematics(
         RRMecanumTuning.inPerTick * RRMecanumTuning.trackWidthTicks, RRMecanumTuning.inPerTick / RRMecanumTuning.lateralInPerTick
@@ -369,7 +369,7 @@ class RRMecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer, val
         val cv = localizer.currentVelocity
         val robotCV = loc.currentVelocity
 
-        telemetry?.addData("VEL", "$cv # $robotCV")
+        Frame.addData("VEL", "$cv # $robotCV")
 
         poseHistory.add(getPose())
 

@@ -5,6 +5,7 @@ import android.util.Size
 import com.bylazar.camerastream.PanelsCameraStream
 import com.qualcomm.robotcore.util.SortOrder
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.vision.VisionPortal
@@ -50,7 +51,7 @@ class ArtifactsVision(robot: BaseRobot) : Hardware(robot) {
         filterAndSort(blobs)
 
         for (blob in blobs) {
-            telemetry.addData("x,y,r", "%.1f,%.1f,%.1f", blob.circle.x, blob.circle.y, blob.circle.radius)
+            Frame.addData("x,y,r", "%.1f,%.1f,%.1f", blob.circle.x, blob.circle.y, blob.circle.radius)
         }
     }
 
