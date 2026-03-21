@@ -1,8 +1,6 @@
 package org.beargineers.platform
 
-import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
@@ -161,24 +159,30 @@ class PID(
         return output.coerceIn(outputMin, outputMax)
     }
 
-    fun logErrors(telemetry: TelemetryManager) {
-        telemetry.addData("PE", error * K.p)
-        telemetry.addData("DE", derivativeError * K.d)
-        telemetry.addData("IE", integralError * K.i)
-        telemetry.addData("E", result())
+    fun logErrors() {
+        with(Frame) {
+            graph("PE", error * K.p)
+            graph("DE", derivativeError * K.d)
+            graph("IE", integralError * K.i)
+            graph("E", result())
+        }
     }
 
-    fun logOscillation(telemetry: TelemetryManager) {
-        telemetry.addData("OM", errorHigh - errorLow)
-        telemetry.addData("OP", oscillationPeriod)
+    fun logOscillation() {
+        with(Frame) {
+            graph("OM", errorHigh - errorLow)
+            graph("OP", oscillationPeriod.toDouble())
+        }
     }
 
-    fun logPIDState(telemetry: Telemetry) {
-        telemetry.addData("Error", "%.3f", error)
-        telemetry.addData("P term", "%.3f", K.p * error)
-        telemetry.addData("I term", "%.3f", K.i * integralError)
-        telemetry.addData("D term", "%.3f", K.d * derivativeError)
-        telemetry.addData("Integral accum", "%.1f", integralError)
-        telemetry.addData("Output", "%.3f", result())
+    fun logPIDState() {
+        with(Frame) {
+            graph("Error", error)
+            graph("P term", K.p * error)
+            graph("I term", K.i * integralError)
+            graph("D term", K.d * derivativeError)
+            graph("Integral accum", integralError)
+            graph("Output", result())
+        }
     }
 }

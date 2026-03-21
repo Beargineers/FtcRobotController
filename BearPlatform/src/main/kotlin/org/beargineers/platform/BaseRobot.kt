@@ -6,9 +6,7 @@ import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.robotcore.util.ElapsedTime
-import com.qualcomm.robotcore.util.RobotLog
 import org.beargineers.platform.rr.RRMecanumDrive
-import org.firstinspires.ftc.robotcore.external.Telemetry
 
 fun cursorLocation(): Location{
     return Location(PanelsField.field.cursorX.inch,PanelsField.field.cursorY.inch)
@@ -24,8 +22,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     val rrMecanumDrive by lazy { RRMecanumDrive(this) }
 
     abstract val localizer: Localizer
-
-    override val telemetry: Telemetry get() = opMode.telemetry
 
     val panelsTelemetry = PanelsTelemetry.telemetry
     val panelsField = PanelsField.field
@@ -74,14 +70,14 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             try {
                 it.loop()
             } catch (e: Throwable) {
-                RobotLog.ee(RobotOpMode.TAG, e, "Exception updating hardware")
+                Frame.error( e, "Exception updating hardware")
             }
         }
 
         localizer.update()
 
-        telemetry.addData("Position", currentPosition)
-        telemetry.addData("Velocity", "%s/s, %s/s",
+        Frame.addData("Position", currentPosition)
+        Frame.addData("Velocity", "%s/s, %s/s",
             hypot(currentVelocity.forward, currentVelocity.right),
             abs(currentVelocity.turn))
 
@@ -89,8 +85,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         while (locationHistory.size >= locationHistorySize) {
             locationHistory.removeFirst()
         }
-
-        panelsTelemetry.addData("Position", currentPosition)
 
         if (Panels.wasStarted) {
             drawRobotOnPanelsField()
