@@ -17,7 +17,7 @@ import org.beargineers.platform.driveTo
 import org.beargineers.platform.pathTo
 import kotlin.time.Duration.Companion.seconds
 
-suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>) {
+suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean = true) {
     coroutineScope {
         val prepare = launch {
             delay(0.2.seconds)
@@ -31,7 +31,7 @@ suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>) {
                 positionTolerance = 3.cm
             ) else waypoint
         }
-        drivePath(waypoints)
+        drivePath(waypoints, applyMirroring)
         prepare.cancel()
     }
 
@@ -96,7 +96,7 @@ suspend fun DecodeRobot.goToShootingZoneAndShoot(shootingZone: ShootingZones) {
         addWaypoint(targetLocation.withHeading(headingToGoalFrom(targetLocation)))
     }
 
-    followPathAndShoot(waypoints)
+    followPathAndShoot(waypoints, false)
 }
 
 suspend fun DecodeRobot.park() {
