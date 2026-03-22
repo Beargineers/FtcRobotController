@@ -126,14 +126,14 @@ class Tune_headingK: TestOp() {
 @Autonomous(group = "Tune")
 class Tune_automationTimingCheck: TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
-        val startingPoint = AutoPositions.NORTH_START.mirrorForAlliance(Alliance.BLUE)
-        val launchPoint = AutoPositions.NORTH_SHOOTING.mirrorForAlliance(Alliance.BLUE)
+        val startingPoint = AutoPositions.NORTH_START
+        val launchPoint = AutoPositions.NORTH_SHOOTING
         repeat(1) {
             val timer = ElapsedTime()
 
-            assumePosition(startingPoint)
+            assumePosition(startingPoint.mirrorForAlliance(alliance))
 
-            followPathAndShoot(pathTo(launchPoint, locations.INITIAL_SHOT_SPEED))
+            followPathAndShoot(pathTo(launchPoint, Locations.INITIAL_SHOT_SPEED))
 
             val secondScoop = scoopSpikePath(2)
             drivePath(secondScoop + openRampPath())
@@ -157,7 +157,7 @@ private suspend fun DecodeRobot.doTuning(
     shiftBack:(pos: Position)->Position,
     coeff: (robot: BaseRobot)-> PIDFTCoeffs
 ) {
-    assumePosition(startingPos)
+    assumePosition(startingPos.mirrorForAlliance(alliance))
 
     repeat(1000) {
 
@@ -171,7 +171,7 @@ private suspend fun DecodeRobot.doTuning(
 
         delay(0.5.seconds)
 
-        val back = pathTo(shiftBack(currentPosition), speed = locations.INITIAL_SHOT_SPEED)
+        val back = pathTo(shiftBack(currentPosition), speed = Locations.INITIAL_SHOT_SPEED)
         drivePath(back)
 
         delay(0.5.seconds)
