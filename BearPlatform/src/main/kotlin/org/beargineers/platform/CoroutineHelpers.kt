@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import org.beargineers.platform.decode.mirrorForAlliance
 import org.beargineers.platform.rr.MovesBuilder
 
 suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
@@ -16,7 +17,13 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
     }
 }
 
-suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
+suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean = true) {
+    val waypoints = if (applyMirroring) {
+        waypoints.map { it.copy(target = it.target.mirrorForAlliance(alliance)) }
+    } else {
+        waypoints
+    }
+
     if (WheelsConfig.RoadRunnerEnabled) {
         move {
             var prev = currentPosition
@@ -46,12 +53,12 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>) {
     }
 }
 
-suspend fun Robot.driveTo(target: Position, speed: Double = 1.0) {
-    drivePath(pathTo(target, speed))
+suspend fun Robot.driveTo(target: Position, speed: Double = 1.0, applyMirroring: Boolean = true) {
+    drivePath(pathTo(target, speed), applyMirroring)
 }
 
 suspend fun Robot.driveRelative(movement: RobotCentricPosition) {
-    driveTo(currentPosition + movement)
+    driveTo(currentPosition + movement, applyMirroring = false)
 }
 
 suspend fun Robot.doWhile(condition: () -> Boolean, block: suspend CoroutineScope.() -> Unit) {

@@ -30,17 +30,17 @@ object AutoPositions {
     val COLLECT_FROM_RAMP_WAIT_TIME by config(1.5)
 }
 
-fun DecodeRobot.scoopSpikePath(spike: Int): List<Waypoint> {
+fun scoopSpikePath(spike: Int): List<Waypoint> {
     return buildPath {
         addWaypoint(spikeStart(spike))
-        addWaypoint(spikeEnd(spike), locations.SPIKE_SCOOPING_SPEED)
+        addWaypoint(spikeEnd(spike), Locations.SPIKE_SCOOPING_SPEED)
     }
 }
 
-fun DecodeRobot.scoopBoxPath(shift: Distance): List<Waypoint> {
+fun scoopBoxPath(shift: Distance): List<Waypoint> {
     return buildPath {
-        addWaypoint(AutoPositions.BOX_APPROACH.shift(-shift, 0.cm).rotate(if (shift == 0.cm) -20.degrees else 0.degrees).mirrorForAlliance(alliance))
-        addWaypoint(AutoPositions.BOX_SCOOP.shift(-shift, 0.cm).rotate(if (shift == 0.cm) -20.degrees else 0.degrees).mirrorForAlliance(alliance), AutoPositions.BOX_SCOOP_SPEED)
+        addWaypoint(AutoPositions.BOX_APPROACH.shift(-shift, 0.cm).rotate(if (shift == 0.cm) -20.degrees else 0.degrees))
+        addWaypoint(AutoPositions.BOX_SCOOP.shift(-shift, 0.cm).rotate(if (shift == 0.cm) -20.degrees else 0.degrees), AutoPositions.BOX_SCOOP_SPEED)
     }
 }
 
@@ -59,8 +59,8 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
         enableFlywheel(false)
 
         driveTo(when (operatingIn) {
-            'F' -> locations.OPEN_RAMP_APPROACH
-            'B' -> AutoPositions.BOX_APPROACH.mirrorForAlliance(alliance)
+            'F' -> Locations.OPEN_RAMP_APPROACH
+            'B' -> AutoPositions.BOX_APPROACH
             else -> error("Unknown operating in: $operatingIn")
         })
     }
@@ -70,7 +70,7 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             'F' -> AutoPositions.NORTH_START
             'B' -> AutoPositions.SOUTH_START
             else -> error("Program should start from either F or B to indicate starting position. Actual symbol: ${program.first()}")
-        }.mirrorForAlliance(alliance)
+        }
 
         var shootingPoint = Position.zero()
         val path = mutableListOf<Waypoint>()
@@ -82,24 +82,24 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             return buildList {
                 var addedBackPath = false
                 if (operatingIn == 'F') {
-                    if ('1' !in collectedSet && cp.x > robot.spikeStart(1).x ||
-                        '2' !in collectedSet && cp.x > robot.spikeStart(2).x ||
-                        '3' !in collectedSet && cp.x > robot.spikeStart(3).x) {
+                    if ('1' !in collectedSet && cp.x > spikeStart(1).x ||
+                        '2' !in collectedSet && cp.x > spikeStart(2).x ||
+                        '3' !in collectedSet && cp.x > spikeStart(3).x) {
                         addAll(pathTo(cp.copy(y = shootingPoint.y)))
                         addedBackPath = true
                     }
                 }
                 else {
-                    if ('1' !in collectedSet && cp.x < robot.spikeStart(1).x ||
-                        '2' !in collectedSet && cp.x < robot.spikeStart(2).x ||
-                        '3' !in collectedSet && cp.x < robot.spikeStart(3).x) {
+                    if ('1' !in collectedSet && cp.x < spikeStart(1).x ||
+                        '2' !in collectedSet && cp.x < spikeStart(2).x ||
+                        '3' !in collectedSet && cp.x < spikeStart(3).x) {
                         addAll(pathTo(cp.copy(y = shootingPoint.y)))
                         addedBackPath = true
                     }
                 }
 
-                if (!addedBackPath && (cp.distanceTo(robot.locations.OPEN_RAMP_COLLECT) < 10.cm ||
-                    cp.distanceTo(robot.locations.OPEN_RAMP) < 10.cm)) {
+                if (!addedBackPath && (cp.distanceTo(Locations.OPEN_RAMP_COLLECT) < 10.cm ||
+                    cp.distanceTo(Locations.OPEN_RAMP) < 10.cm)) {
                     addAll(pathTo(cp + RobotCentricPosition(-15.cm, 0.cm, 0.degrees)))
                 }
 
@@ -131,19 +131,19 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             }
         }
 
-        assumePosition(startingPoint)
+        assumePosition(startingPoint.mirrorForAlliance(alliance))
         enableFlywheel(true)
 
         for (c in program) {
             when (c) {
                 'F' -> {
                     operatingIn = 'F'
-                    shootingPoint = AutoPositions.NORTH_SHOOTING.mirrorForAlliance(alliance)
+                    shootingPoint = AutoPositions.NORTH_SHOOTING
                 }
 
                 'B' -> {
                     operatingIn = 'B'
-                    shootingPoint = AutoPositions.SOUTH_SHOOTING.mirrorForAlliance(alliance)
+                    shootingPoint = AutoPositions.SOUTH_SHOOTING
                 }
 
                 '0' -> {
@@ -154,26 +154,26 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
 
                 '1' -> {
                     shootIfNeeded()
-                    path.addAll(robot.scoopSpikePath(1))
+                    path.addAll(scoopSpikePath(1))
                     collectedSet += '1'
                 }
 
                 '2' -> {
                     shootIfNeeded()
-                    path.addAll(robot.scoopSpikePath(2))
+                    path.addAll(scoopSpikePath(2))
                     collectedSet += '2'
                 }
 
                 '3' -> {
                     shootIfNeeded()
-                    path.addAll(robot.scoopSpikePath(3))
+                    path.addAll(scoopSpikePath(3))
                     collectedSet += '3'
                 }
 
                 '4' -> {
                     shootIfNeeded()
                     val farApproach =
-                        robot.locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = robot.spikeStart(1).y)
+                        Locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = spikeStart(1).y)
                     driveTo(farApproach)
                     openRampAndCollect()
                     followPathAndShoot(pathToShooting())
@@ -186,7 +186,7 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
 
                 'R' -> {
                     val pathNotEmpty = path.isNotEmpty()
-                    path.addAll(robot.openRampPath())
+                    path.addAll(openRampPath())
                     followPathIfNeeded()
                     delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
                     if (pathNotEmpty) {
@@ -212,18 +212,18 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
     }
 }
 
-fun DecodeRobot.openRampPath(): List<Waypoint> {
+fun openRampPath(): List<Waypoint> {
     return buildPath {
-        with(locations) {
+        with(Locations) {
             addWaypoint(OPEN_RAMP_APPROACH, positionTolerance = 2.cm, headingTolerance = 2.degrees)
             addWaypoint(OPEN_RAMP, OPEN_RAMP_SPEED, positionTolerance = 1.cm, headingTolerance = 1.degrees)
         }
     }
 }
 
-fun DecodeRobot.openRampCollectPath(): List<Waypoint> {
+fun openRampCollectPath(): List<Waypoint> {
     return buildPath {
-        with(locations) {
+        with(Locations) {
             addWaypoint(OPEN_RAMP_COLLECT_APPROACH)
             addWaypoint(OPEN_RAMP_COLLECT, OPEN_RAMP_SPEED)
         }
