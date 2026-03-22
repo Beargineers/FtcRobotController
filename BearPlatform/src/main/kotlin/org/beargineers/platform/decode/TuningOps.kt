@@ -125,28 +125,12 @@ class Tune_headingK: TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_automationTimingCheck: TestOp() {
-    suspend fun DecodeRobot.scoopAndShoot(spike: Int, launchPose: Position) {
-        followPathAndShoot(scoopSpikePath(spike) + pathTo(launchPose))
-    }
-
     override suspend fun DecodeRobot.autoProgram() {
         val startingPoint = AutoPositions.NORTH_START
-        val launchPoint = AutoPositions.NORTH_SHOOTING
         repeat(1) {
             val timer = ElapsedTime()
 
-            assumePosition(startingPoint.mirrorForAlliance(alliance))
-
-            followPathAndShoot(pathTo(launchPoint, Locations.INITIAL_SHOT_SPEED))
-
-            val secondScoop = scoopSpikePath(2)
-            drivePath(secondScoop + openRampPath())
-
-            delay(1.seconds)
-            followPathAndShoot(pathTo(launchPoint))
-            // Far shooting zone
-            scoopAndShoot(3, launchPoint)
-            scoopAndShoot(1, launchPoint)
+            interpretProgram("F2R31")
 
             println("TUNING_TIMER: ${timer.milliseconds().toInt()} ms drive: ${(robot as BaseRobot).drive_K} translation: ${(robot as BaseRobot).translational_K} heading: ${(robot as BaseRobot).heading_K} drive2: ${(robot as BaseRobot).drive_K2}")
 
