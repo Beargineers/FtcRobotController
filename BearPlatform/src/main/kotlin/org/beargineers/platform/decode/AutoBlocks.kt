@@ -2,8 +2,8 @@ package org.beargineers.platform.decode
 
 import kotlinx.coroutines.delay
 import org.beargineers.platform.Distance
+import org.beargineers.platform.Location
 import org.beargineers.platform.Position
-import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.buildPath
@@ -13,7 +13,6 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.doWhile
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
-import org.beargineers.platform.pathTo
 import org.beargineers.platform.tilePosition
 import kotlin.time.Duration.Companion.seconds
 
@@ -66,149 +65,81 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
     }
 
     private suspend fun DecodeRobot.interpretProgram() {
-        val startingPoint = when(program.first()) {
-            'F' -> AutoPositions.NORTH_START
-            'B' -> AutoPositions.SOUTH_START
+        val (startingPoint, initialOperatingIn, initialShootingPoint) = when (program.first()) {
+            'F' -> Triple(AutoPositions.NORTH_START, 'F', AutoPositions.NORTH_SHOOTING)
+            'B' -> Triple(AutoPositions.SOUTH_START, 'B', AutoPositions.SOUTH_SHOOTING)
             else -> error("Program should start from either F or B to indicate starting position. Actual symbol: ${program.first()}")
         }
 
-        var shootingPoint = Position.zero()
-        val path = mutableListOf<Waypoint>()
-        var initialLoadReleased = false
+        operatingIn = initialOperatingIn
         val collectedSet = mutableSetOf<Char>()
+        var hasLoad = false
 
-        fun pathToShooting(): List<Waypoint> {
-            val cp = currentPosition
-            return buildList {
-                var addedBackPath = false
-                if (operatingIn == 'F') {
-                    if ('1' !in collectedSet && cp.x > spikeStart(1).x ||
-                        '2' !in collectedSet && cp.x > spikeStart(2).x ||
-                        '3' !in collectedSet && cp.x > spikeStart(3).x) {
-                        addAll(pathTo(cp.copy(y = shootingPoint.y)))
-                        addedBackPath = true
-                    }
-                }
-                else {
-                    if ('1' !in collectedSet && cp.x < spikeStart(1).x ||
-                        '2' !in collectedSet && cp.x < spikeStart(2).x ||
-                        '3' !in collectedSet && cp.x < spikeStart(3).x) {
-                        addAll(pathTo(cp.copy(y = shootingPoint.y)))
-                        addedBackPath = true
-                    }
-                }
+        fun protectedZones()= buildList {
+            add(Location(0.cm, 30.cm)) // For the ramp handle
+            if ('1' !in collectedSet) add(spikeStart(1).location())
+            if ('2' !in collectedSet) add(spikeStart(2).location())
+            if ('3' !in collectedSet) add(spikeStart(3).location())
+        }
 
-                if (!addedBackPath && (cp.distanceTo(Locations.OPEN_RAMP_COLLECT) < 10.cm ||
-                    cp.distanceTo(Locations.OPEN_RAMP) < 10.cm)) {
-                    addAll(pathTo(cp + RobotCentricPosition(-15.cm, 0.cm, 0.degrees)))
-                }
-
-                addAll(pathTo(shootingPoint))
+        suspend fun goAndShootIfHasLoad() {
+            if (hasLoad) {
+                goToShootingZoneAndShoot(
+                    if (operatingIn == 'F') ShootingZones.FRONT else ShootingZones.BACK,
+                    protectedZones()
+                )
+                hasLoad = false
             }
         }
 
-        suspend fun shootIfNeeded() {
-            if (!initialLoadReleased) {
-                shootInitialLoad(shootingPoint)
-                initialLoadReleased = true
-
-                if (path.isNotEmpty()) {
-                    error("Path should be empty before we shoot initial load")
-                }
+        suspend fun collect(from: Char, path: List<Waypoint>) {
+            goAndShootIfHasLoad()
+            doWhile({artifactsCount < 3}) {
+                drivePath(path)
             }
-
-            if (path.isNotEmpty()) {
-                path.addAll(pathToShooting())
-                followPathAndShoot(path.toList())
-                path.clear()
-            }
-        }
-
-        suspend fun followPathIfNeeded() {
-            if (path.isNotEmpty()) {
-                drivePath(path.toList())
-                path.clear()
-            }
+            hasLoad = true
+            collectedSet += from
         }
 
         assumePosition(startingPoint.mirrorForAlliance(alliance))
         enableFlywheel(true)
+        shootInitialLoad(initialShootingPoint)
 
         for (c in program) {
             when (c) {
-                'F' -> {
-                    operatingIn = 'F'
-                    shootingPoint = AutoPositions.NORTH_SHOOTING
-                }
+                'F' -> operatingIn = 'F'
+                'B' -> operatingIn = 'B'
 
-                'B' -> {
-                    operatingIn = 'B'
-                    shootingPoint = AutoPositions.SOUTH_SHOOTING
-                }
+                '/' -> goAndShootIfHasLoad()
+                'P' -> pushAllianceBot(startingPoint)
 
-                '0' -> {
-                    shootIfNeeded()
-                    scoopFromBoxAndShoot(shootingPoint)
-                    collectedSet += '0'
-                }
-
-                '1' -> {
-                    shootIfNeeded()
-                    path.addAll(scoopSpikePath(1))
-                    collectedSet += '1'
-                }
-
-                '2' -> {
-                    shootIfNeeded()
-                    path.addAll(scoopSpikePath(2))
-                    collectedSet += '2'
-                }
-
-                '3' -> {
-                    shootIfNeeded()
-                    path.addAll(scoopSpikePath(3))
-                    collectedSet += '3'
-                }
+                '0' -> collect('0', scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
+                '1' -> collect('1', scoopSpikePath(1))
+                '2' -> collect('2', scoopSpikePath(2))
+                '3' -> collect('3', scoopSpikePath(3))
 
                 '4' -> {
-                    shootIfNeeded()
+                    goAndShootIfHasLoad()
                     val farApproach =
                         Locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = spikeStart(1).y)
                     driveTo(farApproach)
                     openRampAndCollect()
-                    followPathAndShoot(pathToShooting())
                     collectedSet += '4'
-                }
-
-                '/' -> {
-                    shootIfNeeded()
+                    hasLoad = true
+                    goAndShootIfHasLoad()
                 }
 
                 'R' -> {
-                    val pathNotEmpty = path.isNotEmpty()
-                    path.addAll(openRampPath())
-                    followPathIfNeeded()
+                    drivePath(openRampPath())
                     delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
-                    if (pathNotEmpty) {
-                        followPathAndShoot(pathToShooting())
-                    }
                 }
 
-                'P' -> {
-                    pushAllianceBot(startingPoint)
-                }
-
-                ' ' -> {
-                    // Do nothing
-                }
-
-                else -> {
-                    error("Unknown command symbol: $c")
-                }
+                ' ' -> { /* Do nothing */ }
+                else -> error("Unknown command symbol: $c")
             }
         }
 
-        shootIfNeeded()
+        goAndShootIfHasLoad()
     }
 }
 
@@ -229,4 +160,3 @@ fun openRampCollectPath(): List<Waypoint> {
         }
     }
 }
-

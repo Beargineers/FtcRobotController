@@ -14,6 +14,8 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.doWhile
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.max
+import org.beargineers.platform.min
 import org.beargineers.platform.pathTo
 import kotlin.time.Duration.Companion.seconds
 
@@ -45,18 +47,6 @@ suspend fun DecodeRobot.shoot() {
     }
 }
 
-suspend fun DecodeRobot.scoopAndShoot(spike: Int, launchPose: Position) {
-    followPathAndShoot(scoopSpikePath(spike) + pathTo(launchPose))
-}
-
-suspend fun DecodeRobot.scoopFromBoxAndShoot(launchPose: Position) {
-    doWhile({ artifactsCount < 3}) {
-        drivePath(scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
-    }
-
-    followPathAndShoot(pathTo(launchPose))
-}
-
 suspend fun DecodeRobot.pushAllianceBot(startingPoint: Position) {
     drivePath(pathTo(
         startingPoint.shift(0.cm, 30.cm),
@@ -85,15 +75,30 @@ suspend fun DecodeRobot.shootInitialLoad(launchPose: Position) {
     followPathAndShoot(pathTo(launchPose, Locations.INITIAL_SHOT_SPEED))
 }
 
-suspend fun DecodeRobot.goToShootingZoneAndShoot(shootingZone: ShootingZones) {
+suspend fun DecodeRobot.goToShootingZoneAndShoot(shootingZone: ShootingZones, protectedZones: List<Location> = emptyList()) {
     val waypoints = buildPath {
+        var maxBackoff = 0.cm
         if (currentPosition.distanceTo(Locations.OPEN_RAMP_COLLECT) < 10.cm ||
             currentPosition.distanceTo(Locations.OPEN_RAMP) < 10.cm) {
-            addWaypoint(currentPosition + RobotCentricPosition(-15.cm, 0.cm, 0.degrees))
+            maxBackoff = 15.cm
         }
 
         val targetLocation = closestPointInShootingZone(shootingZone)
-        addWaypoint(targetLocation.withHeading(headingToGoalFrom(targetLocation)))
+        val targetHeading = if (hasTurret) currentPosition.heading else headingToGoalFrom(targetLocation)
+
+        val minX = min(currentPosition.x, targetLocation.x)
+        val maxX = max(currentPosition.x, targetLocation.x)
+        for (zone in protectedZones) {
+            if (zone.x in minX..maxX) {
+                maxBackoff = max(maxBackoff, abs(zone.y) - abs(currentPosition.y))
+            }
+        }
+
+        if (maxBackoff > 0.cm) {
+            addWaypoint(currentPosition + RobotCentricPosition(-maxBackoff, 0.cm, 0.degrees))
+        }
+
+        addWaypoint(targetLocation.withHeading(targetHeading))
     }
 
     followPathAndShoot(waypoints, false)

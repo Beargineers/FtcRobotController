@@ -50,6 +50,8 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
     override val artifactsCount: Int
         get() = TODO("Not yet implemented")
 
+    override val hasTurret = false
+
     val parts = mutableMapOf<Part<*>, Any>()
     @Suppress("UNCHECKED_CAST")
     override fun <T:Any> getPart(part: Part<T>): T {
