@@ -33,6 +33,8 @@ interface DecodeRobot : Robot {
     val shootingAngleCorrection: Angle
 
     val artifactsCount: Int
+
+    val hasTurret: Boolean
 }
 
 object Locations {
