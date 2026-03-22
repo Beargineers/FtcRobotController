@@ -125,6 +125,10 @@ class Tune_headingK: TestOp() {
 
 @Autonomous(group = "Tune")
 class Tune_automationTimingCheck: TestOp() {
+    suspend fun DecodeRobot.scoopAndShoot(spike: Int, launchPose: Position) {
+        followPathAndShoot(scoopSpikePath(spike) + pathTo(launchPose))
+    }
+
     override suspend fun DecodeRobot.autoProgram() {
         val startingPoint = AutoPositions.NORTH_START
         val launchPoint = AutoPositions.NORTH_SHOOTING

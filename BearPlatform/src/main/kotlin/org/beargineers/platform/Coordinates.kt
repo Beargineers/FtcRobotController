@@ -114,6 +114,14 @@ fun abs(x: Distance): Distance {
     return Distance(abs(x.distance), x.distanceUnit)
 }
 
+fun max(x: Distance, y: Distance): Distance {
+    return if (x > y) x else y
+}
+
+fun min(x: Distance, y: Distance): Distance {
+    return if (x < y) x else y
+}
+
 class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
     override fun toString(): String {
         return String.format(Locale.US, "%.1fº", toUnit(AngleUnit.DEGREES))

@@ -26,6 +26,8 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         manualAngleCorrection += angle
     }
 
+    override val hasTurret = false
+
     val ledIndicator = LedIndicator(this)
 
     override val localizer: Localizer =
