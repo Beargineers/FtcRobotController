@@ -182,7 +182,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         driveJob?.cancel()
         driveJob = loop.submit {
-            robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0)
+            robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
         }.apply {
             invokeOnCompletion { throwable ->
                 if (throwable != null && throwable !is CancellationException) {
