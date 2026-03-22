@@ -51,7 +51,7 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
 
     override suspend fun DecodeRobot.autoProgram() {
         doWhile({ robot.opMode.elapsedTime.seconds() < 29.5}) {
-            interpretProgram()
+            operatingIn = interpretProgram(program)
         }
 
         intakeMode(IntakeMode.OFF)
@@ -63,84 +63,86 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             else -> error("Unknown operating in: $operatingIn")
         })
     }
+}
 
-    private suspend fun DecodeRobot.interpretProgram() {
-        val (startingPoint, initialOperatingIn, initialShootingPoint) = when (program.first()) {
-            'F' -> Triple(AutoPositions.NORTH_START, 'F', AutoPositions.NORTH_SHOOTING)
-            'B' -> Triple(AutoPositions.SOUTH_START, 'B', AutoPositions.SOUTH_SHOOTING)
-            else -> error("Program should start from either F or B to indicate starting position. Actual symbol: ${program.first()}")
-        }
-
-        operatingIn = initialOperatingIn
-        val collectedSet = mutableSetOf<Char>()
-        var hasLoad = false
-
-        fun protectedZones()= buildList {
-            add(Location(0.cm, 30.cm)) // For the ramp handle
-            if ('1' !in collectedSet) add(spikeStart(1).location())
-            if ('2' !in collectedSet) add(spikeStart(2).location())
-            if ('3' !in collectedSet) add(spikeStart(3).location())
-        }
-
-        suspend fun goAndShootIfHasLoad() {
-            if (hasLoad) {
-                goToShootingZoneAndShoot(
-                    if (operatingIn == 'F') ShootingZones.FRONT else ShootingZones.BACK,
-                    protectedZones()
-                )
-                hasLoad = false
-            }
-        }
-
-        suspend fun collect(from: Char, path: List<Waypoint>) {
-            goAndShootIfHasLoad()
-            doWhile({artifactsCount < 3}) {
-                drivePath(path)
-            }
-            hasLoad = true
-            collectedSet += from
-        }
-
-        assumePosition(startingPoint.mirrorForAlliance(alliance))
-        enableFlywheel(true)
-        shootInitialLoad(initialShootingPoint)
-
-        for (c in program) {
-            when (c) {
-                'F' -> operatingIn = 'F'
-                'B' -> operatingIn = 'B'
-
-                '/' -> goAndShootIfHasLoad()
-                'P' -> pushAllianceBot(startingPoint)
-
-                '0' -> collect('0', scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
-                '1' -> collect('1', scoopSpikePath(1))
-                '2' -> collect('2', scoopSpikePath(2))
-                '3' -> collect('3', scoopSpikePath(3))
-
-                '4' -> {
-                    goAndShootIfHasLoad()
-                    val farApproach =
-                        Locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = spikeStart(1).y)
-                    driveTo(farApproach)
-                    openRampAndCollect()
-                    collectedSet += '4'
-                    hasLoad = true
-                    goAndShootIfHasLoad()
-                }
-
-                'R' -> {
-                    drivePath(openRampPath())
-                    delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
-                }
-
-                ' ' -> { /* Do nothing */ }
-                else -> error("Unknown command symbol: $c")
-            }
-        }
-
-        goAndShootIfHasLoad()
+suspend fun DecodeRobot.interpretProgram(program: String): Char {
+    val (startingPoint, initialOperatingIn, initialShootingPoint) = when (program.first()) {
+        'F' -> Triple(AutoPositions.NORTH_START, 'F', AutoPositions.NORTH_SHOOTING)
+        'B' -> Triple(AutoPositions.SOUTH_START, 'B', AutoPositions.SOUTH_SHOOTING)
+        else -> error("Program should start from either F or B to indicate starting position. Actual symbol: ${program.first()}")
     }
+
+    var operatingIn = initialOperatingIn
+    val collectedSet = mutableSetOf<Char>()
+    var hasLoad = false
+
+    fun protectedZones()= buildList {
+        add(Location(0.cm, 30.cm)) // For the ramp handle
+        if ('1' !in collectedSet) add(spikeStart(1).location())
+        if ('2' !in collectedSet) add(spikeStart(2).location())
+        if ('3' !in collectedSet) add(spikeStart(3).location())
+    }
+
+    suspend fun goAndShootIfHasLoad() {
+        if (hasLoad) {
+            goToShootingZoneAndShoot(
+                if (operatingIn == 'F') ShootingZones.FRONT else ShootingZones.BACK,
+                protectedZones()
+            )
+            hasLoad = false
+        }
+    }
+
+    suspend fun collect(from: Char, path: List<Waypoint>) {
+        goAndShootIfHasLoad()
+        doWhile({artifactsCount < 3}) {
+            drivePath(path)
+        }
+        hasLoad = true
+        collectedSet += from
+    }
+
+    assumePosition(startingPoint.mirrorForAlliance(alliance))
+    enableFlywheel(true)
+    shootInitialLoad(initialShootingPoint)
+
+    for (c in program) {
+        when (c) {
+            'F' -> operatingIn = 'F'
+            'B' -> operatingIn = 'B'
+
+            '/' -> goAndShootIfHasLoad()
+            'P' -> pushAllianceBot(startingPoint)
+
+            '0' -> collect('0', scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
+            '1' -> collect('1', scoopSpikePath(1))
+            '2' -> collect('2', scoopSpikePath(2))
+            '3' -> collect('3', scoopSpikePath(3))
+
+            '4' -> {
+                goAndShootIfHasLoad()
+                val farApproach =
+                    Locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = spikeStart(1).y)
+                driveTo(farApproach)
+                openRampAndCollect()
+                collectedSet += '4'
+                hasLoad = true
+                goAndShootIfHasLoad()
+            }
+
+            'R' -> {
+                drivePath(openRampPath())
+                delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
+            }
+
+            ' ' -> { /* Do nothing */ }
+            else -> error("Unknown command symbol: $c")
+        }
+    }
+
+    goAndShootIfHasLoad()
+
+    return operatingIn
 }
 
 fun openRampPath(): List<Waypoint> {
