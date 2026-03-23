@@ -28,8 +28,6 @@ interface DecodeRobot : Robot {
 
     fun adjustShooting(distance: Double, angle: Double)
 
-    fun warnDriverON()
-
     val shootingAngleCorrection: Angle
 
     val artifactsCount: Int

@@ -41,10 +41,6 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         TODO("Not yet implemented")
     }
 
-    override fun warnDriverON() {
-        TODO("Not yet implemented")
-    }
-
     override val shootingAngleCorrection: Angle
         get() = TODO("Not yet implemented")
     override val artifactsCount: Int
