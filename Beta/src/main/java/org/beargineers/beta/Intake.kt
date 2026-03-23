@@ -50,8 +50,8 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
             }
         }
 
-        if (!bot.lowFPSMode) {
-            if (mode == IntakeMode.ON && !bot.isShooting() && artifacts < 3 && !bot.lowFPSMode) {
+        if (!bot.opMode.isFpsLow()) {
+            if (mode == IntakeMode.ON && !bot.isShooting() && artifacts < 3) {
                 ballCounter.update { ballDetector.getDistance(DistanceUnit.CM) }
             }
 

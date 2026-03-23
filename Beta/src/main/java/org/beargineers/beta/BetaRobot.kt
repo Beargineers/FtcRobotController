@@ -19,7 +19,7 @@ import org.beargineers.platform.degrees
 import kotlin.time.Duration.Companion.seconds
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
-    var lowFPSMode = false
+    private var lowFPSMode = false
     private var manualAngleCorrection = 0.0
     override fun adjustShooting(distance: Double, angle: Double) {
         shooter.manualPowerAdjustment += distance
@@ -56,16 +56,6 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         ledIndicator.setTempPattern(blink("RRR"), 2.seconds)
     }
 
-    override fun lowFpsMode(mode: Boolean) {
-        if (mode && !lowFPSMode) {
-            lowFPSMode = true
-            ledIndicator.setBasePattern(blink("RGR"))
-        }
-        else if (!mode) {
-            lowFPSMode = false
-        }
-    }
-
     override fun enableFlywheel(on: Boolean) {
         shooter.enableFlywheel(on)
     }
@@ -79,6 +69,14 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun loop() {
         super.loop()
+        val mode = opMode.isFpsLow()
+        if (mode && !lowFPSMode) {
+            lowFPSMode = true
+            ledIndicator.setBasePattern(blink("RGR"))
+        } else if (!mode) {
+            lowFPSMode = false
+        }
+
         Frame.addData("Distance to goal", goalDistance())
         Frame.addData("Heading to goal error", headingToGoal() - currentPosition.heading)
     }

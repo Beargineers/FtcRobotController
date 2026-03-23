@@ -10,8 +10,6 @@ interface Robot {
     fun loop()
     fun stop()
 
-    fun lowFpsMode(mode: Boolean) {}
-
     val currentPosition: Position
 
     val currentVelocity: RobotCentricPosition
