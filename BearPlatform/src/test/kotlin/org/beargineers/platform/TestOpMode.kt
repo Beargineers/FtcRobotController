@@ -25,7 +25,7 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         TODO("Not yet implemented")
     }
 
-    override fun getReadyForShoot() {
+    override fun prepareForShooting() {
         TODO("Not yet implemented")
     }
 

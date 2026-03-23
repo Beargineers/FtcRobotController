@@ -42,7 +42,7 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         // TODO("Not yet implemented")
     }
 
-    override fun getReadyForShoot() {
+    override fun prepareForShooting() {
         // TODO("Not yet implemented")
     }
 
