@@ -162,7 +162,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
             Location(dx.cm, dy.cm)
         } else {
-            val h = robot.currentPosition.heading - robot.shootingAngleCorrectionForMovement()
+            val h = robot.currentPosition.heading
             val forward = -gamepad1.left_stick_y.normalize().cm
             val strafe = gamepad1.left_stick_x.normalize().cm
             val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN.toDouble()
@@ -190,7 +190,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
     private fun commandedHeading(): Angle {
         val heading: Angle = when {
-            lookAtGoal -> robot.headingToGoal()
+            lookAtGoal && !robot.hasTurret -> robot.headingToGoal()
             else -> robot.currentPosition.heading - commandedRotation()
         }
         return heading

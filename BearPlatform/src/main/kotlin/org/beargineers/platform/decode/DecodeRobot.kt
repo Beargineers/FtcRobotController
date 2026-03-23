@@ -35,6 +35,12 @@ interface DecodeRobot : Robot {
     val artifactsCount: Int
 
     val hasTurret: Boolean
+
+    /**
+     *  Angle at which an artifact would be fired if it happens now. Naturally, it is a heading of a turret
+     *  if the robot has it or just a heading of a robot if it shoots forward.
+     */
+    val shooterAngle: Angle get() = currentPosition.heading
 }
 
 object Locations {
@@ -66,10 +72,6 @@ fun DecodeRobot.goalDistance(): Distance {
     return hypot(cp.x - goal.x, cp.y - goal.y)
 }
 
-fun DecodeRobot.shootingAngleCorrectionForMovement() : Angle {
-    return 0.degrees
-}
-
 fun DecodeRobot.headingToGoal(): Angle {
     return headingToGoalFrom(currentPosition.location())
 }
@@ -78,7 +80,7 @@ fun DecodeRobot.headingToGoalFrom(position: Location): Angle {
     val goal = Locations.GOAL
     val dx = goal.x - position.x
     val dy = goal.y - position.y
-    return atan2(dy, dx) + shootingAngleCorrectionForMovement() + shootingAngleCorrection
+    return atan2(dy, dx) + shootingAngleCorrection
 }
 
 enum class ShootingZones {
@@ -133,7 +135,8 @@ fun DecodeRobot.clearForShooting(): Boolean{
         val sideDistanceDeviation = 15.cm
         val distanceToGoal = goalDistance()
         val maxHeadingDeviation = atan2(sideDistanceDeviation, distanceToGoal)
-        return currentPosition.heading > headingToGoal() - maxHeadingDeviation && currentPosition.heading < headingToGoal() + maxHeadingDeviation
+        val headingToGoal = headingToGoal()
+        return shooterAngle in headingToGoal - maxHeadingDeviation .. headingToGoal + maxHeadingDeviation
     }
 
     fun flySpeedIsCorrect(): Boolean{
