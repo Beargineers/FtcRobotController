@@ -47,15 +47,15 @@ fun scoopBoxPath(shift: Distance): List<Waypoint> {
 abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
     abstract val program: String
 
-    private var operatingIn: Char = 'N'
-
     override suspend fun DecodeRobot.autoProgram() {
         cancelWhen({ robot.opMode.elapsedTime.seconds() > 29.5}) {
-            operatingIn = interpretProgram(program)
+            interpretProgram(program)
         }
 
         intakeMode(IntakeMode.OFF)
         enableFlywheel(false)
+
+        val operatingIn = program.last {it == 'F' || it == 'B'}
 
         driveTo(when (operatingIn) {
             'F' -> Locations.OPEN_RAMP_APPROACH
@@ -65,14 +65,14 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
     }
 }
 
-suspend fun DecodeRobot.interpretProgram(program: String): Char {
-    val (startingPoint, initialOperatingIn, initialShootingPoint) = when (program.first()) {
-        'F' -> Triple(AutoPositions.NORTH_START, 'F', AutoPositions.NORTH_SHOOTING)
-        'B' -> Triple(AutoPositions.SOUTH_START, 'B', AutoPositions.SOUTH_SHOOTING)
+suspend fun DecodeRobot.interpretProgram(program: String) {
+    val (startingPoint, initialShootingPoint) = when (program.first()) {
+        'F' -> Pair(AutoPositions.NORTH_START, AutoPositions.NORTH_SHOOTING)
+        'B' -> Pair(AutoPositions.SOUTH_START, AutoPositions.SOUTH_SHOOTING)
         else -> error("Program should start from either F or B to indicate starting position. Actual symbol: ${program.first()}")
     }
 
-    var operatingIn = initialOperatingIn
+    var operatingIn = 'N'
     val collectedSet = mutableSetOf<Char>()
     var hasLoad = false
 
@@ -141,8 +141,6 @@ suspend fun DecodeRobot.interpretProgram(program: String): Char {
     }
 
     goAndShootIfHasLoad()
-
-    return operatingIn
 }
 
 fun openRampPath(): List<Waypoint> {
