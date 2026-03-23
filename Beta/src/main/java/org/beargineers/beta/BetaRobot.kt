@@ -16,7 +16,6 @@ import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
-import kotlin.time.Duration.Companion.seconds
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     private var lowFPSMode = false
@@ -50,10 +49,6 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun prepareForShooting() {
         shooter.getReadyForShoot()
-    }
-
-    override fun warnDriverON() {
-        ledIndicator.setTempPattern(blink("RRR"), 2.seconds)
     }
 
     override fun enableFlywheel(on: Boolean) {
