@@ -7,10 +7,10 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.buildPath
+import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.degrees
-import org.beargineers.platform.doWhile
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.tilePosition
@@ -50,7 +50,7 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
     private var operatingIn: Char = 'N'
 
     override suspend fun DecodeRobot.autoProgram() {
-        doWhile({ robot.opMode.elapsedTime.seconds() < 29.5}) {
+        cancelWhen({ robot.opMode.elapsedTime.seconds() > 29.5}) {
             operatingIn = interpretProgram(program)
         }
 
@@ -95,7 +95,7 @@ suspend fun DecodeRobot.interpretProgram(program: String): Char {
 
     suspend fun collect(from: Char, path: List<Waypoint>) {
         goAndShootIfHasLoad()
-        doWhile({artifactsCount < 3}) {
+        cancelWhen({artifactsCount >= 3}) {
             drivePath(path)
         }
         hasLoad = true

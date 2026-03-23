@@ -14,7 +14,7 @@ class CoroutinesLoopTest : RobotTest() {
     fun testCoroutinesDoWhile() {
         var counter = 0
         opMode.loop.submit {
-            robot.doWhile({ counter < 10 }) {
+            robot.cancelWhen({ counter >= 10 }) {
                 while (true) {
                     counter++
                     println("At counter=$counter")
@@ -22,7 +22,7 @@ class CoroutinesLoopTest : RobotTest() {
                 }
             }
 
-            robot.doWhile({ counter > 5 }) {
+            robot.cancelWhen({ counter <= 5 }) {
                 while (true) {
                     counter--
                     println("At counter=$counter")
