@@ -61,10 +61,13 @@ suspend fun Robot.driveRelative(movement: RobotCentricPosition) {
     driveTo(currentPosition + movement, applyMirroring = false)
 }
 
-suspend fun Robot.doWhile(condition: () -> Boolean, block: suspend CoroutineScope.() -> Unit) {
+/**
+ * Executes `block` once until it finishes normally or `condition` becomes false. In latter case, execution of `block` is aborted
+ */
+suspend fun Robot.cancelWhen(condition: () -> Boolean, block: suspend CoroutineScope.() -> Unit) {
     coroutineScope {
         val childJob = launch(block = block)
-        while (childJob.isActive && condition()) {
+        while (childJob.isActive && !condition()) {
             opMode.loop.nextTick()
         }
 

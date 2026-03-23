@@ -9,9 +9,9 @@ import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.buildPath
+import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
-import org.beargineers.platform.doWhile
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.max
@@ -66,7 +66,7 @@ suspend fun DecodeRobot.openRampAndCollect() {
     drivePath(path.take(1))
     drivePath(path.drop(1))
 
-    doWhile({artifactsCount < 3}) {
+    cancelWhen({artifactsCount >= 3}) {
         delay(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
     }
 }
