@@ -25,7 +25,7 @@ suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirro
             delay(0.2.seconds)
             intakeMode(IntakeMode.ON)
             delay(0.5.seconds)
-            getReadyForShoot()
+            prepareForShooting()
         }
 
         val waypoints = waypoints.withIndex().map { (i, waypoint) ->

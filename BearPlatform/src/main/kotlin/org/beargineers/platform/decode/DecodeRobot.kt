@@ -21,7 +21,7 @@ interface DecodeRobot : Robot {
     val intakeMode: IntakeMode
     fun intakeMode(mode: IntakeMode)
     fun launch()
-    fun getReadyForShoot()
+    fun prepareForShooting()
     fun enableFlywheel(on: Boolean)
 
     fun isShooting(): Boolean

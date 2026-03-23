@@ -48,7 +48,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         shooter.launch()
     }
 
-    override fun getReadyForShoot() {
+    override fun prepareForShooting() {
         shooter.getReadyForShoot()
     }
 
