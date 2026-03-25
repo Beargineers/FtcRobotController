@@ -1,6 +1,7 @@
 package org.beargineers.gamma
 
 import org.beargineers.platform.Angle
+import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.LimelightCam
@@ -15,6 +16,9 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
     val shooter = Shooter(this)
     val turret = Turret(this)
+
+    val vision = ArtifactsVision(this)
+
 
     override val localizer: Localizer =
         FusionLocalizer(

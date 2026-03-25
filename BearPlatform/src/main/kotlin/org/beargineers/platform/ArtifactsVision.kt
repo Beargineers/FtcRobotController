@@ -1,12 +1,9 @@
-package org.beargineers.straffer
+package org.beargineers.platform
 
 import android.graphics.Color
 import android.util.Size
 import com.bylazar.camerastream.PanelsCameraStream
 import com.qualcomm.robotcore.util.SortOrder
-import org.beargineers.platform.BaseRobot
-import org.beargineers.platform.Frame
-import org.beargineers.platform.Hardware
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor
