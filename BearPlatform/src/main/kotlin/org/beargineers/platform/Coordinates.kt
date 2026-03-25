@@ -236,6 +236,10 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
         )
     }
 
+    operator fun times(other: Double): Position {
+        return Position(x * other, y * other, heading * other)
+    }
+
     fun normalizeHeading() : Position {
         return Position(x, y, heading.normalize())
     }
@@ -294,6 +298,14 @@ data class RobotCentricLocation(val forward: Distance, val right: Distance) {
 data class RobotCentricPosition(val forward: Distance, val right: Distance, val turn: Angle) {
     operator fun plus(other: RobotCentricPosition): RobotCentricPosition {
         return RobotCentricPosition(forward + other.forward, right + other.right, turn + other.turn)
+    }
+
+    operator fun times(other: Double): RobotCentricPosition {
+        return RobotCentricPosition(forward * other, right * other, turn * other)
+    }
+
+    fun location(): RobotCentricLocation {
+        return RobotCentricLocation(forward, right)
     }
 
     override fun toString(): String {

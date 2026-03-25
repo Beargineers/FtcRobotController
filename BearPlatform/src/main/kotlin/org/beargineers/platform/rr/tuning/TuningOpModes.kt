@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeManager
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
-import org.beargineers.platform.RobotCentricPosition
+import org.beargineers.platform.Position
 import org.beargineers.platform.inch
 import org.beargineers.platform.radians
 import org.beargineers.platform.rr.PinpointLocalizer
@@ -93,9 +93,10 @@ object TuningOpModes {
             return org.beargineers.platform.Position(pose.position.x.inch, pose.position.y.inch, pose.heading.log().radians)
         }
 
-        override val currentVelocity: RobotCentricPosition get() {
+        override val currentVelocity: Position
+            get() {
             val vel = pl.update()
-            return RobotCentricPosition(vel.linearVel.x.inch, vel.linearVel.y.inch, vel.angVel.radians)
+            return Position(vel.linearVel.x.inch, vel.linearVel.y.inch, vel.angVel.radians)
         }
     }
 

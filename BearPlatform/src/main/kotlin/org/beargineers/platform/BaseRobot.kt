@@ -30,7 +30,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override val currentPosition: Position get() = localizer.getPosition()
 
-    override val currentVelocity: RobotCentricPosition get() = localizer.getVelocity()
+    override val currentVelocity: Position get() = localizer.getVelocity()
 
     private val locationHistory = ArrayDeque<Location>(locationHistorySize)
 
@@ -50,10 +50,15 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         localizer.setStartingPosition(position)
     }
 
+    override fun predictedPosition(nTicks: Int): Position {
+        val durationSec = nTicks * opMode.normalTickDurationMs() / 1000
+        return currentPosition + currentVelocity * durationSec
+    }
+
     fun isMoving(): Boolean {
         val vel = currentVelocity
-        val lateral = abs(vel.linear())
-        val angular = abs(vel.angular().normalize())
+        val lateral = hypot(vel.x, vel.y)
+        val angular = abs(vel.heading.normalize())
 
         return lateral > PathFollowingConfig.positionToleranceToStop || angular > PathFollowingConfig.headingToleranceToStop
     }
@@ -78,8 +83,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
         Frame.addData("Position", currentPosition)
         Frame.addData("Velocity", "%s/s, %s/s",
-            hypot(currentVelocity.forward, currentVelocity.right),
-            abs(currentVelocity.turn))
+            hypot(currentVelocity.x, currentVelocity.y),
+            abs(currentVelocity.heading))
 
         locationHistory.addLast(currentPosition.location())
         while (locationHistory.size >= locationHistorySize) {

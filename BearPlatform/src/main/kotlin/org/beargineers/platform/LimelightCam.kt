@@ -43,7 +43,7 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
 
     override fun getRobotPose(): Position? {
         val shift = robot.currentVelocity
-        val velocity = hypot(shift.right, shift.forward)
+        val velocity = hypot(shift.x, shift.y)
         if (velocity > Camera_positionTolerance.cm) {
             normalizer.reset()
             return null

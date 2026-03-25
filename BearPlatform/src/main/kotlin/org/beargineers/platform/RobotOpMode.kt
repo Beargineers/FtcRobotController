@@ -33,6 +33,8 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
     fun isFpsLow(): Boolean = fpsTracker.fpsIsLow
 
+    fun normalTickDurationMs(): Double = fpsTracker.normalTickDurationMs()
+
     open fun bearInit() {}
 
     final override fun init() {
