@@ -3,7 +3,6 @@ package org.beargineers.platform
 import android.graphics.Color
 import android.util.Size
 import com.bylazar.camerastream.PanelsCameraStream
-import com.qualcomm.robotcore.util.SortOrder
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor
@@ -41,30 +40,16 @@ class ArtifactsVision(robot: BaseRobot) : Hardware(robot) {
     }
 
     override fun loop() {
-        val blobs = mutableListOf<ColorBlobLocatorProcessor.Blob>()
-        blobs += purpleLocator.blobs
-        blobs += greenLocator.blobs
+        val blobs = purpleLocator.blobs + greenLocator.blobs
 
-        filterAndSort(blobs)
+        val filtered = blobs.filter {
+            it.contourArea in 50..20000 &&
+            it.circularity in 0.6..1.0
+        }.sortedByDescending { it.contourArea }
 
-        for (blob in blobs) {
+        for (blob in filtered) {
             Frame.addData("x,y,r", "%.1f,%.1f,%.1f", blob.circle.x, blob.circle.y, blob.circle.radius)
         }
-    }
-
-    private fun filterAndSort(blobs: MutableList<ColorBlobLocatorProcessor.Blob>) {
-        ColorBlobLocatorProcessor.Util.filterByCriteria(
-            ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA,
-            50.0, 20000.0, blobs
-        ) // filter out very small blobs.
-
-        ColorBlobLocatorProcessor.Util.filterByCriteria(
-            ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY,
-            0.6, 1.0, blobs
-        )
-
-        ColorBlobLocatorProcessor.Util.sortByCriteria(
-        ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA, SortOrder.DESCENDING, blobs)
     }
 
     private fun colorBlobLocatorProcessorBuilder(): ColorBlobLocatorProcessor.Builder = ColorBlobLocatorProcessor.Builder()
