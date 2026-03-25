@@ -64,8 +64,12 @@ fun Position.mirrorForAlliance(alliance: Alliance): Position {
     return if (alliance == Alliance.RED) this else Position(x, -y, -heading)
 }
 
+fun Location.mirrorForAlliance(alliance: Alliance): Location {
+    return if (alliance == Alliance.RED) this else Location(x, -y)
+}
+
 fun DecodeRobot.goalDistance(): Distance {
-    val goal = Locations.GOAL
+    val goal = Locations.GOAL.mirrorForAlliance(alliance)
     val cp = currentPosition
     return hypot(cp.x - goal.x, cp.y - goal.y)
 }
@@ -75,7 +79,7 @@ fun DecodeRobot.headingToGoal(): Angle {
 }
 
 fun DecodeRobot.headingToGoalFrom(position: Location): Angle {
-    val goal = Locations.GOAL
+    val goal = Locations.GOAL.mirrorForAlliance(alliance)
     val dx = goal.x - position.x
     val dy = goal.y - position.y
     return atan2(dy, dx) + shootingAngleCorrection
