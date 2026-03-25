@@ -2,6 +2,7 @@ package org.beargineers.straffer
 
 import org.beargineers.platform.AbsoluteLocalizer
 import org.beargineers.platform.Angle
+import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.Localizer
