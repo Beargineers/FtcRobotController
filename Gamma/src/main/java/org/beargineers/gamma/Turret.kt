@@ -19,6 +19,7 @@ private const val TURRET_GEAR_TEETH = 121
 
 private const val MOTOR_TICKS_PER_ONE_TURRET_DEGREE = (MOTOR_TICKS_PER_ROTATION / 360.0) * TURRET_GEAR_TEETH / MOTOR_GEAR_TEETH
 
+private val TURRET_AUTOROTATION_ENABLED by config(true)
 private val TURRET_MOTOR_SPEED by config(1.0)
 private val TURRET_MOTOR_DIRECTION by config(DcMotorSimple.Direction.REVERSE)
 private val TURRET_MIN_ANGLE by config(-180.degrees)
@@ -46,11 +47,13 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
 
     override fun loop() {
         RobotOpMode.lastKnownTurretAngle = currentTurretAngle()
-        val predictedPosition = bot.predictedPosition(TURRET_TICKS_LOOKAHEAD)
-        setTurretAngle(bot.headingToGoalFrom(predictedPosition.location()) - predictedPosition.heading)
+        if (TURRET_AUTOROTATION_ENABLED) {
+            val predictedPosition = bot.predictedPosition(TURRET_TICKS_LOOKAHEAD)
+            setTurretAngle(bot.headingToGoalFrom(predictedPosition.location()) - predictedPosition.heading)
+        }
     }
 
-    fun setTurretAngle(angle: Angle) {
+    private fun setTurretAngle(angle: Angle) {
         val norm = angle.normalize()
         val best = listOf(norm, norm + 360.degrees, norm - 360.degrees).filter { it in TURRET_MIN_ANGLE..TURRET_MAX_ANGLE }.minBy { abs(it - currentTurretAngle()) }
         turret.targetPosition = initialEncoderPosition + motorTicksForAngle(best)
