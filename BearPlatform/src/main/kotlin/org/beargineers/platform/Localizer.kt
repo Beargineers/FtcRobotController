@@ -16,7 +16,7 @@ interface RelativeLocalizer {
     /**
      * Returns movement delta normalized by time elapsed.
      */
-    fun getVelocity(): RobotCentricPosition
+    fun getVelocity(): Position
 }
 
 /**
@@ -43,7 +43,7 @@ interface Localizer {
     fun update()
 
     fun getPosition(): Position
-    fun getVelocity(): RobotCentricPosition
+    fun getVelocity(): Position
 }
 
 class FusionLocalizer(
@@ -76,7 +76,7 @@ class FusionLocalizer(
         return RobotOpMode.lastKnownPosition
     }
 
-    override fun getVelocity(): RobotCentricPosition {
+    override fun getVelocity(): Position {
         return relativeLocalizer.getVelocity()
     }
 }

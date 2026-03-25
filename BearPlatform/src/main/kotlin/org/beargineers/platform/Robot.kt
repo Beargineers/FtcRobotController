@@ -12,7 +12,9 @@ interface Robot {
 
     val currentPosition: Position
 
-    val currentVelocity: RobotCentricPosition
+    val currentVelocity: Position
+
+    fun predictedPosition(nTicks: Int): Position
 
     val opMode: RobotOpMode<*>
 
