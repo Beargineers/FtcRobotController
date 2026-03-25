@@ -9,7 +9,6 @@ import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
-import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
@@ -56,9 +55,4 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         get() = (shooter.SHOOTER_ANGLE_CORRECTION + manualAngleCorrection).degrees
 
     override val artifactsCount: Int get() = 0 // TODO
-
-    override fun loop() {
-        super.loop()
-        turret.setTurretAngle(headingToGoal() - currentPosition.heading)
-    }
 }

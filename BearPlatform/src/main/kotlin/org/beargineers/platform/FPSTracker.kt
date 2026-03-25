@@ -21,6 +21,8 @@ class FPSTracker {
         fpsDist.reset()
     }
 
+    fun normalTickDurationMs(): Double = 1000.0 / fpsDist.result().first
+
     fun update() {
         fpsDist.update(1000 / loopTimer.milliseconds())
         loopTimer.reset()
