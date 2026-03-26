@@ -38,7 +38,10 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     override fun init() {
         turret.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         turret.direction = TURRET_MOTOR_DIRECTION
-        initialEncoderPosition = turret.currentPosition - motorTicksForAngle(RobotOpMode.lastKnownTurretAngle)
+    }
+
+    fun assumeAngle(angle: Angle) {
+        initialEncoderPosition = turret.currentPosition - motorTicksForAngle(angle)
     }
 
     fun currentTurretAngle(): Angle {

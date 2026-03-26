@@ -3,7 +3,7 @@ package org.beargineers.platform
 interface Robot {
     fun <T:Any > getPart(part: Part<T>): T
 
-    fun assumePosition(position: Position)
+    fun assumePosition(position: Position, turretAngle: Angle)
 
     fun init()
     fun start()

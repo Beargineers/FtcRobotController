@@ -7,6 +7,7 @@ import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.PinpointLocalizer
+import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
@@ -53,6 +54,11 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun isShooting(): Boolean {
         return shooter.isShooting()
+    }
+
+    override fun assumePosition(position: Position, turretAngle: Angle) {
+        super.assumePosition(position, turretAngle)
+        turret.assumeAngle(turretAngle)
     }
 
     override val shootingAngleCorrection: Angle
