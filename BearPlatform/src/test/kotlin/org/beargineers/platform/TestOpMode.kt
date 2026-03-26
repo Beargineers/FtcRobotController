@@ -80,6 +80,10 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         get() = localizer.currentPosition
     override val currentVelocity: Position
         get() = localizer.getVelocity()
+
+    override fun predictedPosition(nTicks: Int): Position {
+        return currentPosition
+    }
 }
 
 class TestLocalizer : Localizer {
@@ -96,6 +100,6 @@ class TestLocalizer : Localizer {
     }
 
     override fun getVelocity(): Position {
-        return RobotCentricPosition.zero()
+        return Position.zero()
     }
 }
