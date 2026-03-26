@@ -72,11 +72,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     override fun loop() {
         allHardware.forEach {
-            try {
-                it.loop()
-            } catch (e: Throwable) {
-                Frame.error( e, "Exception updating hardware")
-            }
+            it.loop()
         }
 
         localizer.update()
