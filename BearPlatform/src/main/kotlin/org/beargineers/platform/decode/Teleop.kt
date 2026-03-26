@@ -118,7 +118,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
 
         button( gamepad1::x){
-            robot.assumePosition(Position.zero())
+            robot.assumePosition(Position.zero(), 0.degrees)
         }
     }
 
@@ -126,7 +126,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         super.bearStart()
         robot.enableFlywheel(true)
 
-        robot.assumePosition(lastKnownPosition)
+        robot.assumePosition(lastKnownPosition, lastKnownTurretAngle)
 
 /*
         robot.intakeMode(IntakeMode.ON)

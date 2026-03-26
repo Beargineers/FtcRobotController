@@ -9,7 +9,7 @@ class CoordinatesTest : RobotTest() {
     @Test
     fun testInShootingZone() {
         fun test(p: Position, expected: Boolean) {
-            robot.assumePosition(p)
+            robot.assumePosition(p, 0.degrees)
             assertEquals(expected, robot.inShootingZone())
         }
 

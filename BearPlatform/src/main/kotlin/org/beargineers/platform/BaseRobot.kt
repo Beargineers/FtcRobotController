@@ -46,7 +46,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     override fun start() {
     }
 
-    override fun assumePosition(position: Position) {
+    override fun assumePosition(position: Position, turretAngle: Angle) {
         localizer.setStartingPosition(position)
     }
 
