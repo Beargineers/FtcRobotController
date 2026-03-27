@@ -2,7 +2,6 @@ package org.beargineers.straffer
 
 import org.beargineers.platform.AbsoluteLocalizer
 import org.beargineers.platform.Angle
-import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.Localizer
@@ -20,8 +19,6 @@ object NoVision : AbsoluteLocalizer {
 }
 
 class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
-    val vision = ArtifactsVision(this)
-
     override val localizer: Localizer = FusionLocalizer(NoVision, PinpointLocalizer(this))
     override val hasTurret = true
 

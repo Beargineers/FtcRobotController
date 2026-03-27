@@ -9,10 +9,11 @@ import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor
 import org.firstinspires.ftc.vision.opencv.ColorRange
 import org.firstinspires.ftc.vision.opencv.ImageRegion
 
-class ArtifactsVision(robot: BaseRobot) : Hardware(robot) {
+class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robot) {
     val purpleLocator: ColorBlobLocatorProcessor
     val greenLocator: ColorBlobLocatorProcessor
     val visionPortal: VisionPortal
+    private val cameraResolution = Size(320, 240)
 
     init {
         purpleLocator = colorBlobLocatorProcessorBuilder()
@@ -26,13 +27,13 @@ class ArtifactsVision(robot: BaseRobot) : Hardware(robot) {
         visionPortal = VisionPortal.Builder()
             .addProcessor(purpleLocator)
             .addProcessor(greenLocator)
-            .setCameraResolution(Size(320, 240))
+            .setCameraResolution(cameraResolution)
             .setCamera(hardwareMap.get(WebcamName::class.java, "Webcam 1"))
             .build()
     }
 
     override fun init() {
-        PanelsCameraStream.startStream(visionPortal)
+        PanelsCameraStream.startStream( if (upsideDown) RotatedCameraStreamSource(visionPortal) else visionPortal)
     }
 
     override fun stop() {
@@ -47,8 +48,17 @@ class ArtifactsVision(robot: BaseRobot) : Hardware(robot) {
             it.circularity in 0.6..1.0
         }.sortedByDescending { it.contourArea }
 
+        fun mapX(x: Float): Float = if (upsideDown) cameraResolution.width - 1f - x else x
+        fun mapY(y: Float): Float = if (upsideDown) cameraResolution.height - 1f - y else y
+
         for (blob in filtered) {
-            Frame.addData("x,y,r", "%.1f,%.1f,%.1f", blob.circle.x, blob.circle.y, blob.circle.radius)
+            Frame.addData(
+                "x,y,r",
+                "%.1f,%.1f,%.1f",
+                mapX(blob.circle.x),
+                mapY(blob.circle.y),
+                blob.circle.radius,
+            )
         }
     }
 
