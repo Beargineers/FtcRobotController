@@ -16,17 +16,13 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
     private val cameraResolution = Size(320, 240)
 
     init {
-        purpleLocator = colorBlobLocatorProcessorBuilder()
-            .setTargetColorRange(ColorRange.ARTIFACT_PURPLE)
-            .build()
-
-        greenLocator = colorBlobLocatorProcessorBuilder()
-            .setTargetColorRange(ColorRange.ARTIFACT_GREEN)
-            .build()
+        purpleLocator = colorBlobLocator(ColorRange.ARTIFACT_PURPLE)
+        greenLocator = colorBlobLocator(ColorRange.ARTIFACT_GREEN)
 
         visionPortal = VisionPortal.Builder()
             .addProcessor(purpleLocator)
             .addProcessor(greenLocator)
+//            .addProcessor(artifactWatershedProcessor)
             .setCameraResolution(cameraResolution)
             .setCamera(hardwareMap.get(WebcamName::class.java, "Webcam 1"))
             .build()
@@ -43,15 +39,12 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
     override fun loop() {
         val blobs = purpleLocator.blobs + greenLocator.blobs
 
-        val filtered = blobs.filter {
-            it.contourArea in 50..20000 &&
-            it.circularity in 0.6..1.0
-        }.sortedByDescending { it.contourArea }
+        val sorted = blobs.sortedByDescending { it.contourArea }
 
         fun mapX(x: Float): Float = if (upsideDown) cameraResolution.width - 1f - x else x
         fun mapY(y: Float): Float = if (upsideDown) cameraResolution.height - 1f - y else y
 
-        for (blob in filtered) {
+        for (blob in sorted) {
             Frame.addData(
                 "x,y,r",
                 "%.1f,%.1f,%.1f",
@@ -62,7 +55,7 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
         }
     }
 
-    private fun colorBlobLocatorProcessorBuilder(): ColorBlobLocatorProcessor.Builder = ColorBlobLocatorProcessor.Builder()
+    private fun colorBlobLocator(colorRange: ColorRange): ColorBlobLocatorProcessor = ColorBlobLocatorProcessor.Builder()
         .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
         .setRoi(ImageRegion.asUnityCenterCoordinates(-0.75, 0.75, 0.75, -0.75))
         .setDrawContours(true) // Show contours on the Stream Preview
@@ -74,4 +67,9 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
         .setDilateSize(15) // Expand blobs to fill any divots on the edges
         .setErodeSize(15) // Shrink blobs back to original size
         .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
+        .setTargetColorRange(colorRange)
+        .build().apply {
+            addFilter(ColorBlobLocatorProcessor.BlobFilter(ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY, 0.6, 1.0))
+            addFilter(ColorBlobLocatorProcessor.BlobFilter(ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA, 50.0, 20000.0))
+        }
 }
