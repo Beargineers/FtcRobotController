@@ -18,7 +18,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val shooter = Shooter(this)
     val turret = Turret(this)
 
-    val vision = ArtifactsVision(this)
+    val vision = ArtifactsVision(this, true)
 
 
     override val localizer: Localizer =
