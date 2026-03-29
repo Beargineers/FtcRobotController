@@ -14,9 +14,9 @@ private const val CAMERA_H = 240
 val INTAKE_WIDTH by config(15.inch)
 
 class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robot) {
-    val purpleLocator: ColorBlobLocatorProcessor
-    val greenLocator: ColorBlobLocatorProcessor
-    val visionPortal: VisionPortal
+    private val purpleLocator: ColorBlobLocatorProcessor
+    private val greenLocator: ColorBlobLocatorProcessor
+    private val visionPortal: VisionPortal
     private val cameraResolution = Size(CAMERA_W, CAMERA_H)
 
     init {
