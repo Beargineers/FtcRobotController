@@ -155,7 +155,7 @@ fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones, position
             ShootingZones.BACK))){
         return cp
     }
-    val far = AutoPositions.SOUTH_SHOOTING.location() // far
+    val far = AutoPositions.SOUTH_SHOOTING.mirrorForAlliance(alliance).location() // far
     val close = if (cp.y <= 0.cm){ // blue side
         if (cp.y < -cp.x){
             Location((cp.x + cp.y)*0.5, (cp.x + cp.y)*0.5)
