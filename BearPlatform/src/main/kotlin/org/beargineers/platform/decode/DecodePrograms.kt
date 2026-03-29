@@ -47,9 +47,9 @@ suspend fun DecodeRobot.shoot() {
     }
 }
 
-suspend fun DecodeRobot.pushAllianceBot(startingPoint: Position) {
+suspend fun DecodeRobot.pushAllianceBot() {
     drivePath(pathTo(
-        startingPoint.shift(0.cm, 30.cm),
+        currentPosition.shift(0.cm, 30.cm),
         positionTolerance = 4.cm,
         headingTolerance = 3.degrees
     ))

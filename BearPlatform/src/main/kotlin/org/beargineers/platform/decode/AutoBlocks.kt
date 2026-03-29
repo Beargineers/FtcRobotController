@@ -74,7 +74,8 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
 
     var operatingIn = 'N'
     val collectedSet = mutableSetOf<Char>()
-    var hasLoad = false
+    var hasCollectedLoad = false
+    var hasInitialLoad = true
 
     fun protectedZones()= buildList {
         add(Location(0.cm, 30.cm)) // For the ramp handle
@@ -84,12 +85,16 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     }
 
     suspend fun goAndShootIfHasLoad() {
-        if (hasLoad) {
+        if (hasInitialLoad) {
+            shootInitialLoad(initialShootingPoint)
+            hasInitialLoad = false
+        }
+        else if (hasCollectedLoad) {
             goToShootingZoneAndShoot(
                 if (operatingIn == 'F') ShootingZones.FRONT else ShootingZones.BACK,
                 protectedZones()
             )
-            hasLoad = false
+            hasCollectedLoad = false
         }
     }
 
@@ -98,13 +103,12 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
         cancelWhen({artifactsCount >= 3}) {
             drivePath(path)
         }
-        hasLoad = true
+        hasCollectedLoad = true
         collectedSet += from
     }
 
     assumePosition(startingPoint.mirrorForAlliance(alliance), 0.degrees)
     enableFlywheel(true)
-    shootInitialLoad(initialShootingPoint)
 
     for (c in program) {
         when (c) {
@@ -112,7 +116,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
             'B' -> operatingIn = 'B'
 
             '/' -> goAndShootIfHasLoad()
-            'P' -> pushAllianceBot(startingPoint)
+            'P' -> pushAllianceBot()
 
             '0' -> collect('0', scoopBoxPath(0.cm) + scoopBoxPath(20.cm) + scoopBoxPath(30.cm))
             '1' -> collect('1', scoopSpikePath(1))
@@ -126,7 +130,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
                 driveTo(farApproach)
                 openRampAndCollect()
                 collectedSet += '4'
-                hasLoad = true
+                hasCollectedLoad = true
                 goAndShootIfHasLoad()
             }
 
