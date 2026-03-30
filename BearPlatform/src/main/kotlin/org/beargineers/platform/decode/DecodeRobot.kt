@@ -7,6 +7,7 @@ import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.Robot
 import org.beargineers.platform.RobotLocations
+import org.beargineers.platform.StateHolder
 import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
 import org.beargineers.platform.between
@@ -18,11 +19,8 @@ import org.beargineers.platform.inch
 import org.beargineers.platform.tileLocation
 
 interface DecodeRobot : Robot {
-    val intakeMode: IntakeMode
-    fun intakeMode(mode: IntakeMode)
     fun launch()
     fun prepareForShooting()
-    fun enableFlywheel(on: Boolean)
 
     fun isShooting(): Boolean
 
@@ -42,6 +40,9 @@ interface DecodeRobot : Robot {
      */
     val shooterAngle: Angle get() = currentPosition.heading
 }
+
+var DecodeRobot.intakeMode by StateHolder("Intake", IntakeMode.OFF)
+var DecodeRobot.flywheelEnabled by StateHolder("Flywheel", false)
 
 object Locations {
     val OPEN_RAMP_SPEED by config(0.6)

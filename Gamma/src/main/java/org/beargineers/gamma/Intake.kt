@@ -8,6 +8,7 @@ import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.intakeMode
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 
 private val ONE_ARTIFACTS_CURRENT_THRESHOLD by config(1500) // Typical current ~1900ma +-60
@@ -18,22 +19,19 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
     private val intake: DcMotor by hardware("intake")
     private val motorCurrent = DoubleNormalDistribution(10)
 
-    public var artifactsCount = 0
-
-    var mode: IntakeMode = IntakeMode.OFF
+    var artifactsCount = 0
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
     }
 
     override fun loop() {
-        Frame.addData("Intake", mode.name)
         motorCurrent.update((intake as DcMotorEx).getCurrent(CurrentUnit.MILLIAMPS))
         val (current, currentStd) = motorCurrent.result()
         Frame.graph("IntakeCurrentMA", current)
         Frame.graph("IntakeCurrentMASTD", currentStd)
 
-        if (mode == IntakeMode.ON) {
+        if (bot.intakeMode == IntakeMode.ON) {
             artifactsCount = when {
                 current > THREE_ARTIFACTS_CURRENT_THRESHOLD -> 3
                 current > TWO_ARTIFACTS_CURRENT_THRESHOLD -> 2
@@ -49,7 +47,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
 */
         }
 
-        intake.power = when (mode) {
+        intake.power = when (bot.intakeMode) {
             IntakeMode.ON -> {
                 1.0
             }
@@ -65,7 +63,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
     }
 
     fun onShoot() {
-        mode=IntakeMode.ON
+        bot.intakeMode = IntakeMode.ON
         robot.opMode.gamepad1.rumble(300)
     }
 }

@@ -8,6 +8,7 @@ import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.counter
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.intakeMode
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
 class Intake(val bot: BetaRobot): Hardware(bot) {
@@ -16,13 +17,12 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
 
     val ballInThreshold by config(13.0)
     val ballOutThreshold by config(17.0)
-    var mode: IntakeMode = IntakeMode.OFF
 
 
     val ballCounter = BallCounter(ballInThreshold, ballOutThreshold) {
         artifacts++
         if (artifacts == 3) {
-            mode = IntakeMode.OFF
+            bot.intakeMode = IntakeMode.OFF
             robot.opMode.gamepad1.rumble(300)
         }
     }
@@ -34,9 +34,7 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
     }
 
     override fun loop() {
-        Frame.addData("Intake", mode.name)
-
-        intake.power = when (mode) {
+        intake.power = when (bot.intakeMode) {
             IntakeMode.ON -> {
                 1.0
             }
@@ -51,7 +49,7 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
         }
 
         if (!bot.opMode.isFpsLow()) {
-            if (mode == IntakeMode.ON && !bot.isShooting() && artifacts < 3) {
+            if (bot.intakeMode == IntakeMode.ON && !bot.isShooting() && artifacts < 3) {
                 ballCounter.update { ballDetector.getDistance(DistanceUnit.CM) }
             }
 
@@ -65,12 +63,12 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
     }
     fun onShoot(){
         artifacts = 0
-        mode=IntakeMode.ON
+        bot.intakeMode = IntakeMode.ON
         robot.opMode.gamepad1.rumble(300)
     }
 
     override fun stop() {
-        mode = IntakeMode.OFF
+        bot.intakeMode = IntakeMode.OFF
     }
 
 

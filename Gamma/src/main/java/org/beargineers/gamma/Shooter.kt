@@ -11,6 +11,7 @@ import org.beargineers.platform.PID
 import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
+import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.roundMotorPower
 
@@ -35,8 +36,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     val latch by hardware<Servo>()
 
-    var flywheelEnabled = false
-
     var maxTicks = 0
 
     val shootingTime = ElapsedTime()
@@ -54,18 +53,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
         maxTicks = fly1.motorType.achieveableMaxTicksPerSecondRounded
         latch.direction = Servo.Direction.REVERSE
-    }
-
-    fun enableFlywheel(on: Boolean) {
-        flywheelEnabled = on
-
-        if (on) {
-            latch.position = LATCH_SERVO_OPEN_POSITION
-        }
-        else {1
-            latch.position = LATCH_SERVO_CLOSED_POSITION
-        }
-
     }
 
     private fun powerFlywheel(p: Double) {
@@ -88,8 +75,15 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
 
     override fun loop() {
+        if (bot.flywheelEnabled) {
+            latch.position = LATCH_SERVO_OPEN_POSITION
+        }
+        else {1
+            latch.position = LATCH_SERVO_CLOSED_POSITION
+        }
+
         val nominalPower = when {
-            flywheelEnabled -> recommendedFlywheelPower()
+            bot.flywheelEnabled -> recommendedFlywheelPower()
             else -> 0.0
         }
         powerFlywheel(nominalPower)
@@ -101,7 +95,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     override fun stop() {
-        enableFlywheel(false)
+        bot.flywheelEnabled = false
     }
 
     fun isShooting(): Boolean {
