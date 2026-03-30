@@ -12,7 +12,6 @@ import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.blink
 import org.beargineers.platform.decode.DecodeRobot
-import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.degrees
@@ -38,10 +37,6 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val shooter = Shooter(this)
 
     val intake = Intake(this)
-    override val intakeMode: IntakeMode get() = intake.mode
-    override fun intakeMode(mode: IntakeMode) {
-        intake.mode = mode
-    }
 
     override fun launch() {
         shooter.launch()
@@ -49,10 +44,6 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun prepareForShooting() {
         shooter.getReadyForShoot()
-    }
-
-    override fun enableFlywheel(on: Boolean) {
-        shooter.enableFlywheel(on)
     }
 
     override fun isShooting(): Boolean {

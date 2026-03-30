@@ -28,6 +28,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     private val parts = mutableMapOf<Part<*>, Any>()
 
+    val states = mutableMapOf<StateHolder<*>, Any>()
+
     override val currentPosition: Position get() = localizer.getPosition()
 
     override val currentVelocity: Position get() = localizer.getVelocity()
@@ -81,6 +83,10 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         Frame.addData("Velocity", "%s/s, %s/s",
             hypot(currentVelocity.x, currentVelocity.y),
             abs(currentVelocity.heading))
+
+        for ((key, value) in states) {
+            Frame.addData(key.name, value)
+        }
 
         locationHistory.addLast(currentPosition.location())
         while (locationHistory.size >= locationHistorySize) {

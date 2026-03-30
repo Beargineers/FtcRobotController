@@ -5,19 +5,19 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.PID
 import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
+import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.roundMotorPower
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
 
-class Shooter(robot: BaseRobot): Hardware(robot) {
+class Shooter(val bot: BetaRobot): Hardware(bot) {
     val SHOOTER_POWER_ADJUST by config(1.0)
     var manualPowerAdjustment = 1.0
     val SHOOTER_DISTANCE_QUOTIENT by config(0.00101)
@@ -44,8 +44,6 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     var stopFeederAt: Long = 0
     var pausedFeederFlag: Boolean = false
 
-    var flywheelEnabled = false
-
     var maxTicks = 0
 
     val loopTime = ElapsedTime()
@@ -66,10 +64,6 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
         feeder.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
         maxTicks = fly1.motorType.achieveableMaxTicksPerSecondRounded
-    }
-
-    fun enableFlywheel(on: Boolean) {
-        flywheelEnabled = on
     }
 
     private fun powerFlywheel(p: Double) {
@@ -126,10 +120,10 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
             pausedFeederFlag = true
         }
 
-        feeder.power = if (isShooting() && flywheelPoweredUp && flywheelEnabled || feederTransferring) 1.0 else 0.0
+        feeder.power = if (isShooting() && flywheelPoweredUp && bot.flywheelEnabled || feederTransferring) 1.0 else 0.0
 
         val nominalPower = when {
-            flywheelEnabled -> recommendedFlywheelPower()
+            bot.flywheelEnabled -> recommendedFlywheelPower()
             else -> 0.0
         }
         powerFlywheel(nominalPower)
@@ -141,7 +135,7 @@ class Shooter(robot: BaseRobot): Hardware(robot) {
     }
 
     override fun stop() {
-        enableFlywheel(false)
+        bot.flywheelEnabled = false
         feeder.power = 0.0
     }
 

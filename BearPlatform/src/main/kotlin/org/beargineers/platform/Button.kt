@@ -31,19 +31,3 @@ open class Button(val test: () -> Boolean) {
         }
     }
 }
-
-class ToggleButton(val name: String, test: () -> Boolean, val toggleCallback: (Boolean) -> Unit): Button(test) {
-    var value: Boolean = false
-
-    init {
-        onRelease {
-            value = !value
-            toggleCallback(value)
-        }
-    }
-
-    override fun update() {
-        super.update()
-        Frame.addData(name, if (value) "ON" else "OFF")
-    }
-}

@@ -107,10 +107,6 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         return button
     }
 
-    fun toggleButton(name: String, test: () -> Boolean, callback: (Boolean) -> Unit) {
-        allButtons += ToggleButton(name, test, callback)
-    }
-
     fun auto(name: String, b: suspend T.() -> Unit) {
         cancelAuto()
         auto = loop.submit {

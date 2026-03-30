@@ -52,8 +52,8 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             interpretProgram(program)
         }
 
-        intakeMode(IntakeMode.OFF)
-        enableFlywheel(false)
+        intakeMode = IntakeMode.OFF
+        flywheelEnabled = false
 
         val operatingIn = program.last {it == 'F' || it == 'B'}
 
@@ -108,7 +108,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     }
 
     assumePosition(startingPoint.mirrorForAlliance(alliance), 0.degrees)
-    enableFlywheel(true)
+    flywheelEnabled = true
 
     for (c in program) {
         when (c) {
