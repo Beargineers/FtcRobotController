@@ -34,6 +34,8 @@ interface DecodeRobot : Robot {
 
     val hasTurret: Boolean
 
+    val optimalArtifactStrafe: Distance get() = 0.cm
+
     /**
      *  Angle at which an artifact would be fired if it happens now. Naturally, it is a heading of a turret
      *  if the robot has it or just a heading of a robot if it shoots forward.
