@@ -67,5 +67,5 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val shootingAngleCorrection: Angle
         get() = (shooter.SHOOTER_ANGLE_CORRECTION + manualAngleCorrection).degrees
 
-    override val artifactsCount: Int get() = 0 // TODO
+    override val artifactsCount: Int get() = intake.artifactsCount
 }
