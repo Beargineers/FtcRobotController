@@ -26,7 +26,7 @@ suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirro
     coroutineScope {
         val prepare = launch {
             delay(0.2.seconds)
-            intakeMode(IntakeMode.ON)
+            intakeMode = IntakeMode.ON
             delay(0.5.seconds)
             prepareForShooting()
         }

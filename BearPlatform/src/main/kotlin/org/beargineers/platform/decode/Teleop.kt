@@ -34,13 +34,13 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         super.bearInit()
 
         button(gamepad1::y) {
-            robot.intakeMode(when (robot.intakeMode) {
+            robot.intakeMode = when (robot.intakeMode) {
                 IntakeMode.OFF -> IntakeMode.ON
                 IntakeMode.ON -> IntakeMode.OFF
                 IntakeMode.REVERSE -> IntakeMode.ON
-            })
+            }
         }.onHold {
-            robot.intakeMode(IntakeMode.REVERSE)
+            robot.intakeMode = IntakeMode.REVERSE
         }
 
 /*
@@ -49,8 +49,8 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
 */
 
-        toggleButton("Shooter", gamepad1::a){
-            robot.enableFlywheel(it)
+        button(gamepad1::a) {
+            robot.flywheelEnabled = !robot.flywheelEnabled
         }
 
         button(gamepad1::right_stick_button) {
@@ -130,12 +130,12 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
     override fun bearStart() {
         super.bearStart()
-        robot.enableFlywheel(true)
 
         robot.assumePosition(lastKnownPosition, lastKnownTurretAngle)
 
 /*
-        robot.intakeMode(IntakeMode.ON)
+        robot.flywheelEnabled = true
+        robot.intakeMode = IntakeMode.ON
 */
     }
 

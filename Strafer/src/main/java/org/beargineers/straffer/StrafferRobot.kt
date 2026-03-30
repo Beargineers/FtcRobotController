@@ -9,7 +9,6 @@ import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
-import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.degrees
 
 object NoVision : AbsoluteLocalizer {
@@ -26,25 +25,17 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     }
 
-    override val intakeMode: IntakeMode get() = IntakeMode.OFF
     override val shootingAngleCorrection: Angle
         get() = 0.degrees
     override val artifactsCount: Int
         get() = 0
 
-    override fun intakeMode(mode: IntakeMode) {
-        // TODO("Not yet implemented")
-    }
 
     override fun launch() {
         // TODO("Not yet implemented")
     }
 
     override fun prepareForShooting() {
-        // TODO("Not yet implemented")
-    }
-
-    override fun enableFlywheel(on: Boolean) {
         // TODO("Not yet implemented")
     }
 

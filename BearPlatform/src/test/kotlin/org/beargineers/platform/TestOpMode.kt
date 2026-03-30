@@ -1,7 +1,6 @@
 package org.beargineers.platform
 
 import org.beargineers.platform.decode.DecodeRobot
-import org.beargineers.platform.decode.IntakeMode
 
 class TestOpMode : RobotOpMode<Robot>() {
     override val alliance: Alliance = Alliance.RED
@@ -14,22 +13,11 @@ class TestOpMode : RobotOpMode<Robot>() {
 class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
     val localizer = TestLocalizer()
 
-    override fun intakeMode(mode: IntakeMode) {
-        TODO("Not yet implemented")
-    }
-
-    override val intakeMode: IntakeMode
-        get() = TODO("Not yet implemented")
-
     override fun launch() {
         TODO("Not yet implemented")
     }
 
     override fun prepareForShooting() {
-        TODO("Not yet implemented")
-    }
-
-    override fun enableFlywheel(on: Boolean) {
         TODO("Not yet implemented")
     }
 
