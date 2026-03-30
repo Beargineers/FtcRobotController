@@ -3,7 +3,9 @@ package org.beargineers.platform.decode
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.beargineers.platform.Frame
 import org.beargineers.platform.Location
+import org.beargineers.platform.PathFollowingConfig
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.Waypoint
@@ -13,6 +15,7 @@ import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
+import org.beargineers.platform.driveRelative
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.max
 import org.beargineers.platform.min
@@ -68,6 +71,21 @@ suspend fun DecodeRobot.openRampAndCollect() {
 
     cancelWhen({artifactsCount >= 3}) {
         delay(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
+    }
+}
+
+suspend fun DecodeRobot.strafeArtifactsToView() {
+    while (true) {
+        val strafe = optimalArtifactStrafe
+        Frame.graph("AStrafe", strafe.cm())
+        val job = opMode.loop.submit {
+            if (abs(strafe) > PathFollowingConfig.artifactStrafeTolerance) {
+                driveRelative(RobotCentricPosition(0.cm, strafe, 0.degrees))
+            }
+        }
+
+        opMode.loop.nextTick()
+        job.cancel()
     }
 }
 
