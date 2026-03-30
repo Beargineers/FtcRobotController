@@ -101,6 +101,12 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             }
         }
 
+        button(gamepad1::b) {
+            auto("strafing to artifact") {
+                strafeArtifactsToView()
+            }
+        }
+
         button(gamepad2::dpad_up) {
             robot.adjustShooting(+0.01, 0.0)
         }
