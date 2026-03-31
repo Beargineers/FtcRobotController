@@ -3,10 +3,10 @@ package org.beargineers.gamma
 import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
-import org.beargineers.platform.Distance
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
+import org.beargineers.platform.Location
 import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
@@ -20,8 +20,9 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     val vision = ArtifactsVision(this, true)
 
-    override val optimalArtifactStrafe: Distance
-        get() = vision.optimalStrafeDistance()
+    override fun intakeTarget(filter: (Location) -> Boolean): Location? {
+        return vision.calculateTargetLocation(filter)
+    }
 
     override val localizer: Localizer =
         FusionLocalizer(

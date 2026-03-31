@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor
 import org.firstinspires.ftc.vision.opencv.ColorRange
+import kotlin.math.acos
 
 private const val CAMERA_W = 320
 private const val CAMERA_H = 240
@@ -41,29 +42,56 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
     }
 
     enum class ArtifactColor {PURPLE, GREEN}
+    data class RelativeLocation(val distance: Distance, val offset: Distance)
     data class Artifact(val color: ArtifactColor, val px: Float, val py: Float, val radius: Float) {
-        val distance: Distance get() = (2073/radius).toDouble().cm
+        fun distance(): Distance {
+            return (2073 / radius).toDouble().cm
+        }
 
-        fun offsetFromCenter(): Distance {
+        fun offset(): Distance {
             return (2.5.inch / radius.toDouble()) * (px - CAMERA_W/2).toDouble() // 5 inch is a diameter of an artifact
+        }
+
+        fun loc(): RelativeLocation {
+            return RelativeLocation(distance(), offset())
         }
     }
 
-    fun optimalStrafeDistance(): Distance {
-        val raw = artifacts()
-        if (raw.isEmpty()) return 0.cm
+    fun RelativeLocation.location(): Location {
+        val cp = robot.currentPosition
+        val angle = (cp.heading + acos(offset / distance).radians).normalize()
 
+        return Location(
+            cp.x + distance * sin(angle),
+            cp.y + distance * cos(angle)
+        )
+    }
+
+    fun Artifact.location() = loc().location()
+
+    fun calculateTargetLocation(acceptableLocationFilter: (Location) -> Boolean): Location? {
+        val raw = artifacts().filter {
+            val l = it.location()
+            l.isWithinFieldBounds() && acceptableLocationFilter(l)
+        }
+
+        if (raw.isEmpty()) return null
+
+        return calculateIntakeTarget(raw).location()
+    }
+
+    private fun calculateIntakeTarget(raw: List<Artifact>): RelativeLocation {
         // Don't look at artifacts, which appear much farther than first one
-        val artifacts = raw.filter { abs(it.distance - raw.first().distance) < 20.cm }.sortedBy { it.px }
+        val artifacts = raw.filter { abs(it.distance() - raw.first().distance()) < 20.cm }.sortedBy { it.px }
 
         // Now try to take 3 artifacts with minimal movement, then 2 if we can't take 3 at once, then 1
 
         fun List<Artifact>.groupWidth(): Distance {
-            return last().offsetFromCenter() - first().offsetFromCenter()
+            return last().offset() - first().offset()
         }
 
         fun List<Artifact>.groupOffset(): Distance {
-            return (last().offsetFromCenter() + first().offsetFromCenter()) / 2
+            return (last().offset() + first().offset()) / 2
         }
 
         fun groupBy(n: Int) = buildList {
@@ -75,17 +103,16 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
             }
         }
 
-        val by3 = groupBy(3)
-        if (by3.isNotEmpty()) {
-            return by3.minBy { abs(it.groupOffset()) }.groupOffset()
+        val groups = groupBy(3).takeIf { it.isNotEmpty() } ?:
+                     groupBy(2).takeIf { it.isNotEmpty() }
+
+        if (groups != null) {
+            val group = groups.minBy { abs(it.groupOffset()) }
+            return RelativeLocation(group.maxOf { it.distance() }, group.groupOffset())
         }
 
-        val by2 = groupBy(2)
-        if (by2.isNotEmpty()) {
-            return by2.minBy { abs(it.groupOffset()) }.groupOffset()
-        }
-
-        return artifacts.minBy { it.offsetFromCenter() }.offsetFromCenter()
+        val closest = artifacts.minBy { it.distance() }
+        return RelativeLocation(closest.distance(), closest.offset())
     }
 
 

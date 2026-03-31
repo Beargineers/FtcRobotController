@@ -366,4 +366,13 @@ fun Location.between(other: Location): Location {
     return Location((other.x + x)/2, (other.y + y)/2)
 }
 
+fun Location.isWithinFieldBounds(): Boolean {
+    val highestCoord = (24 * 3).inch
+    return abs(x) < highestCoord && abs(y) < highestCoord
+}
+
 fun Position.toPose2d() = Pose2d(x.inch(), y.inch(), heading.radians())
+
+fun headingFromTo(from: Location, to: Location): Angle {
+    return atan2(from.y - to.y, from.x - to.x)
+}
