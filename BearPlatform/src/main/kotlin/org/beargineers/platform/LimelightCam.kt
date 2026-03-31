@@ -64,10 +64,6 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
         return true
     }
 
-    fun headingFromTo(from: Location, to: Location): Angle {
-        return atan2(from.y - to.y, from.x - to.x)
-    }
-
     private fun position(latestResult: LLResult): Position? {
         return latestResult.botpose?.robotPose()
     }

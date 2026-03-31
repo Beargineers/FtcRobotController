@@ -3,9 +3,7 @@ package org.beargineers.platform.decode
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.beargineers.platform.Frame
 import org.beargineers.platform.Location
-import org.beargineers.platform.PathFollowingConfig
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.Waypoint
@@ -15,8 +13,8 @@ import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
-import org.beargineers.platform.driveRelative
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.headingFromTo
 import org.beargineers.platform.max
 import org.beargineers.platform.min
 import org.beargineers.platform.pathTo
@@ -74,18 +72,37 @@ suspend fun DecodeRobot.openRampAndCollect() {
     }
 }
 
-suspend fun DecodeRobot.strafeArtifactsToView() {
-    while (true) {
-        val strafe = optimalArtifactStrafe
-        Frame.graph("AStrafe", strafe.cm())
-        val job = opMode.loop.submit {
-            if (abs(strafe) > PathFollowingConfig.artifactStrafeTolerance) {
-                driveRelative(RobotCentricPosition(0.cm, strafe, 0.degrees))
+suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Location) -> Boolean = {true}) {
+    intakeMode = IntakeMode.ON
+
+    var targetLocation = intakeTarget(filter) ?: return
+    coroutineScope {
+        outer@while (true) {
+            val job = launch {
+                val targetPosition = if (strafe) {
+                    targetLocation.withHeading(currentPosition.heading)
+                } else {
+                    targetLocation.withHeading(headingFromTo(
+                        targetLocation,
+                        currentPosition.location()
+                    ))
+                }
+
+                driveTo(targetPosition)
+            }
+
+            while (true) {
+                opMode.loop.nextTick()
+                val nextTarget = intakeTarget(filter)
+                if (nextTarget != null) {
+                    targetLocation = nextTarget
+                    job.cancel()
+                    break
+                } else if (!job.isActive) {
+                    break@outer
+                }
             }
         }
-
-        opMode.loop.nextTick()
-        job.cancel()
     }
 }
 
