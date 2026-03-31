@@ -103,7 +103,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         button(gamepad1::b) {
             auto("strafing to artifact") {
-                strafeArtifactsToView()
+                collectArtifactsInView(false)
             }
         }
 
