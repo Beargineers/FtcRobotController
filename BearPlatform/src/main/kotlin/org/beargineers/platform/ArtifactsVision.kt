@@ -7,7 +7,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor
 import org.firstinspires.ftc.vision.opencv.ColorRange
-import kotlin.math.acos
+import kotlin.math.asin
 
 private const val CAMERA_W = 320
 private const val CAMERA_H = 240
@@ -59,11 +59,11 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
 
     fun RelativeLocation.location(): Location {
         val cp = robot.currentPosition
-        val angle = (cp.heading + acos(offset / distance).radians).normalize()
+        val angle = (cp.heading - asin(offset / distance).radians).normalize()
 
         return Location(
-            cp.x + distance * sin(angle),
-            cp.y + distance * cos(angle)
+            cp.x + distance * cos(angle),
+            cp.y + distance * sin(angle)
         )
     }
 
