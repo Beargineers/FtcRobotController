@@ -8,13 +8,13 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
+import org.beargineers.platform.atan2
 import org.beargineers.platform.buildPath
 import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
-import org.beargineers.platform.headingFromTo
 import org.beargineers.platform.max
 import org.beargineers.platform.min
 import org.beargineers.platform.pathTo
@@ -82,13 +82,12 @@ suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Locatio
                 val targetPosition = if (strafe) {
                     targetLocation.withHeading(currentPosition.heading)
                 } else {
-                    targetLocation.withHeading(headingFromTo(
-                        targetLocation,
-                        currentPosition.location()
-                    ))
+                    val dx = targetLocation.x - currentPosition.x
+                    val dy = targetLocation.y - currentPosition.y
+                    targetLocation.withHeading(atan2(dy, dx))
                 }
 
-                driveTo(targetPosition)
+                driveTo(targetPosition, applyMirroring = false)
             }
 
             while (true) {

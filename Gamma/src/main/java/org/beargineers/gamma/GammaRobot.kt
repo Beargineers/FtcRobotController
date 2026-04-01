@@ -59,4 +59,18 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         get() = (shooter.SHOOTER_ANGLE_CORRECTION + manualAngleCorrection).degrees
 
     override val artifactsCount: Int get() = intake.artifactsCount
+
+    override fun doDrawRobot() {
+        super.doDrawRobot()
+
+        val target = intakeTarget { true }
+
+        if (target != null) {
+            with(panelsField) {
+                setStyle("green", "green", 1.0)
+                moveCursor(target.x.inch(), target.y.inch())
+                circle(1.0)
+            }
+        }
+    }
 }
