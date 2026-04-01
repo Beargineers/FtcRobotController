@@ -108,7 +108,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         }
     }
 
-    private fun doDrawRobot() {
+    open fun doDrawRobot() {
         if (Panels.clientsCount == 0) return
 
         val cp = currentPosition
