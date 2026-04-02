@@ -79,6 +79,8 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val artifactsCount: Int get() = intake.artifactsCount
 
+    override val shooterAngle: Angle get() = currentPosition.heading + turret.currentTurretAngle()
+
     override fun doDrawRobot() {
         super.doDrawRobot()
 
