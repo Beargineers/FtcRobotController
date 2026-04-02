@@ -71,7 +71,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         }
 
         maxTicks = fly1.motorType.achieveableMaxTicksPerSecondRounded
-        latch.direction = Servo.Direction.REVERSE
+        latch.direction = Servo.Direction.FORWARD
     }
 
     private fun powerFlywheel(p: Double) {
