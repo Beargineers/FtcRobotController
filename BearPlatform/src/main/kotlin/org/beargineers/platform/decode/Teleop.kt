@@ -94,10 +94,8 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
 
         button(gamepad1::right_bumper) {
-            val position = robot.currentPosition
-            robot.launch()
-            auto("Holding position") {
-                holdPositionLookAtGoal(position.location())
+            auto("Shooting") {
+                robot.shoot()
             }
         }
 
@@ -183,7 +181,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val targetPosition = robot.currentPosition.plus(deltaPosition)
 
         driveJob?.cancel()
-        driveJob = loop.submit {
+        driveJob = launch {
             robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
         }.apply {
             invokeOnCompletion { throwable ->

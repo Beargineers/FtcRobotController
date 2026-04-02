@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 
 
 abstract class RobotOpMode<T : Robot>() : OpMode() {
@@ -25,7 +27,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     }
 
 
-    private var auto: Deferred<Unit>? = null
+    private var auto: Job? = null
     private val fpsTracker = FPSTracker()
 
     val elapsedTime = ElapsedTime()
@@ -67,7 +69,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         bearStart()
         elapsedTime.reset()
 
-        loop.submit { robot.autoProgram() }.invokeOnCompletion { throwable ->
+        launch { robot.autoProgram() }.invokeOnCompletion { throwable ->
             if (throwable != null && throwable !is CancellationException) {
                 Frame.error(throwable, "Auto program has failed")
                 stop()
@@ -107,9 +109,15 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         return button
     }
 
+    fun launch(body: suspend CoroutineScope.() -> Unit): Job = async(body)
+    fun <T> async(body: suspend CoroutineScope.() -> T): Deferred<T> = loop.submit(body)
+    suspend fun yield() {
+        loop.nextTick()
+    }
+
     fun auto(name: String, b: suspend T.() -> Unit) {
         cancelAuto()
-        auto = loop.submit {
+        auto = launch {
             robot.b()
         }.apply {
             invokeOnCompletion { throwable ->
