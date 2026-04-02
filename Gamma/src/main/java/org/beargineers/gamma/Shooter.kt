@@ -5,15 +5,27 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.beargineers.gamma.Shooter.LatchState.CLOSED
+import org.beargineers.gamma.Shooter.LatchState.CLOSING
+import org.beargineers.gamma.Shooter.LatchState.OPEN
+import org.beargineers.gamma.Shooter.LatchState.OPENING
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.PID
 import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
+import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
+import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.roundMotorPower
+import kotlin.time.Duration.Companion.milliseconds
 
 class Shooter(val bot: GammaRobot): Hardware(bot) {
     val SHOOTER_POWER_ADJUST by config(1.0)
@@ -28,6 +40,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     val LATCH_SERVO_OPEN_POSITION by config(0.30)
     val LATCH_SERVO_CLOSED_POSITION by config(0.30)
+    val LATCH_SERVO_RUN_TIME_MS by config(500)
 
     val pid = PID()
 
@@ -35,6 +48,12 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val fly2 by hardware<DcMotor>()
 
     val latch by hardware<Servo>()
+
+    enum class LatchState {
+        OPEN, CLOSED, OPENING, CLOSING
+    }
+
+    var latchState = OPEN
 
     var maxTicks = 0
 
@@ -66,8 +85,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         fly2.power = v
     }
 
-    fun launch() {
-        // TODO open latch
+    suspend fun launch() {
+        openLatch()
         shootingTime.reset()
         bot.intake.onShoot()
     }
@@ -75,13 +94,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
 
     override fun loop() {
-        if (bot.flywheelEnabled) {
-            latch.position = LATCH_SERVO_OPEN_POSITION
-        }
-        else {1
-            latch.position = LATCH_SERVO_CLOSED_POSITION
-        }
-
         val nominalPower = when {
             bot.flywheelEnabled -> recommendedFlywheelPower()
             else -> 0.0
@@ -100,5 +112,57 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     fun isShooting(): Boolean {
         return shootingTime.seconds() < SHOOTING_TIME_SECONDS
+    }
+
+    private var latchJob: Job? = null
+
+    suspend fun closeLatch(waitForCompletion: Boolean) {
+        when (latchState) {
+            CLOSED -> {}
+            CLOSING -> latchJob!!.join()
+
+            OPENING,
+            OPEN -> {
+                latchJob?.cancel()
+                latchState = CLOSING
+                coroutineScope {
+                    latchJob = launch {
+                        bot.intakeMode = IntakeMode.OFF
+                        latch.position = LATCH_SERVO_CLOSED_POSITION
+                        delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
+                        latchState = CLOSED
+                    }
+
+                    if (waitForCompletion) {
+                        latchJob!!.join()
+                        if (latchState != CLOSED) cancel()
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun openLatch() {
+        when (latchState) {
+            OPEN -> {}
+            OPENING -> latchJob!!.join()
+
+            CLOSING,
+            CLOSED -> {
+                latchJob?.cancel()
+                latchState = OPENING
+                coroutineScope {
+                    latchJob = launch {
+                        bot.intakeMode = IntakeMode.OFF
+                        latch.position = LATCH_SERVO_OPEN_POSITION
+                        delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
+                        latchState = OPEN
+                    }
+
+                    latchJob!!.join()
+                    if (latchState != OPEN) cancel()
+                }
+            }
+        }
     }
 }
