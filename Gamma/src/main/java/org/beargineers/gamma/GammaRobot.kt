@@ -11,7 +11,10 @@ import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
+import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
+import org.beargineers.platform.driveTo
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
@@ -38,12 +41,28 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val hasTurret = true
 
-    override fun launch() {
+    override suspend fun shoot() {
+        val cp = currentPosition
         shooter.launch()
+
+        val hold = opMode.launch {
+            while (true) {
+                driveTo(cp, applyMirroring = false)
+                opMode.yield()
+            }
+        }
+
+        while (isShooting()) {
+            opMode.yield()
+        }
+
+        hold.cancel()
+        shooter.closeLatch(false)
+        intakeMode = IntakeMode.ON
     }
 
-    override fun prepareForShooting() {
-        // TODO Anything?
+    override suspend fun prepareForShooting() {
+        shooter.openLatch()
     }
 
     override fun isShooting(): Boolean {

@@ -31,11 +31,11 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         get() = 0
 
 
-    override fun launch() {
+    override suspend fun shoot() {
         // TODO("Not yet implemented")
     }
 
-    override fun prepareForShooting() {
+    override suspend fun prepareForShooting() {
         // TODO("Not yet implemented")
     }
 

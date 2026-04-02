@@ -13,7 +13,7 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
     movesBuilder.apply(moves)
     val action = movesBuilder.build()
     while (action.run(TelemetryPacket())) {
-        opMode.loop.nextTick()
+        opMode.yield()
     }
 }
 
@@ -48,7 +48,7 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean =
         )
 
         while (follower.update()) {
-            opMode.loop.nextTick()
+            opMode.yield()
         }
     }
 }
@@ -68,7 +68,7 @@ suspend fun Robot.cancelWhen(condition: () -> Boolean, block: suspend CoroutineS
     coroutineScope {
         val childJob = launch(block = block)
         while (childJob.isActive && !condition()) {
-            opMode.loop.nextTick()
+            opMode.yield()
         }
 
         if (childJob.isActive) {

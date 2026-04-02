@@ -19,8 +19,8 @@ import org.beargineers.platform.inch
 import org.beargineers.platform.tileLocation
 
 interface DecodeRobot : Robot {
-    fun launch()
-    fun prepareForShooting()
+    suspend fun shoot()
+    suspend fun prepareForShooting()
 
     fun isShooting(): Boolean
 

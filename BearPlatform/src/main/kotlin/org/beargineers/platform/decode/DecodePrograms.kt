@@ -22,10 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 
 suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean = true) {
     coroutineScope {
-        val prepare = launch {
-            delay(0.2.seconds)
-            intakeMode = IntakeMode.ON
-            delay(0.5.seconds)
+        launch {
             prepareForShooting()
         }
 
@@ -35,16 +32,8 @@ suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirro
             ) else waypoint
         }
         drivePath(waypoints, applyMirroring)
-        prepare.cancel()
-    }
 
-    shoot()
-}
-
-suspend fun DecodeRobot.shoot() {
-    launch()
-    while (isShooting()) {
-        opMode.loop.nextTick()
+        shoot()
     }
 }
 
@@ -91,7 +80,7 @@ suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Locatio
             }
 
             while (true) {
-                opMode.loop.nextTick()
+                opMode.yield()
                 val nextTarget = intakeTarget(filter)
                 if (nextTarget != null) {
                     targetLocation = nextTarget
@@ -146,8 +135,3 @@ suspend fun DecodeRobot.park() {
     driveTo(parkCoords.withHeading(parkHeading))
 }
 
-suspend fun DecodeRobot.holdPositionLookAtGoal(location: Location) {
-    while (true) {
-        driveTo(location.withHeading(headingToGoalFrom(location)))
-    }
-}

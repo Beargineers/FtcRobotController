@@ -1,5 +1,9 @@
 package org.beargineers.beta
 
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Frame
@@ -12,9 +16,14 @@ import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.blink
 import org.beargineers.platform.decode.DecodeRobot
+import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.headingToGoal
+import org.beargineers.platform.decode.headingToGoalFrom
+import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
+import org.beargineers.platform.driveTo
+import kotlin.time.Duration.Companion.seconds
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     private var lowFPSMode = false
@@ -38,12 +47,38 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     val intake = Intake(this)
 
-    override fun launch() {
+    var prepareJob: Job? = null
+
+    override suspend fun shoot() {
+        prepareJob?.cancel()
+
+        val cl = currentPosition.location()
         shooter.launch()
+
+        val hold = opMode.launch {
+            while (true) {
+                driveTo(cl.withHeading(headingToGoalFrom(cl)), applyMirroring = false)
+                opMode.yield()
+            }
+        }
+
+        while (isShooting()) {
+            opMode.yield()
+        }
+
+        hold.cancel()
     }
 
-    override fun prepareForShooting() {
-        shooter.getReadyForShoot()
+    override suspend fun prepareForShooting() {
+        coroutineScope {
+            prepareJob = launch {
+                delay(0.2.seconds)
+                intakeMode = IntakeMode.ON
+                delay(0.5.seconds)
+
+                shooter.getReadyForShoot()
+            }
+        }
     }
 
     override fun isShooting(): Boolean {

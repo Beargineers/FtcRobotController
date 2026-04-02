@@ -13,12 +13,12 @@ class CoroutinesLoopTest : RobotTest() {
     @Test
     fun testCoroutinesDoWhile() {
         var counter = 0
-        opMode.loop.submit {
+        opMode.launch {
             robot.cancelWhen({ counter >= 10 }) {
                 while (true) {
                     counter++
                     println("At counter=$counter")
-                    opMode.loop.nextTick()
+                    opMode.yield()
                 }
             }
 
@@ -26,7 +26,7 @@ class CoroutinesLoopTest : RobotTest() {
                 while (true) {
                     counter--
                     println("At counter=$counter")
-                    opMode.loop.nextTick()
+                    opMode.yield()
                 }
             }
             println("Done")
@@ -45,10 +45,10 @@ class CoroutinesLoopTest : RobotTest() {
         var trigger = false
         var complete = false
 
-        opMode.loop.submit {
+        opMode.launch {
             launch {
                 while (!trigger) {
-                    opMode.loop.nextTick()
+                    opMode.yield()
                 }
                 complete = true
             }
@@ -80,7 +80,7 @@ class CoroutinesLoopTest : RobotTest() {
     @Test
     fun testExceptionHandling() {
         var success = false
-        opMode.loop.submit {
+        opMode.launch {
             throw RuntimeException("Test exception")
         }.invokeOnCompletion { throwable ->
             if (throwable?.message == "Test exception") {
@@ -94,15 +94,15 @@ class CoroutinesLoopTest : RobotTest() {
     @Test
     fun testCancellation() {
         var counter = 0
-        opMode.loop.submit {
+        opMode.launch {
             var job: Job? = null
 
             repeat(5) {
                 job?.cancel()
-                job = opMode.loop.submit {
+                job = opMode.launch {
                     while (true) {
                         counter++
-                        opMode.loop.nextTick()
+                        opMode.yield()
                     }
                 }
             }

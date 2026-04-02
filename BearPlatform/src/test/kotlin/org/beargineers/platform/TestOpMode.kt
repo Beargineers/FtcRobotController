@@ -13,11 +13,11 @@ class TestOpMode : RobotOpMode<Robot>() {
 class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
     val localizer = TestLocalizer()
 
-    override fun launch() {
+    override suspend fun shoot() {
         TODO("Not yet implemented")
     }
 
-    override fun prepareForShooting() {
+    override suspend fun prepareForShooting() {
         TODO("Not yet implemented")
     }
 
