@@ -25,6 +25,7 @@ import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.roundMotorPower
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 
 class Shooter(val bot: GammaRobot): Hardware(bot) {
@@ -85,10 +86,17 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         fly2.power = v
     }
 
-    suspend fun launch() {
+    suspend fun shoot() {
         openLatch()
+        waitForFlywheelSpeed()
         shootingTime.reset()
-        bot.intake.onShoot()
+        bot.intakeMode = IntakeMode.ON
+    }
+
+    private suspend fun waitForFlywheelSpeed() {
+        while (abs(pid.error()) > SHOOTER_ERROR_MARGIN) {
+            bot.opMode.yield()
+        }
     }
 
     private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())

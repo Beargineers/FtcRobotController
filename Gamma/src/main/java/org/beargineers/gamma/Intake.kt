@@ -62,8 +62,4 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
         }
     }
 
-    fun onShoot() {
-        bot.intakeMode = IntakeMode.ON
-        robot.opMode.gamepad1.rumble(300)
-    }
 }
