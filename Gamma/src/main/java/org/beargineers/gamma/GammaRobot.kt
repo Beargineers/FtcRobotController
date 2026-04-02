@@ -1,5 +1,6 @@
 package org.beargineers.gamma
 
+import kotlinx.coroutines.coroutineScope
 import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
@@ -42,23 +43,22 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val hasTurret = true
 
     override suspend fun shoot() {
-        val cp = currentPosition
-        shooter.launch()
-
-        val hold = opMode.launch {
-            while (true) {
-                driveTo(cp, applyMirroring = false)
-                opMode.yield()
+        coroutineScope {
+            val hold = opMode.launch {
+                val cp = currentPosition
+                do {
+                    opMode.yield()
+                    driveTo(cp, applyMirroring = false)
+                } while (isShooting())
             }
-        }
 
-        while (isShooting()) {
-            opMode.yield()
-        }
+            shooter.shoot()
+            hold.join()
 
-        hold.cancel()
-        shooter.closeLatch(false)
-        intakeMode = IntakeMode.ON
+            shooter.closeLatch(false)
+            intakeMode = IntakeMode.ON
+            opMode.gamepad1.rumble(300)
+        }
     }
 
     override suspend fun prepareForShooting() {
