@@ -15,16 +15,6 @@ fun blink(pattern: String, period: Duration = 300.milliseconds): LEDPattern {
     })
 }
 
-fun counter(n: Int, color: Char): LEDPattern {
-    if (n > 3) return blink("$color$color$color")
-    return LEDPattern(buildList {
-        add(LEDPhase(buildString {
-            repeat(n) { append(color) }
-            append("000")
-        }.take(3), 100.seconds))
-    })
-}
-
 
 class LedIndicator(val nLEDs: Int, robot: BaseRobot) : Hardware(robot) {
     private var basePattern = LEDPattern(buildList { add(LEDPhase("000", 100.seconds)) })
@@ -33,6 +23,17 @@ class LedIndicator(val nLEDs: Int, robot: BaseRobot) : Hardware(robot) {
     private var startTime = 0L
     private var loopTime = 1L
 
+    fun counter(n: Int, color: Char) = setBasePattern(counterPattern(n, color))
+
+    private fun counterPattern(n: Int, color: Char): LEDPattern {
+        if (n > nLEDs) return blink("$color$color$color")
+        return LEDPattern(buildList {
+            add(LEDPhase(buildString {
+                repeat(n) { append(color) }
+                append("000")
+            }.take(nLEDs), 100.seconds))
+        })
+    }
 
     fun setBasePattern(pattern: LEDPattern) {
         if (basePattern != pattern) {

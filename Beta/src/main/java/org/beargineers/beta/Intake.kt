@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.DistanceSensor
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
-import org.beargineers.platform.counter
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.intakeMode
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -55,7 +54,7 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
 
             Frame.addData("Artifacts", artifacts)
 
-            bot.ledIndicator.setBasePattern(counter(artifacts, 'G'))
+            bot.ledIndicator.counter(artifacts, 'G')
         }
         else {
             Frame.addData("Artifacts", "Low FPS!!!")
