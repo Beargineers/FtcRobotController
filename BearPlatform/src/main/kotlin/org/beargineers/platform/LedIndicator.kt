@@ -26,7 +26,7 @@ fun counter(n: Int, color: Char): LEDPattern {
 }
 
 
-class LedIndicator(robot: BaseRobot) : Hardware(robot) {
+class LedIndicator(val nLEDs: Int, robot: BaseRobot) : Hardware(robot) {
     private var basePattern = LEDPattern(buildList { add(LEDPhase("000", 100.seconds)) })
     private var tempPattern : LEDPattern? = null
     private var stopTempAtMillis = 0L
@@ -69,14 +69,10 @@ class LedIndicator(robot: BaseRobot) : Hardware(robot) {
         return "000"
     }
 
-    val led1 = Led("led1")
-    val led2 = Led("led2")
-    val led3 = Led("led3")
+    val leds = (0..<nLEDs).map { Led("led${it+1}") }
 
     override fun init() {
-        led1.color('0')
-        led2.color('0')
-        led3.color('0')
+        leds.forEach { it.color('0') }
     }
 
     override fun loop() {
@@ -90,15 +86,13 @@ class LedIndicator(robot: BaseRobot) : Hardware(robot) {
         val pattern = tempPattern ?: basePattern
 
         val colors = currentPattern(pattern.phases)
-        led1.color(colors[0])
-        led2.color(colors[1])
-        led3.color(colors[2])
+        for (i in 0..<nLEDs) {
+            leds[i].color(colors[i])
+        }
     }
 
     override fun stop() {
-        led1.color('R')
-        led2.color('R')
-        led3.color('R')
+        leds.forEach { it.color('R') }
     }
 
     inner class Led(name: String) {
