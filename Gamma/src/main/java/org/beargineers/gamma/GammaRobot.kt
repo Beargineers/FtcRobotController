@@ -5,6 +5,8 @@ import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.FusionLocalizer
+import org.beargineers.platform.IndicatingRelativeLocalizer
+import org.beargineers.platform.LedIndicator
 import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.Location
@@ -21,6 +23,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
     val shooter = Shooter(this)
     val turret = Turret(this)
+    val ledIndicator = LedIndicator(2, this)
 
     val vision = ArtifactsVision(this, true)
 
@@ -31,7 +34,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val localizer: Localizer =
         FusionLocalizer(
             RotatingCameraAdjuster(LimelightCam(this), turret),
-            PinpointLocalizer(this)
+            IndicatingRelativeLocalizer(PinpointLocalizer(this), ledIndicator)
         )
 
     private var manualAngleCorrection = 0.0

@@ -35,7 +35,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val hasTurret = false
 
-    val ledIndicator = LedIndicator(this)
+    val ledIndicator = LedIndicator(3,this)
 
     override val localizer: Localizer =
         FusionLocalizer(
