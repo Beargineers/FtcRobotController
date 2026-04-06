@@ -76,14 +76,19 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     private fun powerFlywheel(p: Double) {
+        fly1.power = p
+        fly2.power = p
+    }
+
+    private fun recommendedPower(): Double {
+        val p = targetFlywheelPower()
         pid.updateCoefficients(SHOOTER_PID)
         pid.setTarget(p)
         pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
         Frame.addData("Shooter error", pid.error())
 
         val v = roundMotorPower(pid.result() + p)
-        fly1.power = v
-        fly2.power = v
+        return v
     }
 
     suspend fun shoot() {
@@ -99,11 +104,11 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         }
     }
 
-    private fun recommendedFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
+    private fun targetFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
 
     override fun loop() {
         val nominalPower = when {
-            bot.flywheelEnabled -> recommendedFlywheelPower()
+            bot.flywheelEnabled -> recommendedPower()
             else -> 0.0
         }
         powerFlywheel(nominalPower)
