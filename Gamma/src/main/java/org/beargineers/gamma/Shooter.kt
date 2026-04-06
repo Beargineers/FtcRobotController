@@ -86,6 +86,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         }
 
         pusher.direction = Servo.Direction.FORWARD
+        activatePusher(false)
     }
 
     private fun powerFlywheel(p: Double) {
