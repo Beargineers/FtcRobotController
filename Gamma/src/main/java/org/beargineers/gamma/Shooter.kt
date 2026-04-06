@@ -42,6 +42,13 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val LATCH_SERVO_OPEN_POSITION by config(0.30)
     val LATCH_SERVO_CLOSED_POSITION by config(0.30)
     val LATCH_SERVO_RUN_TIME_MS by config(500)
+    val LATCH_SERVO_DIRECTION by config(DcMotorSimple.Direction.FORWARD)
+
+    val PUSHER_SERVO_OPEN_POSITION by config(0.0)
+    val PUSHER_SERVO_CLOSED_POSITION by config(1.0)
+    val PUSHER_SERVO_ACTIVATION_DELAY_MS by config(50)
+    val PUSHER_SERVO_ACTIVATION_DURATION_MS by config(100)
+    val PUSHER_SERVO_RELEASE_THRESHOLD_MA by config(1800)
 
     val pid = PID()
 
@@ -49,6 +56,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val fly2 by hardware<DcMotor>()
 
     val latch by hardware<Servo>()
+    val pusher by hardware<Servo>()
 
     enum class LatchState {
         OPEN, CLOSED, OPENING, CLOSING
@@ -72,7 +80,12 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         }
 
         maxTicks = fly1.motorType.achieveableMaxTicksPerSecondRounded
-        latch.direction = Servo.Direction.FORWARD
+        latch.direction = when (LATCH_SERVO_DIRECTION) {
+            DcMotorSimple.Direction.FORWARD -> Servo.Direction.FORWARD
+            DcMotorSimple.Direction.REVERSE -> Servo.Direction.REVERSE
+        }
+
+        pusher.direction = Servo.Direction.FORWARD
     }
 
     private fun powerFlywheel(p: Double) {
@@ -92,10 +105,25 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     suspend fun shoot() {
-        openLatch()
-        waitForFlywheelSpeed()
-        shootingTime.reset()
-        bot.intakeMode = IntakeMode.ON
+        coroutineScope {
+            openLatch()
+            waitForFlywheelSpeed()
+
+            launch {
+                activatePusher(false)
+                delay(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
+                while (isShooting() && bot.intake.motorCurrent.result().first > PUSHER_SERVO_RELEASE_THRESHOLD_MA) {
+                    bot.opMode.yield()
+                }
+
+                activatePusher(true)
+                delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
+                activatePusher(false)
+            }
+
+            shootingTime.reset()
+            bot.intakeMode = IntakeMode.ON
+        }
     }
 
     private suspend fun waitForFlywheelSpeed() {
@@ -130,6 +158,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     private var latchJob: Job? = null
 
     suspend fun closeLatch(waitForCompletion: Boolean) {
+        activatePusher(false)
+
         when (latchState) {
             CLOSED -> {}
             CLOSING -> latchJob!!.join()
@@ -177,5 +207,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
                 }
             }
         }
+    }
+
+    fun activatePusher(active: Boolean) {
+        pusher.position = if (active) PUSHER_SERVO_CLOSED_POSITION else PUSHER_SERVO_OPEN_POSITION
     }
 }

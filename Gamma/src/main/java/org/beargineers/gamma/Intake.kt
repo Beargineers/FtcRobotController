@@ -17,7 +17,7 @@ private val THREE_ARTIFACTS_CURRENT_THRESHOLD by config(4000) // Typical current
 
 class Intake(val bot: GammaRobot): Hardware(bot) {
     private val intake: DcMotor by hardware("intake")
-    private val motorCurrent = DoubleNormalDistribution(10)
+    val motorCurrent = DoubleNormalDistribution(10)
 
     var artifactsCount = 0
 
