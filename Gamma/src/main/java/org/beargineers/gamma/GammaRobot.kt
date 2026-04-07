@@ -4,6 +4,7 @@ import kotlinx.coroutines.coroutineScope
 import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Frame
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.IndicatingRelativeLocalizer
 import org.beargineers.platform.LedIndicator
@@ -45,6 +46,12 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val hasTurret = true
 
+    override fun loop() {
+        super.loop()
+        Frame.addData("Artifacts", artifactsCount)
+        ledIndicator.counter(artifactsCount, 'G')
+    }
+
     override suspend fun shoot() {
         coroutineScope {
             val hold = opMode.launch {
@@ -60,6 +67,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
             shooter.closeLatch(false)
             intakeMode = IntakeMode.ON
+            intake.artifactsCount = 0
             opMode.gamepad1.rumble(300)
         }
     }
