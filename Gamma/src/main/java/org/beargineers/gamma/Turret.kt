@@ -7,6 +7,7 @@ import org.beargineers.platform.Angle
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.abs
+import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.headingToGoalFrom
 import org.beargineers.platform.degrees
@@ -26,6 +27,7 @@ private val TURRET_MIN_ANGLE by config(-180.degrees)
 private val TURRET_MAX_ANGLE by config(180.degrees)
 
 private val TURRET_TICKS_LOOKAHEAD by config(1)
+private val TURRET_CENTER_OFFSET by config(0.cm)
 
 fun motorTicksForAngle(angle: Angle): Int {
     return (angle.degrees() * MOTOR_TICKS_PER_ONE_TURRET_DEGREE).roundToInt()
@@ -47,6 +49,8 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     fun currentTurretAngle(): Angle {
         return ((turret.currentPosition - initialEncoderPosition) / MOTOR_TICKS_PER_ONE_TURRET_DEGREE).degrees
     }
+
+    val centerOffset get() = TURRET_CENTER_OFFSET
 
     override fun loop() {
         RobotOpMode.lastKnownTurretAngle = currentTurretAngle()
