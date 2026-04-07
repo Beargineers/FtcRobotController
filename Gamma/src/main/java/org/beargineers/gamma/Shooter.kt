@@ -113,10 +113,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             launch {
                 activatePusher(false)
                 delay(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
-                while (isShooting() && bot.intake.motorCurrent.result().first > PUSHER_SERVO_RELEASE_THRESHOLD_MA) {
-                    bot.opMode.yield()
-                }
-
                 activatePusher(true)
                 delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
                 activatePusher(false)
