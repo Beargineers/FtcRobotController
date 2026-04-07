@@ -13,12 +13,15 @@ private const val CAMERA_W = 320
 private const val CAMERA_H = 240
 
 val INTAKE_WIDTH by config(15.inch)
+val CAMERA_STREAM_ENABLED by config(false)
 
 class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robot) {
     private val purpleLocator: ColorBlobLocatorProcessor
     private val greenLocator: ColorBlobLocatorProcessor
     private val visionPortal: VisionPortal
     private val cameraResolution = Size(CAMERA_W, CAMERA_H)
+
+    private var streamEnabled = false
 
     init {
         purpleLocator = colorBlobLocator(ColorRange.ARTIFACT_PURPLE)
@@ -32,13 +35,23 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
             .build()
     }
 
-    override fun init() {
-        PanelsCameraStream.startStream( if (upsideDown) RotatedCameraStreamSource(visionPortal) else visionPortal)
+    override fun stop() {
+        if (streamEnabled) {
+            PanelsCameraStream.stopStream()
+        }
+
+        visionPortal.close()
     }
 
-    override fun stop() {
-        PanelsCameraStream.stopStream()
-        visionPortal.close()
+    override fun loop() {
+        if (CAMERA_STREAM_ENABLED && !streamEnabled) {
+            streamEnabled = true
+            PanelsCameraStream.startStream( if (upsideDown) RotatedCameraStreamSource(visionPortal) else visionPortal)
+        }
+        else if (!CAMERA_STREAM_ENABLED && streamEnabled) {
+            streamEnabled = false
+            PanelsCameraStream.stopStream()
+        }
     }
 
     enum class ArtifactColor {PURPLE, GREEN}
