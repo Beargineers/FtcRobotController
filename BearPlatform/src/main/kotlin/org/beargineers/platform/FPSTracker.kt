@@ -10,7 +10,7 @@ class FPSTracker {
 
     var fpsIsLow: Boolean = false
 
-    private val fpsDist = DoubleNormalDistribution(100)
+    private val fpsDist = DoubleMedian(100)
 
     fun start() {
         loopTimer.reset()
@@ -21,12 +21,12 @@ class FPSTracker {
         fpsDist.reset()
     }
 
-    fun normalTickDurationMs(): Double = 1000.0 / fpsDist.result().first
+    fun normalTickDurationMs(): Double = 1000.0 / fpsDist.mean()
 
     fun update() {
         fpsDist.update(1000 / loopTimer.milliseconds())
         loopTimer.reset()
-        val (fps, std) = fpsDist.result()
+        val (fps, dev) = fpsDist.result()
 
         if (elapsedTime.seconds() > 3) { // Give JIT time to speed up the loop
             val now = System.currentTimeMillis()
@@ -45,6 +45,6 @@ class FPSTracker {
             }
         }
 
-        Frame.addData("FPS", "${if (fpsIsLow) "LOW!!" else ""} %.1f, STD=%.1f", fps, std)
+        Frame.addData("FPS", "${if (fpsIsLow) "LOW!!" else ""} %.1f, DEV=%.1f", fps, dev)
     }
 }

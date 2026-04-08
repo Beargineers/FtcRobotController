@@ -160,7 +160,7 @@ class LLPinpointLocalizer(robot: BaseRobot) : Localizer, Hardware(robot) {
     }
 
     private fun getRobotPose(): Position? {
-        val normalizer = PositionNormalDistribution(5)
+        val normalizer = PositionMedian(5)
         synchronized(visionBuffer) {
             for (snapshot in visionBuffer) {
                 normalizer.update(snapshot.translateToCurrentMoment())
