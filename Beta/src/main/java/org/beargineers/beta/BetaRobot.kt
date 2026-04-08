@@ -23,6 +23,7 @@ import org.beargineers.platform.decode.headingToGoalFrom
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.nextTick
 import kotlin.time.Duration.Companion.seconds
 
 class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
@@ -55,18 +56,20 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         val cl = currentPosition.location()
         shooter.launch()
 
-        val hold = opMode.launch {
-            while (true) {
-                driveTo(cl.withHeading(headingToGoalFrom(cl)), applyMirroring = false)
-                opMode.yield()
+        coroutineScope {
+            val hold = launch {
+                while (true) {
+                    driveTo(cl.withHeading(headingToGoalFrom(cl)), applyMirroring = false)
+                    opMode.nextTick()
+                }
             }
-        }
 
-        while (isShooting()) {
-            opMode.yield()
-        }
+            while (isShooting()) {
+                nextTick()
+            }
 
-        hold.cancel()
+            hold.cancel()
+        }
     }
 
     override suspend fun prepareForShooting() {

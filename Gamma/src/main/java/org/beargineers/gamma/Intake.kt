@@ -11,6 +11,7 @@ import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.intakeMode
+import org.beargineers.platform.submitJob
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -49,7 +50,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
 
                     if (artifactsCount >= 3) {
                         robot.opMode.gamepad1.rumble(300)
-                        bot.opMode.launch {
+                        bot.submitJob {
                             delay(INTAKE_CUTOFF_DELAY_MS.milliseconds)
                             bot.intakeMode = IntakeMode.OFF
                         }

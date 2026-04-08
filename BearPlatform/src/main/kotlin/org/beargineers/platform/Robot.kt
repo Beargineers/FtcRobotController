@@ -1,5 +1,8 @@
 package org.beargineers.platform
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+
 interface Robot {
     fun <T:Any > getPart(part: Part<T>): T
 
@@ -19,6 +22,14 @@ interface Robot {
     val opMode: RobotOpMode<*>
 
     val alliance: Alliance get() = opMode.alliance
+}
+
+fun Robot.submitJob(block: suspend CoroutineScope.() -> Unit): Job {
+    return opMode.submitJob(block)
+}
+
+suspend fun Robot.nextTick() {
+    opMode.nextTick()
 }
 
 class RobotLocations(val robot: Robot) {

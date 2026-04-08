@@ -24,7 +24,9 @@ import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.intakeMode
+import org.beargineers.platform.nextTick
 import org.beargineers.platform.roundMotorPower
+import org.beargineers.platform.submitJob
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -87,7 +89,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
         pusher.direction = Servo.Direction.FORWARD
         activatePusher(false)
-        bot.opMode.launch {
+        bot.submitJob {
             closeLatch(false)
         }
     }
@@ -117,7 +119,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
                 activatePusher(false)
                 delay(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
                 while (isShooting() && bot.intake.motorCurrent.result().first > PUSHER_SERVO_RELEASE_THRESHOLD_MA) {
-                    bot.opMode.yield()
+                    bot.nextTick()
                 }
                 if (isShooting()) {
                     activatePusher(true)
@@ -133,7 +135,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     private suspend fun waitForFlywheelSpeed() {
         while (abs(pid.error()) > SHOOTER_ERROR_MARGIN) {
-            bot.opMode.yield()
+            bot.nextTick()
         }
     }
 
