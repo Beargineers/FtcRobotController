@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DigitalChannel
 import kotlinx.coroutines.delay
-import org.beargineers.platform.DoubleNormalDistribution
+import org.beargineers.platform.DoubleMedian
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
@@ -24,7 +24,7 @@ private val INTAKE_CUTOFF_DELAY_MS by config(100)
 class Intake(val bot: GammaRobot): Hardware(bot) {
     private val intake by hardware<DcMotor>()
     private val ballCounter by hardware<DigitalChannel>()
-    val motorCurrent = DoubleNormalDistribution(10)
+    val motorCurrent = DoubleMedian(10)
 
 
     var artifactsCount = 0
@@ -38,9 +38,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
 
     override fun loop() {
         motorCurrent.update((intake as DcMotorEx).getCurrent(CurrentUnit.MILLIAMPS))
-        val (current, currentStd) = motorCurrent.result()
-        Frame.graph("IntakeCurrentMA", current)
-        Frame.graph("IntakeCurrentMASTD", currentStd)
+        Frame.graph("IntakeCurrentMA", motorCurrent.mean())
 
         if (bot.intakeMode == IntakeMode.ON) {
             if (ballCounter.state) {
