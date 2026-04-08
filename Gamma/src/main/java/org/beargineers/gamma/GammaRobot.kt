@@ -17,6 +17,7 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
@@ -50,6 +51,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun loop() {
         super.loop()
+        Frame.addData("Distance to goal", goalDistance())
         Frame.addData("Artifacts", artifactsCount)
         ledIndicator.counter(artifactsCount, 'G')
     }
