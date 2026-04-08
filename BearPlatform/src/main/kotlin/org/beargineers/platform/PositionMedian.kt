@@ -25,10 +25,12 @@ class DoubleMedian(val maxSamples:Int = 20) {
 
         val samples = mutableListOf<Double>()
         for (i in 0 until size) {
-            if (abs(data[i] - median) < 3 * sigma) {
+            if (abs(data[i] - median) <= 3 * sigma) {
                 samples.add(data[i])
             }
         }
+
+        if (samples.isEmpty()) return 0.0
 
         val goodSamplesSize = min(5, samples.size)
         samples.sortBy { abs(it - median) }

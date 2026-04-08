@@ -1,6 +1,7 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlin.math.abs
 
 class FPSTracker {
     private val loopTimer = ElapsedTime()
@@ -21,7 +22,11 @@ class FPSTracker {
         fpsDist.reset()
     }
 
-    fun normalTickDurationMs(): Double = 1000.0 / fpsDist.mean()
+    fun normalTickDurationMs(): Double {
+        val m = fpsDist.mean()
+        if (abs(m) < 0.01) return 100.0
+        return 1000.0 / m
+    }
 
     fun update() {
         fpsDist.update(1000 / loopTimer.milliseconds())
