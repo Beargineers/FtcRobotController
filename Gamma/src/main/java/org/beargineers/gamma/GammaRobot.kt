@@ -1,6 +1,7 @@
 package org.beargineers.gamma
 
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
@@ -19,6 +20,7 @@ import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.nextTick
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
@@ -54,10 +56,10 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override suspend fun shoot() {
         coroutineScope {
-            val hold = opMode.launch {
+            val hold = launch {
                 val cp = currentPosition
                 do {
-                    opMode.yield()
+                    nextTick()
                     driveTo(cp, applyMirroring = false)
                 } while (isShooting())
             }

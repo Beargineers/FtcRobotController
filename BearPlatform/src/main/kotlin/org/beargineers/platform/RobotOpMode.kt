@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 
 
@@ -69,7 +68,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         bearStart()
         elapsedTime.reset()
 
-        launch { robot.autoProgram() }.invokeOnCompletion { throwable ->
+        submitJob { robot.autoProgram() }.invokeOnCompletion { throwable ->
             if (throwable != null && throwable !is CancellationException) {
                 Frame.error(throwable, "Auto program has failed")
                 stop()
@@ -109,15 +108,15 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         return button
     }
 
-    fun launch(body: suspend CoroutineScope.() -> Unit): Job = async(body)
-    fun <T> async(body: suspend CoroutineScope.() -> T): Deferred<T> = loop.submit(body)
-    suspend fun yield() {
+    fun submitJob(body: suspend CoroutineScope.() -> Unit): Job = loop.submit(body)
+
+    suspend fun nextTick() {
         loop.nextTick()
     }
 
     fun auto(name: String, b: suspend T.() -> Unit) {
         cancelAuto()
-        auto = launch {
+        auto = submitJob {
             robot.b()
         }.apply {
             invokeOnCompletion { throwable ->

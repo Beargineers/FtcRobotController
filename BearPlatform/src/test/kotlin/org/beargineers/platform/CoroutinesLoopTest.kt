@@ -13,12 +13,12 @@ class CoroutinesLoopTest : RobotTest() {
     @Test
     fun testCoroutinesDoWhile() {
         var counter = 0
-        opMode.launch {
+        opMode.submitJob {
             robot.cancelWhen({ counter >= 10 }) {
                 while (true) {
                     counter++
                     println("At counter=$counter")
-                    opMode.yield()
+                    opMode.nextTick()
                 }
             }
 
@@ -26,7 +26,7 @@ class CoroutinesLoopTest : RobotTest() {
                 while (true) {
                     counter--
                     println("At counter=$counter")
-                    opMode.yield()
+                    opMode.nextTick()
                 }
             }
             println("Done")
@@ -45,10 +45,10 @@ class CoroutinesLoopTest : RobotTest() {
         var trigger = false
         var complete = false
 
-        opMode.launch {
+        opMode.submitJob {
             launch {
                 while (!trigger) {
-                    opMode.yield()
+                    opMode.nextTick()
                 }
                 complete = true
             }
@@ -80,7 +80,7 @@ class CoroutinesLoopTest : RobotTest() {
     @Test
     fun testExceptionHandling() {
         var success = false
-        opMode.launch {
+        opMode.submitJob {
             throw RuntimeException("Test exception")
         }.invokeOnCompletion { throwable ->
             if (throwable?.message == "Test exception") {
@@ -94,15 +94,15 @@ class CoroutinesLoopTest : RobotTest() {
     @Test
     fun testCancellation() {
         var counter = 0
-        opMode.launch {
+        opMode.submitJob {
             var job: Job? = null
 
             repeat(5) {
                 job?.cancel()
-                job = opMode.launch {
+                job = opMode.submitJob {
                     while (true) {
                         counter++
-                        opMode.yield()
+                        opMode.nextTick()
                     }
                 }
             }

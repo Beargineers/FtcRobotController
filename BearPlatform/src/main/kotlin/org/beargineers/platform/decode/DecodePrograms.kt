@@ -17,6 +17,7 @@ import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.max
 import org.beargineers.platform.min
+import org.beargineers.platform.nextTick
 import org.beargineers.platform.pathTo
 import kotlin.time.Duration.Companion.seconds
 
@@ -80,7 +81,7 @@ suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Locatio
             }
 
             while (true) {
-                opMode.yield()
+                nextTick()
                 val nextTarget = intakeTarget(filter)
                 if (nextTarget != null) {
                     targetLocation = nextTarget

@@ -181,7 +181,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val targetPosition = robot.currentPosition.plus(deltaPosition)
 
         driveJob?.cancel()
-        driveJob = launch {
+        driveJob = submitJob {
             robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
         }.apply {
             invokeOnCompletion { throwable ->
