@@ -13,7 +13,7 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
     val Camera_angleRange by config(15)
     val Camera_headingTolerance by config(1.0)
 
-    private val normalizer: PositionNormalDistribution = PositionNormalDistribution(5)
+    private val normalizer: PositionMedian = PositionMedian(5)
 
     private var lastUpdated = 0.0
     private val limelight by hardware<Limelight3A>("limelight")
