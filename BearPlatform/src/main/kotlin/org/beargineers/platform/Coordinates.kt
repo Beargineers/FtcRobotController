@@ -42,6 +42,10 @@ data class Location(val x: Distance, val y: Distance) {
 }
 
 class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparable<Distance> {
+    init {
+        assert(distance.isFinite())
+    }
+
     override fun toString(): String {
         return String.format(Locale.US, "%.1fcm", DistanceUnit.CM.fromUnit(distanceUnit, distance))
     }
@@ -123,6 +127,10 @@ fun min(x: Distance, y: Distance): Distance {
 }
 
 class Angle(val angle: Double, val angleUnit: AngleUnit) : Comparable<Angle> {
+    init {
+        assert(angle.isFinite())
+    }
+
     override fun toString(): String {
         return String.format(Locale.US, "%.1fº", toUnit(AngleUnit.DEGREES))
     }
