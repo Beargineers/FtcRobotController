@@ -13,6 +13,7 @@ import org.beargineers.platform.config
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
+import org.beargineers.platform.motorPower
 import org.beargineers.platform.roundMotorPower
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.math.abs
@@ -73,8 +74,8 @@ class Shooter(val bot: BetaRobot): Hardware(bot) {
         Frame.addData("Shooter error", pid.error())
 
         val v = roundMotorPower(pid.result() + p)
-        fly1.power = v
-        fly2.power = v
+        fly1.motorPower = v
+        fly2.motorPower = v
     }
 
     fun getReadyForShoot(){
@@ -120,7 +121,7 @@ class Shooter(val bot: BetaRobot): Hardware(bot) {
             pausedFeederFlag = true
         }
 
-        feeder.power = if (isShooting() && flywheelPoweredUp && bot.flywheelEnabled || feederTransferring) 1.0 else 0.0
+        feeder.motorPower = if (isShooting() && flywheelPoweredUp && bot.flywheelEnabled || feederTransferring) 1.0 else 0.0
 
         val nominalPower = when {
             bot.flywheelEnabled -> recommendedFlywheelPower()
@@ -136,7 +137,7 @@ class Shooter(val bot: BetaRobot): Hardware(bot) {
 
     override fun stop() {
         bot.flywheelEnabled = false
-        feeder.power = 0.0
+        feeder.motorPower = 0.0
     }
 
     fun isShooting(): Boolean {

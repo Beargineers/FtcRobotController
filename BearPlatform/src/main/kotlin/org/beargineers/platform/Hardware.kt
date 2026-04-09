@@ -1,6 +1,8 @@
 package org.beargineers.platform
 
+import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.HardwareMap
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.round
 import kotlin.reflect.KProperty
 
@@ -34,3 +36,16 @@ fun roundMotorPower(v: Double): Double {
     val scale = 1000.0
     return round(v.coerceIn(-1.0, 1.0) * scale) / scale
 }
+
+private val powers = ConcurrentHashMap<DcMotor, Double>()
+var DcMotor.motorPower: Double
+    set(p) {
+        val rnd = roundMotorPower(p)
+        if (powers[this] != rnd) {
+            powers[this] = rnd
+            this.power = rnd
+        }
+    }
+    get() : Double {
+        return powers[this] ?: this.power
+    }

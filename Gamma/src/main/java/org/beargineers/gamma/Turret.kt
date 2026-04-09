@@ -15,6 +15,7 @@ import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.headingToGoalFrom
 import org.beargineers.platform.degrees
+import org.beargineers.platform.motorPower
 import kotlin.math.roundToInt
 
 // https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-5-2-1-ratio-24mm-length-8mm-rex-shaft-1150-rpm-3-3-5v-encoder
@@ -86,10 +87,10 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
         targetEncoderPosition = initialEncoderPosition + motorTicksForAngle(best)
         turret.targetPosition = targetEncoderPosition
         turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-        turret.power = TURRET_MOTOR_SPEED
+        turret.motorPower = TURRET_MOTOR_SPEED
     }
 
     override fun stop() {
-        turret.power = 0.0
+        turret.motorPower = 0.0
     }
 }
