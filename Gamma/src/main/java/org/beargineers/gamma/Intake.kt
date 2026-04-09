@@ -37,8 +37,10 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
     }
 
     override fun loop() {
-        motorCurrent.update((intake as DcMotorEx).getCurrent(CurrentUnit.MILLIAMPS))
-        Frame.graph("IntakeCurrentMA", motorCurrent.mean())
+        if (artifactsCount > 0) {
+            motorCurrent.update((intake as DcMotorEx).getCurrent(CurrentUnit.MILLIAMPS))
+            Frame.graph("IntakeCurrentMA", motorCurrent.mean())
+        }
 
         if (bot.intakeMode == IntakeMode.ON) {
             if (ballCounter.state) {
