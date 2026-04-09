@@ -60,6 +60,10 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
             }
         }
 
+        if (bot.intakeMode == IntakeMode.REVERSE) {
+            artifactsCount = 0
+        }
+
         intake.power = when (bot.intakeMode) {
             IntakeMode.ON -> {
                 1.0
