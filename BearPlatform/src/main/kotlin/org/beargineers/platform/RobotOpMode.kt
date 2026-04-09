@@ -7,7 +7,7 @@ import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
-import kotlinx.coroutines.CancellationException
+import com.qualcomm.robotcore.util.RobotLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
@@ -88,13 +88,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         bearStart()
         elapsedTime.reset()
 
-        submitJob { robot.autoProgram() }.invokeOnCompletion { throwable ->
-            if (throwable != null && throwable !is CancellationException) {
-                Frame.error(throwable, "Auto program has failed")
-                stop()
-                terminateOpModeNow()
-            }
-        }
+        submitJob { robot.autoProgram() }
     }
 
     override fun stop() {
@@ -130,7 +124,15 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         return button
     }
 
-    fun submitJob(body: suspend CoroutineScope.() -> Unit): Job = loop.submit(body)
+    fun submitJob(body: suspend CoroutineScope.() -> Unit): Job = loop.submit(body).apply {
+        invokeOnCompletion { throwable ->
+            if (throwable != null) {
+                Frame.error(throwable, "Job has failed")
+                RobotLog.setGlobalErrorMsg(RuntimeException(throwable), "Job has failed")
+                terminateOpModeNow()
+            }
+        }
+    }
 
     suspend fun nextTick() {
         loop.nextTick()
@@ -140,12 +142,6 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         cancelAuto()
         auto = submitJob {
             robot.b()
-        }.apply {
-            invokeOnCompletion { throwable ->
-                if (throwable != null && throwable !is CancellationException) {
-                    Frame.error(throwable, "Auto has failed")
-                }
-            }
         }
     }
 
@@ -156,6 +152,8 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
             auto = null
         }
     }
+
+    fun isAutoActive() = auto?.isActive ?: false
 
     fun controlsAreTouched(): Boolean {
         return gamepad1.controlsAreTouched() || gamepad2.controlsAreTouched()
