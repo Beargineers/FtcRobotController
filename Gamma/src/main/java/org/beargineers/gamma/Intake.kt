@@ -11,6 +11,7 @@ import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.intakeMode
+import org.beargineers.platform.motorPower
 import org.beargineers.platform.submitJob
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.time.Duration.Companion.milliseconds
@@ -66,7 +67,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
             artifactsCount = 0
         }
 
-        intake.power = when (bot.intakeMode) {
+        intake.motorPower = when (bot.intakeMode) {
             IntakeMode.ON -> {
                 1.0
             }

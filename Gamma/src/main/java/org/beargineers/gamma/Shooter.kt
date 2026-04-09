@@ -24,6 +24,7 @@ import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.intakeMode
+import org.beargineers.platform.motorPower
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.roundMotorPower
 import org.beargineers.platform.submitJob
@@ -95,8 +96,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     private fun powerFlywheel(p: Double) {
-        fly1.power = p
-        fly2.power = p
+        fly1.motorPower = p
+        fly2.motorPower = p
     }
 
     private fun recommendedPower(): Double {
