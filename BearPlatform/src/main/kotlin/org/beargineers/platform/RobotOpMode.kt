@@ -11,6 +11,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
+private val PANELS_ENABLED by config(false)
 
 abstract class RobotOpMode<T : Robot>() : OpMode() {
     abstract val alliance: Alliance
@@ -32,6 +33,25 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     val elapsedTime = ElapsedTime()
     val loop = LoopRuntime()
 
+    enum class PanelsState { ON, OFF, UNKNOWN}
+    private var panelsState = PanelsState.UNKNOWN
+    private fun checkPanelsState() {
+        Panels.config.enableLogs = false
+
+        if (PANELS_ENABLED && panelsState != PanelsState.ON) {
+            Panels.config.isDisabled = false
+            panelsState = PanelsState.ON
+            Panels.enable()
+            Frame.panelsTelemetry = PanelsTelemetry.telemetry
+        }
+        else if (!PANELS_ENABLED && panelsState != PanelsState.OFF && Panels.wasStarted) {
+            Panels.config.isDisabled = true
+            panelsState = PanelsState.OFF
+            Panels.disable()
+            Frame.panelsTelemetry = null
+        }
+    }
+
     fun isFpsLow(): Boolean = fpsTracker.fpsIsLow
 
     fun normalTickDurationMs(): Double = fpsTracker.normalTickDurationMs()
@@ -39,9 +59,9 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     open fun bearInit() {}
 
     final override fun init() {
-        Panels.config.enableLogs = false
         Frame.telemetry = telemetry
-        Frame.panelsTelemetry = PanelsTelemetry.telemetry
+
+        checkPanelsState()
 
         elapsedTime.reset()
 
@@ -86,6 +106,8 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     open fun bearLoop() {}
 
     final override fun loop() {
+        checkPanelsState()
+
         for (hub in allHubs) {
             hub.clearBulkCache()
         }
