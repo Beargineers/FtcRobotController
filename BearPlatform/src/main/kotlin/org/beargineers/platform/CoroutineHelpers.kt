@@ -2,6 +2,7 @@ package org.beargineers.platform
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.beargineers.platform.decode.mirrorForAlliance
@@ -17,6 +18,7 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
     }
 }
 
+private var driveJob: Job? = null
 suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean = true) {
     val waypoints = if (applyMirroring) {
         waypoints.map { it.copy(target = it.target.mirrorForAlliance(alliance)) }
@@ -41,14 +43,19 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean =
             }
         }
     } else {
-        val follower = PathFollower(
-            robot = this as BaseRobot,
-            path = waypoints,
-            startPosition = currentPosition
-        )
+        driveJob?.cancel()
+        coroutineScope {
+            driveJob = launch {
+                val follower = PathFollower(
+                    robot = this@drivePath as BaseRobot,
+                    path = waypoints,
+                    startPosition = currentPosition
+                )
 
-        while (follower.update()) {
-            nextTick()
+                while (follower.update()) {
+                    nextTick()
+                }
+            }
         }
     }
 }

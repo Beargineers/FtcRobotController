@@ -1,8 +1,6 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Frame
@@ -137,7 +135,6 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 */
     }
 
-    private var driveJob: Job? = null
 
     override fun bearLoop() {
         super.bearLoop()
@@ -178,16 +175,11 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val heading: Angle = commandedHeading()
         val deltaPosition = Position(delta.x, delta.y, heading - robot.currentPosition.heading)
 
-        val targetPosition = robot.currentPosition.plus(deltaPosition)
+        if (!isAutoActive()) {
+            val targetPosition = robot.currentPosition.plus(deltaPosition)
 
-        driveJob?.cancel()
-        driveJob = submitJob {
-            robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
-        }.apply {
-            invokeOnCompletion { throwable ->
-                if (throwable != null && throwable !is CancellationException) {
-                    Frame.error(throwable, "Drive coroutine has failed")
-                }
+            submitJob {
+                robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
             }
         }
     }
