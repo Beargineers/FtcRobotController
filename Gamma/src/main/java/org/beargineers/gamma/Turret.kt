@@ -67,12 +67,6 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             val predictedPosition = bot.predictedPosition(TURRET_TICKS_LOOKAHEAD)
             setTurretAngle(bot.headingToGoalFrom(predictedPosition.location()) - predictedPosition.heading)
         }
-        else if (bot.opMode.gamepad1.right_trigger > 0.1) {
-            setTurretAngle(90.degrees)
-        }
-        else {
-            setTurretAngle(0.degrees)
-        }
     }
 
     private fun setTurretAngle(angle: Angle) {
