@@ -21,8 +21,6 @@ object PinpointConfig {
 
 class PinpointLocalizer(robot: BaseRobot): Hardware(robot), RelativeLocalizer {
     private val pinpoint by hardware<GoBildaPinpointDriver>()
-    private var correction = Position.zero()
-
 
     override fun init() {
         pinpoint.setOffsets(
