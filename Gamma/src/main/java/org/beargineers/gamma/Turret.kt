@@ -43,6 +43,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     private val turret by hardware<DcMotorEx>()
     private val magnet by hardware<DigitalChannel>()
     private var initialEncoderPosition = 0
+    private var targetEncoderPosition = 0
 
     override fun init() {
         turret.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -61,7 +62,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
 
     override fun loop() {
         Frame.addData("MAGNET", magnet.state)
-        Frame.graph("TURRET ERROR", 0.0 + turret.targetPosition - turret.currentPosition)
+        Frame.graph("TURRET ERROR", 0.0 + targetEncoderPosition - turret.currentPosition)
         RobotOpMode.lastKnownTurretAngle = currentTurretAngle()
         if (TURRET_AUTOROTATION_ENABLED) {
             val predictedPosition = bot.predictedPosition(TURRET_TICKS_LOOKAHEAD)
@@ -82,7 +83,8 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
 
         val norm = angle.normalize()
         val best = listOf(norm, norm + 360.degrees, norm - 360.degrees).filter { it in TURRET_MIN_ANGLE..TURRET_MAX_ANGLE }.minBy { abs(it - currentTurretAngle()) }
-        turret.targetPosition = initialEncoderPosition + motorTicksForAngle(best)
+        targetEncoderPosition = initialEncoderPosition + motorTicksForAngle(best)
+        turret.targetPosition = targetEncoderPosition
         turret.mode = DcMotor.RunMode.RUN_TO_POSITION
         turret.power = TURRET_MOTOR_SPEED
     }
