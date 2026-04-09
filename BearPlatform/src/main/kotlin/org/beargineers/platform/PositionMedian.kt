@@ -5,7 +5,9 @@ import kotlin.math.min
 
 class DoubleMedian(val maxSamples:Int = 20) {
     private val data = DoubleArray(maxSamples)
+
     private val deviations = DoubleArray(maxSamples)
+    private val meanSamples = mutableListOf<Double>()
     var n: Int = 0
 
     fun update(d: Double) {
@@ -23,19 +25,19 @@ class DoubleMedian(val maxSamples:Int = 20) {
         val sigma = mad() * 1.4826
         val size = min(n, maxSamples)
 
-        val samples = mutableListOf<Double>()
+        meanSamples.clear()
         for (i in 0 until size) {
             if (abs(data[i] - median) <= 3 * sigma) {
-                samples.add(data[i])
+                meanSamples.add(data[i])
             }
         }
 
-        if (samples.isEmpty()) return 0.0
+        if (meanSamples.isEmpty()) return 0.0
 
-        val goodSamplesSize = min(5, samples.size)
-        samples.sortBy { abs(it - median) }
+        val goodSamplesSize = min(5, meanSamples.size)
+        meanSamples.sortBy { abs(it - median) }
 
-        return samples.subList(0, goodSamplesSize).average()
+        return meanSamples.subList(0, goodSamplesSize).average()
     }
 
     private fun DoubleArray.median(n: Int): Double {
