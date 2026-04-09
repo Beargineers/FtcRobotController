@@ -105,6 +105,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         pid.setTarget(p)
         pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
         Frame.addData("Shooter error", pid.error())
+        Frame.graph("Shooter error", pid.error())
+        Frame.graph("FW Target", p * 6000)
+        Frame.graph("FW Actual", 6000 * (fly1 as DcMotorEx).velocity / (maxTicks))
 
         val v = roundMotorPower(pid.result() + p)
         return v
