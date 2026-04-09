@@ -8,6 +8,7 @@ import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.intakeMode
+import org.beargineers.platform.motorPower
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
 class Intake(val bot: BetaRobot): Hardware(bot) {
@@ -33,7 +34,7 @@ class Intake(val bot: BetaRobot): Hardware(bot) {
     }
 
     override fun loop() {
-        intake.power = when (bot.intakeMode) {
+        intake.motorPower = when (bot.intakeMode) {
             IntakeMode.ON -> {
                 1.0
             }
