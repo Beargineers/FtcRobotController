@@ -49,10 +49,17 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     override fun init() {
         turret.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         turret.direction = TURRET_MOTOR_DIRECTION
+        if (firstTimeInitialPosition == null) {
+            initialEncoderPosition = turret.currentPosition
+            firstTimeInitialPosition = initialEncoderPosition
+        }
+        else {
+            initialEncoderPosition = firstTimeInitialPosition!!
+        }
     }
 
     fun assumeAngle(angle: Angle) {
-        initialEncoderPosition = turret.currentPosition - motorTicksForAngle(angle)
+        //initialEncoderPosition = turret.currentPosition - motorTicksForAngle(angle)
     }
 
     fun currentTurretAngle(): Angle {
@@ -62,7 +69,6 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     val centerOffset get() = TURRET_CENTER_OFFSET
 
     override fun loop() {
-        Frame.addData("MAGNET", magnet.state)
         Frame.graph("TURRET ERROR", 0.0 + targetEncoderPosition - turret.currentPosition)
         RobotOpMode.lastKnownTurretAngle = currentTurretAngle()
         if (TURRET_AUTOROTATION_ENABLED) {
@@ -92,5 +98,9 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
 
     override fun stop() {
         turret.motorPower = 0.0
+    }
+
+    companion object {
+        var firstTimeInitialPosition: Int? = null
     }
 }
