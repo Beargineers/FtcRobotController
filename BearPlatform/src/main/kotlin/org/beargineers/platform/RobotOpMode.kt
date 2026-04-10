@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.RobotLog
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
@@ -126,7 +127,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
     fun submitJob(body: suspend CoroutineScope.() -> Unit): Job = loop.submit(body).apply {
         invokeOnCompletion { throwable ->
-            if (throwable != null) {
+            if (throwable != null && throwable !is CancellationException) {
                 Frame.error(throwable, "Job has failed")
                 RobotLog.setGlobalErrorMsg(RuntimeException(throwable), "Job has failed")
                 terminateOpModeNow()
