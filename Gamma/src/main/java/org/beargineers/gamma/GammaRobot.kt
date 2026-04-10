@@ -49,6 +49,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     override val hasTurret = true
+    override val hasVision = true
 
     override fun loop() {
         super.loop()
