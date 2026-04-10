@@ -21,7 +21,7 @@ import org.beargineers.platform.nextTick
 import org.beargineers.platform.pathTo
 import kotlin.time.Duration.Companion.seconds
 
-suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean = true) {
+suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
     coroutineScope {
         launch {
             prepareForShooting()
@@ -43,19 +43,19 @@ suspend fun DecodeRobot.pushAllianceBot() {
         currentPosition.shift(0.cm, 30.cm),
         positionTolerance = 4.cm,
         headingTolerance = 3.degrees
-    ))
+    ), true)
 }
 
 suspend fun DecodeRobot.openRamp() {
-    drivePath(openRampPath())
+    drivePath(openRampPath(), true)
     delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
-    driveTo(Locations.COLLECT_FROM_OPEN_RAMP)
+    driveTo(Locations.COLLECT_FROM_OPEN_RAMP, applyMirroring = true)
 }
 
 suspend fun DecodeRobot.openRampAndCollect() {
     val path = openRampCollectPath()
-    drivePath(path.take(1))
-    drivePath(path.drop(1))
+    drivePath(path.take(1), true)
+    drivePath(path.drop(1), true)
 
     cancelWhen({artifactsCount >= 3}) {
         delay(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
@@ -96,7 +96,7 @@ suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Locatio
 }
 
 suspend fun DecodeRobot.shootInitialLoad(launchPose: Position) {
-    followPathAndShoot(pathTo(launchPose, Locations.INITIAL_SHOT_SPEED))
+    followPathAndShoot(pathTo(launchPose, Locations.INITIAL_SHOT_SPEED), true)
 }
 
 suspend fun DecodeRobot.goToShootingZoneAndShoot(shootingZone: ShootingZones, protectedZones: List<Location> = emptyList()) {
