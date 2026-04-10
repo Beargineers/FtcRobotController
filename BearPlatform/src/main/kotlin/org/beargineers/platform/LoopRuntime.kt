@@ -1,6 +1,7 @@
 package org.beargineers.platform
 
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -16,11 +17,12 @@ import kotlin.coroutines.resume
  * Single-threaded, manually pumped event-loop runtime.
  *
  * You call tick() from your outer loop.
- * All coroutine execution/resumption happens only during tick().
+ * All coroutine execution/resumption happens only during [tick].
  */
 class LoopRuntime {
     private val ready = ArrayDeque<Runnable>()
     private val nextTickWaiters = ArrayDeque<CancellableContinuation<Unit>>()
+    private val uncaughtFailures = ArrayDeque<Throwable>()
 
     private val rootJob: Job = SupervisorJob()
 
@@ -48,9 +50,18 @@ class LoopRuntime {
 
     /**
      * Convenience boundary for non-coroutine callers that want a result.
+     * If it fails, the exception is rethrown from the next [tick] that observes it.
      */
     fun <T> submit(block: suspend CoroutineScope.() -> T): Deferred<T> {
-        return scope.async(block = block)
+        val deferred = scope.async(block = block)
+
+        deferred.invokeOnCompletion { throwable ->
+            if (throwable != null && throwable !is CancellationException) {
+                uncaughtFailures.addLast(throwable)
+            }
+        }
+
+        return deferred
     }
 
     /**
@@ -61,6 +72,8 @@ class LoopRuntime {
      * Returns number of executed runnables.
      */
     fun tick(): Int {
+        rethrowPendingFailure()
+
         // Snapshot waiters so anything that calls nextTick() during this tick
         // resumes on the *following* tick, not this one.
         val toResume = ArrayList<CancellableContinuation<Unit>>(nextTickWaiters.size)
@@ -78,13 +91,20 @@ class LoopRuntime {
             val task = ready.poll() ?: break
             task.run()
             ran++
+            rethrowPendingFailure()
         }
         return ran
     }
 
     fun stop() {
         rootJob.cancel()
+        uncaughtFailures.clear()
         nextTickWaiters.clear()
         ready.clear()
+    }
+
+    private fun rethrowPendingFailure() {
+        val throwable = uncaughtFailures.pollFirst() ?: return
+        throw throwable
     }
 }

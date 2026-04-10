@@ -10,6 +10,19 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class CoroutinesLoopTest : RobotTest() {
+    private inline fun <reified T : Throwable> expectThrows(block: () -> Unit): T {
+        try {
+            block()
+        } catch (throwable: Throwable) {
+            if (throwable is T) {
+                return throwable
+            }
+            throw throwable
+        }
+
+        throw AssertionError("Expected ${T::class.simpleName}")
+    }
+
     @Test
     fun testCoroutinesDoWhile() {
         var counter = 0
@@ -79,16 +92,30 @@ class CoroutinesLoopTest : RobotTest() {
 
     @Test
     fun testExceptionHandling() {
-        var success = false
         opMode.submitJob {
+            opMode.nextTick()
             throw RuntimeException("Test exception")
-        }.invokeOnCompletion { throwable ->
-            if (throwable?.message == "Test exception") {
-                success = true
-            }
         }
-        repeat(5) {opMode.loop.tick()}
-        assert(success)
+
+        val thrown = expectThrows<RuntimeException> {
+            opMode.loop.tick()
+            opMode.loop.tick()
+        }
+
+        assert(thrown.message == "Test exception")
+    }
+
+    @Test
+    fun testSubmitRethrowsImmediateException() {
+        opMode.loop.submit {
+            error("throw me")
+        }
+
+        val thrown = expectThrows<IllegalStateException> {
+            opMode.loop.tick()
+        }
+
+        assert(thrown.message == "throw me")
     }
 
     @Test
