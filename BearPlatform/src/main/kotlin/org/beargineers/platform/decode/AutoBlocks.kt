@@ -25,6 +25,9 @@ object AutoPositions {
     val BOX_SCOOP by config(tilePosition("D4:+135"))
     val BOX_SCOOP_SPEED by config(1.0)
 
+    val BOX_SCOOP_OBSERVATION_P1 by config(tilePosition("E1:+90"))
+    val BOX_SCOOP_OBSERVATION_P2 by config(tilePosition("E2:+90"))
+
     val OPEN_RAMP_WAIT_TIME by config(0.01)
     val COLLECT_FROM_RAMP_WAIT_TIME by config(1.5)
 }
@@ -98,6 +101,17 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
         }
     }
 
+    suspend fun DecodeRobot.collectVisuallyForBack(observationPoints: List<Position>) {
+        goAndShootIfHasLoad()
+        cancelWhen({ artifactsCount >= 3}) {
+            for (p in observationPoints) {
+                driveTo(p, applyMirroring = true)
+                collectArtifactsInView(true)
+            }
+        }
+        hasCollectedLoad = artifactsCount != 0
+    }
+
     suspend fun collect(from: Char, path: List<Waypoint>) {
         goAndShootIfHasLoad()
         cancelWhen({artifactsCount >= 3}) {
@@ -122,6 +136,14 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
             '1' -> collect('1', scoopSpikePath(1))
             '2' -> collect('2', scoopSpikePath(2))
             '3' -> collect('3', scoopSpikePath(3))
+            'V' -> collectVisuallyForBack(
+                if ('1' in collectedSet)
+                    listOf(
+                        AutoPositions.BOX_SCOOP_OBSERVATION_P1,
+                        AutoPositions.BOX_SCOOP_OBSERVATION_P2
+                    )
+                else listOf(AutoPositions.BOX_SCOOP_OBSERVATION_P1)
+            )
 
             '4' -> {
                 goAndShootIfHasLoad()
