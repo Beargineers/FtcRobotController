@@ -19,7 +19,7 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
 }
 
 private var driveJob: Job? = null
-suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean = true) {
+suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean) {
     val waypoints = if (applyMirroring) {
         waypoints.map { it.copy(target = it.target.mirrorForAlliance(alliance)) }
     } else {
@@ -60,7 +60,7 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean =
     }
 }
 
-suspend fun Robot.driveTo(target: Position, speed: Double = 1.0, applyMirroring: Boolean = true) {
+suspend fun Robot.driveTo(target: Position, speed: Double = 1.0, applyMirroring: Boolean) {
     drivePath(pathTo(target, speed), applyMirroring)
 }
 
