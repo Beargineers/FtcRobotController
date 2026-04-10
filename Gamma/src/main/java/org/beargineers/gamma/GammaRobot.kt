@@ -30,6 +30,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val ledIndicator = LedIndicator(2, this)
 
     val vision = ArtifactsVision(this, true)
+    val ballsDetector = BallsDetector(this)
 
     override fun intakeTarget(filter: (Location) -> Boolean): Location? {
         return vision.calculateTargetLocation(filter)
@@ -71,7 +72,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
             shooter.closeLatch(false)
             intakeMode = IntakeMode.ON
-            intake.artifactsCount = 0
+            ballsDetector.reset()
             opMode.gamepad1.rumble(300)
         }
     }
@@ -92,7 +93,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val shootingAngleCorrection: Angle
         get() = (shooter.SHOOTER_ANGLE_CORRECTION + manualAngleCorrection).degrees
 
-    override val artifactsCount: Int get() = intake.artifactsCount
+    override val artifactsCount: Int get() = ballsDetector.artifactsCount()
 
     override val shooterAngle: Angle get() = currentPosition.heading + turret.currentTurretAngle()
 
