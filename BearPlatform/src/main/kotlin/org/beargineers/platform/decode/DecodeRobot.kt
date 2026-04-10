@@ -32,6 +32,8 @@ interface DecodeRobot : Robot {
 
     val hasTurret: Boolean
 
+    val hasVision: Boolean get() = false
+
     fun intakeTarget(filter: (Location) -> Boolean): Location? = null
 
     /**
@@ -52,6 +54,7 @@ object Locations {
     val OPEN_RAMP_COLLECT by config(-6.cm, 129.cm, 90.degrees)
     val OPEN_RAMP_COLLECT_APPROACH by config(-6.cm, 80.cm, 90.degrees)
     val COLLECT_FROM_OPEN_RAMP by config(50.cm, 152.cm, 152.degrees)
+    val COLLECT_FROM_OPEN_RAMP_APPROACH by config(50.cm, 132.cm, 90.degrees)
 
     val OPEN_RAMP by config(-6.cm, 129.cm, 90.degrees)
     val OPEN_RAMP_APPROACH by config(-6.cm, 80.cm, 90.degrees)
