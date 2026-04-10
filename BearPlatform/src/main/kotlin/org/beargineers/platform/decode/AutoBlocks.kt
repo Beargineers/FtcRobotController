@@ -61,7 +61,7 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             'F' -> Locations.OPEN_RAMP_APPROACH
             'B' -> AutoPositions.BOX_APPROACH
             else -> error("Unknown operating in: $operatingIn")
-        })
+        }, applyMirroring = true)
     }
 }
 
@@ -101,7 +101,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     suspend fun collect(from: Char, path: List<Waypoint>) {
         goAndShootIfHasLoad()
         cancelWhen({artifactsCount >= 3}) {
-            drivePath(path)
+            drivePath(path, true)
         }
         hasCollectedLoad = true
         collectedSet += from
@@ -127,7 +127,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
                 goAndShootIfHasLoad()
                 val farApproach =
                     Locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = spikeStart(1).y)
-                driveTo(farApproach)
+                driveTo(farApproach, applyMirroring = true)
                 openRampAndCollect()
                 collectedSet += '4'
                 hasCollectedLoad = true
@@ -135,7 +135,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
             }
 
             'R' -> {
-                drivePath(openRampPath())
+                drivePath(openRampPath(), true)
                 delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
             }
 

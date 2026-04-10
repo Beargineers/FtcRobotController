@@ -134,7 +134,7 @@ class Tune_automationTimingCheck: TestOp() {
 
             println("TUNING_TIMER: ${timer.milliseconds().toInt()} ms drive: ${(robot as BaseRobot).drive_K} translation: ${(robot as BaseRobot).translational_K} heading: ${(robot as BaseRobot).heading_K} drive2: ${(robot as BaseRobot).drive_K2}")
 
-            driveTo(startingPoint)
+            driveTo(startingPoint, applyMirroring = true)
         }
     }
 }
@@ -152,7 +152,7 @@ private suspend fun DecodeRobot.doTuning(
         val forth = pathTo(shift(currentPosition))
 
         val timer = System.currentTimeMillis()
-        drivePath(forth)
+        drivePath(forth, false)
 
         val error = forth.first().target.distanceTo(currentPosition)
         println("TUNETIME: ${System.currentTimeMillis() - timer} ERROR: ${error.cm()}cm PID: ${coeff((this as BaseRobot))}}")
@@ -160,7 +160,7 @@ private suspend fun DecodeRobot.doTuning(
         delay(0.5.seconds)
 
         val back = pathTo(shiftBack(currentPosition), speed = Locations.INITIAL_SHOT_SPEED)
-        drivePath(back)
+        drivePath(back, false)
 
         delay(0.5.seconds)
 
@@ -179,7 +179,7 @@ translational_K=0.025, 0.002, 0.0035, 0.3
 class Tune_C1ToC6Forward : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
         assumePosition(tilePosition("C1:180"), 0.degrees)
-        driveTo(tilePosition("C6:180"))
+        driveTo(tilePosition("C6:180"), applyMirroring = false)
     }
 }
 
@@ -187,6 +187,6 @@ class Tune_C1ToC6Forward : TestOp() {
 class Tune_B1ToB6Left : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
         assumePosition(tilePosition("B1:90"), 0.degrees)
-        driveTo(tilePosition("B6:90"))
+        driveTo(tilePosition("B6:90"), applyMirroring = false)
     }
 }
