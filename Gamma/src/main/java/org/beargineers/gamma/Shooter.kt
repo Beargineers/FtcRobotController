@@ -3,6 +3,7 @@ package org.beargineers.gamma
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.DigitalChannel
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.Job
@@ -59,6 +60,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val fly2 by hardware<DcMotor>()
 
     val latch by hardware<Servo>()
+    val ballLatchDetector by hardware<DigitalChannel>("ballCounter")
+    val lastSeenBall = ElapsedTime()
+
     val pusher by hardware<Servo>()
 
     enum class LatchState {
@@ -93,6 +97,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         bot.submitJob {
             closeLatch(false)
         }
+        ballLatchDetector.mode = DigitalChannel.Mode.INPUT
     }
 
     private fun powerFlywheel(p: Double) {
@@ -121,10 +126,11 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
             launch {
                 activatePusher(false)
-                delay(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
-                while (isShooting() && bot.intake.motorCurrent.mean() > PUSHER_SERVO_RELEASE_THRESHOLD_MA) {
+                do {
+                    delay(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
                     bot.nextTick()
-                }
+                } while(isShooting() && lastSeenBall.milliseconds() < PUSHER_SERVO_ACTIVATION_DELAY_MS)
+
                 if (isShooting()) {
                     activatePusher(true)
                     delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
@@ -151,6 +157,10 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             else -> 0.0
         }
         powerFlywheel(nominalPower)
+
+        if (ballLatchDetector.state) {
+            lastSeenBall.reset()
+        }
     }
 
     // According to the experimental data this linear approximation gives coefficient of determination of 0.95. Also, voltage degradation seem to be handled quite well
