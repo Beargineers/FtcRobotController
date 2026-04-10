@@ -129,10 +129,10 @@ suspend fun DecodeRobot.goToShootingZoneAndShoot(shootingZone: ShootingZones, pr
 }
 
 suspend fun DecodeRobot.park() {
-    val parkCoords: Location = Locations.PARK
+    val parkCoords: Location = Locations.PARK.mirrorForAlliance(alliance)
     val heading = currentPosition.heading
     val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
-    val parkHeading = squareAngles.minBy { abs(it - heading) }
-    driveTo(parkCoords.withHeading(parkHeading))
+    val parkHeading = squareAngles.minBy { abs((it - heading).normalize()) }
+    driveTo(parkCoords.withHeading(parkHeading), applyMirroring = false)
 }
 
