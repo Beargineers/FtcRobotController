@@ -3,8 +3,6 @@ package org.beargineers.gamma
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
-import com.qualcomm.robotcore.hardware.DigitalChannel
-import kotlinx.coroutines.delay
 import org.beargineers.platform.DoubleMedian
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
@@ -12,9 +10,7 @@ import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.motorPower
-import org.beargineers.platform.submitJob
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
-import kotlin.time.Duration.Companion.milliseconds
 
 private val ONE_ARTIFACTS_CURRENT_THRESHOLD by config(1500) // Typical current ~1900ma +-60
 private val TWO_ARTIFACTS_CURRENT_THRESHOLD by config(2800) // Typical current ~3300ma +-160
@@ -24,7 +20,6 @@ private val INTAKE_CUTOFF_DELAY_MS by config(100)
 
 class Intake(val bot: GammaRobot): Hardware(bot) {
     private val intake by hardware<DcMotor>()
-    private val ballCounter by hardware<DigitalChannel>()
     val motorCurrent = DoubleMedian(10)
 
 
@@ -33,7 +28,6 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
-        ballCounter.mode = DigitalChannel.Mode.INPUT
         seeingBall = false
     }
 
@@ -43,6 +37,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
             Frame.graph("IntakeCurrentMA", motorCurrent.mean())
         }
 
+/*
         if (bot.intakeMode == IntakeMode.ON) {
             if (ballCounter.state) {
                 if (!seeingBall) {
@@ -62,6 +57,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
                 seeingBall = false
             }
         }
+*/
 
         if (bot.intakeMode == IntakeMode.REVERSE) {
             artifactsCount = 0
