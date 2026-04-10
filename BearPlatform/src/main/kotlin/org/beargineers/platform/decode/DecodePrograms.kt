@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricPosition
+import org.beargineers.platform.RobotDimensions
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
@@ -15,6 +16,7 @@ import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.inch
 import org.beargineers.platform.max
 import org.beargineers.platform.min
 import org.beargineers.platform.nextTick
@@ -49,7 +51,21 @@ suspend fun DecodeRobot.pushAllianceBot() {
 suspend fun DecodeRobot.openRamp() {
     drivePath(openRampPath(), true)
     delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
-    driveTo(Locations.COLLECT_FROM_OPEN_RAMP, applyMirroring = true)
+
+    if (hasVision) {
+        driveTo(Locations.COLLECT_FROM_OPEN_RAMP_APPROACH, applyMirroring = true)
+        collectArtifactsInView(true) {
+            it.x > 0.cm && it.x < spikeStart(2).x - (RobotDimensions.ROBOT_WIDTH / 2 + 5.inch)
+        }
+    }
+    else {
+        drivePath(buildPath {
+            with(Locations) {
+                addWaypoint(COLLECT_FROM_OPEN_RAMP_APPROACH)
+                addWaypoint(COLLECT_FROM_OPEN_RAMP)
+            }
+        }, applyMirroring = true)
+    }
 }
 
 suspend fun DecodeRobot.openRampAndCollect() {
