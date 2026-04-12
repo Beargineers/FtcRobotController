@@ -135,6 +135,13 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 */
     }
 
+    override fun init_loop() {
+        super.init_loop()
+        if (gamepad1.xWasPressed()) {
+            robot.assumePosition(Position.zero(), 0.degrees)
+            robot.resetTurret()
+        }
+    }
 
     override fun bearLoop() {
         super.bearLoop()

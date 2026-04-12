@@ -94,6 +94,10 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         turret.assumeAngle(turretAngle)
     }
 
+    override fun resetTurret() {
+        turret.reset()
+    }
+
     override val shootingAngleCorrection: Angle
         get() = (shooter.SHOOTER_ANGLE_CORRECTION + manualAngleCorrection).degrees
 

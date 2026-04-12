@@ -41,6 +41,8 @@ interface DecodeRobot : Robot {
      *  if the robot has it or just a heading of a robot if it shoots forward.
      */
     val shooterAngle: Angle get() = currentPosition.heading
+
+    fun resetTurret() {}
 }
 
 var DecodeRobot.intakeMode by StateHolder("Intake", IntakeMode.OFF)
