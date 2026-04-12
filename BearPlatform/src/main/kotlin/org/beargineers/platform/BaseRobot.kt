@@ -2,6 +2,7 @@
 
 package org.beargineers.platform
 
+import com.bylazar.field.FieldManager
 import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
@@ -101,53 +102,52 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
 
     private val drawnAt = ElapsedTime()
     private fun drawRobotOnPanelsField() {
+        if (Panels.clientsCount == 0) return
         if (drawnAt.milliseconds() > 1000 / PANELS_FIELD_FPS) {
             drawnAt.reset()
 
-            doDrawRobot()
+            with(panelsField) {
+                doDrawRobot()
+                drawExtraFeatures()
+                if (PANELS_SHOW_PATH) drawHistoryPath()
+
+                update()
+            }
         }
     }
 
-    open fun doDrawRobot() {
-        if (Panels.clientsCount == 0) return
+    private fun FieldManager.drawHistoryPath() {
+        setStyle("", "#4CAF50", 0.75)
 
-        val cp = currentPosition
-        with(panelsField) {
-            fun lineTo(location: Location) {
-                line(location.x.inch(), location.y.inch())
-                moveCursor(location.x.inch(), location.y.inch())
-            }
-
-            fun moveCursor(location: Location) {
-                moveCursor(location.x.inch(), location.y.inch())
-            }
-
-            setStyle("white", "blue", 1.0)
-            val l = getPart(RobotLocations)
-            moveCursor(l.lf_corner)
-            lineTo(l.rf_corner)
-            lineTo(l.rb_corner)
-            lineTo(l.lb_corner)
-            lineTo(l.lf_corner)
-
-            setStyle("white", "white", 1.0)
-            moveCursor(cp.x.inch(), cp.y.inch())
-            circle(2.0)
-
-            moveCursor(cp.x.inch() + 3 * cos(cp.heading), cp.y.inch() + 3 * sin(cp.heading))
-            circle(1.0)
-
-            if (PANELS_SHOW_PATH) {
-                setStyle("", "#4CAF50", 0.75)
-
-                for ((prev, next) in locationHistory.zipWithNext()) {
-                    moveCursor(prev.x.inch(), prev.y.inch())
-                    line(next.x.inch(), next.y.inch())
-                }
-            }
-
-            update()
+        for ((prev, next) in locationHistory.zipWithNext()) {
+            moveCursor(prev.x.inch(), prev.y.inch())
+            line(next.x.inch(), next.y.inch())
         }
+    }
+
+    open fun FieldManager.drawExtraFeatures() {}
+
+    fun FieldManager.doDrawRobot() {
+        val cp = currentPosition
+        fun lineTo(location: Location) {
+            line(location.x.inch(), location.y.inch())
+            moveCursor(location.x.inch(), location.y.inch())
+        }
+
+        fun moveCursor(location: Location) {
+            moveCursor(location.x.inch(), location.y.inch())
+        }
+
+        val l = getPart(RobotLocations)
+
+        setStyle("white", "white", 1.0)
+        moveCursor(l.lf_corner)
+        lineTo(l.rf_corner)
+
+        setStyle("white", "blue", 1.0)
+        lineTo(l.rb_corner)
+        lineTo(l.lb_corner)
+        lineTo(l.lf_corner)
     }
 
     override fun stop() {
