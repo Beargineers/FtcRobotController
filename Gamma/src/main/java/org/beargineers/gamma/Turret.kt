@@ -100,6 +100,11 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
         turret.motorPower = 0.0
     }
 
+    fun reset() {
+        initialEncoderPosition = turret.currentPosition
+        firstTimeInitialPosition = initialEncoderPosition
+    }
+
     companion object {
         var firstTimeInitialPosition: Int? = null
     }
