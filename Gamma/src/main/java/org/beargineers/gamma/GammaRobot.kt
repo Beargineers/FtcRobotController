@@ -1,5 +1,6 @@
 package org.beargineers.gamma
 
+import com.bylazar.field.FieldManager
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Angle
@@ -15,6 +16,7 @@ import org.beargineers.platform.Location
 import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.cos
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance
@@ -22,6 +24,7 @@ import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.nextTick
+import org.beargineers.platform.sin
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
@@ -98,17 +101,28 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val shooterAngle: Angle get() = currentPosition.heading + turret.currentTurretAngle()
 
-    override fun doDrawRobot() {
-        super.doDrawRobot()
+    override fun FieldManager.drawExtraFeatures() {
+        drawVisualTarget()
+        drawTurret()
+    }
 
+    private fun FieldManager.drawTurret() {
+        val cp = currentPosition
+        setStyle("white", "white", 1.0)
+        moveCursor(cp.x.inch(), cp.y.inch())
+        circle(2.0)
+
+        moveCursor(cp.x.inch() + 3 * cos(shooterAngle), cp.y.inch() + 3 * sin(shooterAngle))
+        circle(1.0)
+    }
+
+    private fun FieldManager.drawVisualTarget() {
         val target = intakeTarget { true }
 
         if (target != null) {
-            with(panelsField) {
-                setStyle("green", "green", 1.0)
-                moveCursor(target.x.inch(), target.y.inch())
-                circle(1.0)
-            }
+            setStyle("green", "green", 1.0)
+            moveCursor(target.x.inch(), target.y.inch())
+            circle(1.0)
         }
     }
 }
