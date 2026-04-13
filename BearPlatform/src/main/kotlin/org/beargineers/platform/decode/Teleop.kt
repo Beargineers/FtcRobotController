@@ -93,7 +93,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         button(gamepad1::right_bumper) {
             auto("Shooting") {
-                robot.shoot()
+                robot.shoot(true)
             }
         }
 

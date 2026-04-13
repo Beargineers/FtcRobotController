@@ -31,7 +31,7 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         get() = 0
 
 
-    override suspend fun shoot() {
+    override suspend fun shoot(holdPosition: Boolean) {
         // TODO("Not yet implemented")
     }
 

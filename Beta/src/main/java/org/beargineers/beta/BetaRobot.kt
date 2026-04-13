@@ -50,7 +50,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     var prepareJob: Job? = null
 
-    override suspend fun shoot() {
+    override suspend fun shoot(holdPosition: Boolean) {
         prepareJob?.cancel()
 
         val cl = currentPosition.location()
@@ -59,7 +59,9 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         coroutineScope {
             val hold = launch {
                 while (true) {
-                    driveTo(cl.withHeading(headingToGoalFrom(cl)), applyMirroring = false)
+                    if (holdPosition) {
+                        driveTo(cl.withHeading(headingToGoalFrom(cl)), applyMirroring = false)
+                    }
                     opMode.nextTick()
                 }
             }

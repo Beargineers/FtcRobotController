@@ -61,17 +61,19 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         ledIndicator.counter(artifactsCount, 'G')
     }
 
-    override suspend fun shoot() {
+    override suspend fun shoot(holdPosition: Boolean) {
         coroutineScope {
             val hold = launch {
-                val cp = currentPosition
+                val initialPosition = currentPosition
                 do {
                     nextTick()
-                    driveTo(cp, applyMirroring = false)
+                    if (holdPosition) {
+                        driveTo(initialPosition, applyMirroring = false)
+                    }
                 } while (isShooting())
             }
 
-            shooter.shoot()
+            shooter.startShooting()
             hold.join()
 
             shooter.closeLatch(false)
