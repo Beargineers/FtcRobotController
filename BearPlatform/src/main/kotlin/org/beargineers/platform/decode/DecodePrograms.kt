@@ -36,7 +36,7 @@ suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirro
         }
         drivePath(waypoints, applyMirroring)
 
-        shoot()
+        shoot(true)
     }
 }
 
