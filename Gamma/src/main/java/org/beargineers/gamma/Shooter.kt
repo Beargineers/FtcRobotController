@@ -118,7 +118,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         return v
     }
 
-    suspend fun shoot() {
+    suspend fun startShooting() {
         coroutineScope {
             shooterJob = launch {
                 coroutineScope {

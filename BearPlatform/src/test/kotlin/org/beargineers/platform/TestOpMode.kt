@@ -13,7 +13,7 @@ class TestOpMode : RobotOpMode<Robot>() {
 class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
     val localizer = TestLocalizer()
 
-    override suspend fun shoot() {
+    override suspend fun shoot(holdPosition: Boolean) {
         TODO("Not yet implemented")
     }
 
