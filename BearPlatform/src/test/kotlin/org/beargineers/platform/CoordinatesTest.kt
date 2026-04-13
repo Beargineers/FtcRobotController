@@ -17,4 +17,12 @@ class CoordinatesTest : RobotTest() {
         test(Position.zero().shift(0.cm, 50.cm), false)
         test(Position(180.cm, 0.cm, 0.degrees), true)
     }
+
+
+    @Test
+    fun testHeadinToFrom() {
+        assertEquals(0.degrees, headingFromTo(Position.zero().location(), Location(10.cm, 0.cm)))
+        assertEquals(90.degrees, headingFromTo(Position.zero().location(), Location(0.cm, 10.cm)))
+        assertEquals(180.degrees, headingFromTo(Position.zero().location(), Location(-10.cm, 0.cm)))
+    }
 }

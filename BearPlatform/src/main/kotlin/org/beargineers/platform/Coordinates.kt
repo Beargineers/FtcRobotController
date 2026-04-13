@@ -382,5 +382,5 @@ fun Location.isWithinFieldBounds(): Boolean {
 fun Position.toPose2d() = Pose2d(x.inch(), y.inch(), heading.radians())
 
 fun headingFromTo(from: Location, to: Location): Angle {
-    return atan2(from.y - to.y, from.x - to.x)
+    return atan2(to.y - from.y, to.x - from.x)
 }
