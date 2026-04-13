@@ -16,6 +16,7 @@ import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.headingFromTo
 import org.beargineers.platform.inch
 import org.beargineers.platform.max
 import org.beargineers.platform.min
@@ -124,7 +125,7 @@ suspend fun DecodeRobot.goToShootingZoneAndShoot(shootingZone: ShootingZones, pr
         }
 
         val targetLocation = closestPointInShootingZone(shootingZone)
-        val targetHeading = if (hasTurret) currentPosition.heading else headingToGoalFrom(targetLocation)
+        val targetHeading = if (hasTurret) headingFromTo(currentPosition.location(), targetLocation) else headingToGoalFrom(targetLocation)
 
         val minX = min(currentPosition.x, targetLocation.x)
         val maxX = max(currentPosition.x, targetLocation.x)
