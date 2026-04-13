@@ -64,6 +64,10 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
         }
 
         if (seenUpper || seenLower) {
+            if (bot.shooter.pusherActive) {
+                bot.shooter.abortShooting()
+            }
+
             if (artifactsCount == 0) {
                 artifactsCount = 1
             }

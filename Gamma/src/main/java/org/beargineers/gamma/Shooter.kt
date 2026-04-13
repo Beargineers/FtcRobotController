@@ -32,6 +32,7 @@ import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 
 class Shooter(val bot: GammaRobot): Hardware(bot) {
+    private var shooterJob: Job? = null
     val SHOOTER_POWER_ADJUST by config(1.0)
     var manualPowerAdjustment = 1.0
     val SHOOTER_DISTANCE_QUOTIENT by config(0.00101)
@@ -67,6 +68,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     var latchState = OPEN
+    var pusherActive = false
+
 
     var maxTicks = 0
 
@@ -117,22 +120,26 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     suspend fun shoot() {
         coroutineScope {
-            openLatch()
-            waitForFlywheelSpeed()
+            shooterJob = launch {
+                coroutineScope {
+                    openLatch()
+                    waitForFlywheelSpeed()
 
-            launch {
-                activatePusher(false)
-                bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
+                    launch {
+                        activatePusher(false)
+                        bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
 
-                if (isShooting()) {
-                    activatePusher(true)
-                    delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
+                        if (isShooting()) {
+                            activatePusher(true)
+                            delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
+                        }
+                        activatePusher(false)
+                    }
+
+                    shootingTime.reset()
+                    bot.intakeMode = IntakeMode.ON
                 }
-                activatePusher(false)
             }
-
-            shootingTime.reset()
-            bot.intakeMode = IntakeMode.ON
         }
     }
 
@@ -220,6 +227,18 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     fun activatePusher(active: Boolean) {
+        pusherActive = active
         pusher.position = if (active) PUSHER_SERVO_CLOSED_POSITION else PUSHER_SERVO_OPEN_POSITION
+    }
+
+    fun abortShooting() {
+        shooterJob?.cancel()
+        bot.submitJob {
+            bot.intakeMode = IntakeMode.REVERSE
+            closeLatch(false)
+            activatePusher(false)
+            delay(1500.milliseconds)
+            bot.intakeMode = IntakeMode.ON
+        }
     }
 }
