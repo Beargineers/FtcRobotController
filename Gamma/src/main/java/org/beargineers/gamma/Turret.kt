@@ -4,10 +4,10 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DigitalChannel
-import com.qualcomm.robotcore.hardware.PIDFCoefficients
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
+import org.beargineers.platform.PID
 import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.abs
@@ -26,9 +26,7 @@ private const val TURRET_GEAR_TEETH = 121
 private const val MOTOR_TICKS_PER_ONE_TURRET_DEGREE = (MOTOR_TICKS_PER_ROTATION / 360.0) * TURRET_GEAR_TEETH / MOTOR_GEAR_TEETH
 
 private val TURRET_AUTOROTATION_ENABLED by config(true)
-private val TURRET_MOTOR_SPEED by config(1.0)
 private val TURRET_MOTOR_PIDF by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
-private val TURRET_MOTOR_P by config(0.0)
 private val TURRET_MOTOR_DIRECTION by config(DcMotorSimple.Direction.REVERSE)
 private val TURRET_MIN_ANGLE by config(-180.degrees)
 private val TURRET_MAX_ANGLE by config(180.degrees)
@@ -42,6 +40,11 @@ fun motorTicksForAngle(angle: Angle): Int {
 
 class Turret(val bot: GammaRobot) : Hardware(bot) {
     private val turret by hardware<DcMotorEx>()
+    private val control = PID(
+        integralZone = 5.0,
+        outputMin = -1.0, outputMax = 1.0
+    )
+
     private val magnet by hardware<DigitalChannel>()
     private var initialEncoderPosition = 0
     private var targetEncoderPosition = 0
@@ -49,6 +52,8 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     override fun init() {
         turret.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         turret.direction = TURRET_MOTOR_DIRECTION
+        turret.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+
         if (firstTimeInitialPosition == null) {
             initialEncoderPosition = turret.currentPosition
             firstTimeInitialPosition = initialEncoderPosition
@@ -78,22 +83,15 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     }
 
     private fun setTurretAngle(angle: Angle) {
-        if (TURRET_MOTOR_PIDF.p > 0) {
-            turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, with (TURRET_MOTOR_PIDF) {
-                PIDFCoefficients(p, i, d, t)
-            })
-        }
-
-        if (TURRET_MOTOR_P > 0) {
-            turret.setPositionPIDFCoefficients(TURRET_MOTOR_P)
-        }
-
+        control.updateCoefficients(TURRET_MOTOR_PIDF)
         val norm = angle.normalize()
         val best = listOf(norm, norm + 360.degrees, norm - 360.degrees).filter { it in TURRET_MIN_ANGLE..TURRET_MAX_ANGLE }.minBy { abs(it - currentTurretAngle()) }
         targetEncoderPosition = initialEncoderPosition + motorTicksForAngle(best)
-        turret.targetPosition = targetEncoderPosition
-        turret.mode = DcMotor.RunMode.RUN_TO_POSITION
-        turret.motorPower = TURRET_MOTOR_SPEED
+
+        control.setTarget(targetEncoderPosition.toDouble())
+        control.updateCurrent(turret.currentPosition.toDouble())
+
+        turret.motorPower = control.result()
     }
 
     override fun stop() {
