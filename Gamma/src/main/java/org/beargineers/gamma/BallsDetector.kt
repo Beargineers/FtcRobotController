@@ -27,13 +27,38 @@ private class RollingBoolean(val size: Int) {
     }
 }
 
+private class SensorReader(val reader: () -> Boolean, val bot: GammaRobot) {
+    private var attentionFramesRemained = 5
+    private var framesToSkipRemained = 0
+    private var previousState = false
+    private val updater = RollingBoolean(20)
+    fun state(): Boolean {
+        if (--framesToSkipRemained > 0) return previousState
+
+        val newState = reader()
+        attentionFramesRemained = if (newState != previousState || bot.isShooting()) 5 else 1
+        if (--attentionFramesRemained <= 0) {
+            framesToSkipRemained = 5
+        }
+
+        previousState = newState
+        return newState
+    }
+
+    fun hasArtifact(): Boolean {
+        updater.update(previousState)
+        return updater.count() > 13
+    }
+}
+
 class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
-    val upperSensor by hardware<DigitalChannel>()
-    val lowerSensor by hardware<RevColorSensorV3>()
+    private val upperSensor by hardware<DigitalChannel>()
+    private val lowerSensor by hardware<RevColorSensorV3>()
+
+    private val upperReader = SensorReader({ upperSensor.state }, bot)
+    private val lowerReader = SensorReader({ lowerSensor.getDistance(DistanceUnit.CM).cm < LOWER_SENSOR_THRESHOLD}, bot)
 
     private val lastSeenBall = ElapsedTime()
-    private val rollingLower = RollingBoolean(20)
-    private val rollingUpper = RollingBoolean(20)
     private var artifactsCount = 0
 
     override fun init() {
@@ -43,18 +68,12 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
     override fun loop() {
         val oldArtifactsCount = artifactsCount
 
-        val seenLower = lowerSensor.getDistance(DistanceUnit.CM).cm < LOWER_SENSOR_THRESHOLD
-        val seenUpper = upperSensor.state
+        val seenLower = lowerReader.state()
+        val seenUpper = upperReader.state()
 
-        rollingLower.update(seenLower)
-        rollingUpper.update(seenUpper)
-
-        val hasLower = rollingLower.count() > 13
-        val hasUpper = rollingUpper.count() > 13
-
-        if (hasUpper) {
+        if (upperReader.hasArtifact()) {
             artifactsCount = 2
-            if (hasLower) {
+            if (lowerReader.hasArtifact()) {
                 artifactsCount = 3
 
                 if (oldArtifactsCount < 3) {
