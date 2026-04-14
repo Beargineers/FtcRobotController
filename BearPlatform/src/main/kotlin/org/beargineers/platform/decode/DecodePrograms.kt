@@ -5,7 +5,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
-import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.RobotDimensions
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
@@ -16,10 +15,7 @@ import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
-import org.beargineers.platform.headingFromTo
 import org.beargineers.platform.inch
-import org.beargineers.platform.max
-import org.beargineers.platform.min
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.pathTo
 import kotlin.time.Duration.Companion.seconds
@@ -116,30 +112,21 @@ suspend fun DecodeRobot.shootInitialLoad(launchPose: Position) {
     followPathAndShoot(pathTo(launchPose, Locations.INITIAL_SHOT_SPEED), true)
 }
 
-suspend fun DecodeRobot.goToShootingZoneAndShoot(shootingZone: ShootingZones, protectedZones: List<Location> = emptyList()) {
+suspend fun DecodeRobot.goToShootingZoneAndShoot(
+    shootingZone: ShootingZones,
+    protectedZones: List<Location> = emptyList(),
+    stayInAllianceHalf: Boolean = false
+) {
+    val plan = planShootingApproach(
+        shootingZone = shootingZone,
+        protectedZones = protectedZones,
+        stayInAllianceHalf = stayInAllianceHalf
+    )
     val waypoints = buildPath {
-        var maxBackoff = 0.cm
-        if (currentPosition.distanceTo(Locations.OPEN_RAMP_COLLECT) < 10.cm ||
-            currentPosition.distanceTo(Locations.OPEN_RAMP) < 10.cm) {
-            maxBackoff = 15.cm
+        for (waypoint in plan.approachWaypoints) {
+            addWaypoint(waypoint)
         }
-
-        val targetLocation = closestPointInShootingZone(shootingZone)
-        val targetHeading = if (hasTurret) headingFromTo(currentPosition.location(), targetLocation) else headingToGoalFrom(targetLocation)
-
-        val minX = min(currentPosition.x, targetLocation.x)
-        val maxX = max(currentPosition.x, targetLocation.x)
-        for (zone in protectedZones) {
-            if (zone.x in minX..maxX) {
-                maxBackoff = max(maxBackoff, abs(zone.y) - abs(currentPosition.y))
-            }
-        }
-
-        if (maxBackoff > 0.cm) {
-            addWaypoint(currentPosition + RobotCentricPosition(-maxBackoff, 0.cm, 0.degrees))
-        }
-
-        addWaypoint(targetLocation.withHeading(targetHeading))
+        addWaypoint(plan.target)
     }
 
     followPathAndShoot(waypoints, false)
@@ -152,4 +139,3 @@ suspend fun DecodeRobot.park() {
     val parkHeading = squareAngles.minBy { abs((it - heading).normalize()) }
     driveTo(parkCoords.withHeading(parkHeading), applyMirroring = false)
 }
-
