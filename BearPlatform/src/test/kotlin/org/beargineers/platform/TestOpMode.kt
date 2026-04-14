@@ -30,11 +30,11 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
     }
 
     override val shootingAngleCorrection: Angle
-        get() = TODO("Not yet implemented")
+        get() = 0.degrees
     override val artifactsCount: Int
-        get() = TODO("Not yet implemented")
+        get() = 0
 
-    override val hasTurret = false
+    override var hasTurret = false
 
     val parts = mutableMapOf<Part<*>, Any>()
     @Suppress("UNCHECKED_CAST")
