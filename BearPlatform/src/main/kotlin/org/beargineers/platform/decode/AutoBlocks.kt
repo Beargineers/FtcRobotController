@@ -95,7 +95,8 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
         else if (hasCollectedLoad) {
             goToShootingZoneAndShoot(
                 if (operatingIn == 'F') ShootingZones.FRONT else ShootingZones.BACK,
-                protectedZones()
+                protectedZones(),
+                stayInAllianceHalf = true
             )
             hasCollectedLoad = false
         }
