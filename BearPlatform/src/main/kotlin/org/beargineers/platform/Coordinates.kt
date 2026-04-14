@@ -17,7 +17,7 @@ It says that
 - X axis goes from goals towards the audience, i.e. x getting higher when row index getting lower
 - Y axis goes from blue goal side towards red goal side, i.e. y getting higher with column index getting higher
 - Center of the field has [0,0] coordinates
-- Heading is 0  when facing upwards, and increases counterclockwise
+- Heading is 0 when facing along positive field X, and increases counterclockwise
  */
 data class Location(val x: Distance, val y: Distance) {
     fun shift(x: Distance, y: Distance): Location {
@@ -348,12 +348,10 @@ data class RobotCentricPosition(val forward: Distance, val right: Distance, val 
 }
 
 fun RobotCentricLocation.toFieldCentric(atPosition: Position): Location {
-    val magnitude = hypot(right, forward)
-    val absoluteH = atan2(right,forward)
-    val absH = absoluteH + atPosition.heading
-    val absX = cos(absH)*magnitude
-    val absY = sin(absH)*magnitude
-    return Location(absX + atPosition.x, absY + atPosition.y)
+    return Location(
+        x = atPosition.x + forward * cos(atPosition.heading) + right * sin(atPosition.heading),
+        y = atPosition.y + forward * sin(atPosition.heading) - right * cos(atPosition.heading)
+    )
 }
 
 fun Location.toRobotCentric(atPosition: Position): RobotCentricLocation {
