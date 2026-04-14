@@ -57,7 +57,7 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
         return isGoodResultFor(BLUE_GOAL, result) || isGoodResultFor(RED_GOAL, result)
     }
 
-    private fun isGoodResultFor(result: Position, goal: Position): Boolean {
+    private fun isGoodResultFor(goal: Position, result: Position): Boolean {
         val headingToGoal = headingFromTo(result.location(), goal.location())
         if (abs((headingToGoal - result.heading).normalize()) > Camera_angleRange.degrees) return false
         if (abs((goal.heading - result.heading).normalize()) > Camera_angleRange.degrees) return false
