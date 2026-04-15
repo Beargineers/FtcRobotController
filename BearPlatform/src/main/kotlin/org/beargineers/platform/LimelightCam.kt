@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 private val executor = Executors.newSingleThreadScheduledExecutor()
 
-class LimelightCam(robot: BaseRobot): Camera(robot) {
+class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot) {
     val Camera_positionTolerance by config(1.0)
     val Camera_angleRange by config(15)
     val Camera_headingTolerance by config(1.0)
@@ -41,6 +41,10 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
         pollingTask.cancel(false)
     }
 
+    override fun loop() {
+        limelight.updateRobotOrientation(camHeading().degrees())
+    }
+
     override fun getRobotPose(): Position? {
         val shift = robot.currentVelocity
         val velocity = hypot(shift.x, shift.y)
@@ -65,7 +69,7 @@ class LimelightCam(robot: BaseRobot): Camera(robot) {
     }
 
     private fun position(latestResult: LLResult): Position? {
-        return latestResult.botpose?.robotPose()
+        return latestResult.botpose_MT2?.robotPose()
     }
 
     private val BLUE_GOAL = Position(-58.3727.inch, -55.6425.inch, -128.degrees)
