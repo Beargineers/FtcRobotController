@@ -41,7 +41,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val localizer: Localizer =
         FusionLocalizer(
-            RotatingCameraAdjuster(LimelightCam(this), turret),
+            RotatingCameraAdjuster(LimelightCam(this) {currentPosition.heading + turret.currentTurretAngle()}, turret),
             IndicatingRelativeLocalizer(PinpointLocalizer(this), ledIndicator)
         )
 

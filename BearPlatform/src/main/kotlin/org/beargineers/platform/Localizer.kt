@@ -60,15 +60,17 @@ class FusionLocalizer(
     }
 
     override fun update() {
-        val pose = absoluteLocalizer.getRobotPose()
-        if (pose != null) {
+        val rel = relativeLocalizer.getPosition(RobotOpMode.lastKnownPosition)
+        val abs = absoluteLocalizer.getRobotPose()
+        if (abs != null) {
             Frame.addData("Vision", "✓ acquired")
-            relativeLocalizer.updatePositionEstimate(pose)
-            updateCurrentPosition(pose)
+            val res = abs.location().withHeading(rel.heading)
+            relativeLocalizer.updatePositionEstimate(res)
+            updateCurrentPosition(res)
         }
         else {
             Frame.addData("Vision", "✗ odometry only")
-            updateCurrentPosition(relativeLocalizer.getPosition(RobotOpMode.lastKnownPosition))
+            updateCurrentPosition(rel)
         }
     }
 
