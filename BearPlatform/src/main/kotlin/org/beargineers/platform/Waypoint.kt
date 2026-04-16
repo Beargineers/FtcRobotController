@@ -42,6 +42,14 @@ class PathBuilder {
         result += Waypoint(target, speed, positionTolerance, headingTolerance)
     }
 
+    fun addStrictHeadingWaypoint(target: Position, speed: Double = 1.0) {
+        addWaypoint(target, positionTolerance = 5.cm, headingTolerance = 1.degrees)
+    }
+
+    fun addRelaxedWaypoint(target: Position, speed: Double = 1.0) {
+        addWaypoint(target, positionTolerance = 5.cm, headingTolerance = 5.degrees)
+    }
+
     fun build(): List<Waypoint> {
         return result
     }
