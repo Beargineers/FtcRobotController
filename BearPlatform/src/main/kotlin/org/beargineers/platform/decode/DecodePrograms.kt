@@ -118,18 +118,13 @@ suspend fun DecodeRobot.goToShootingZoneAndShoot(
     stayInAllianceHalf: Boolean = false
 ) {
     val plan = planShootingApproach(
+        startPosition = currentPosition,
         shootingZone = shootingZone,
         protectedZones = protectedZones,
         stayInAllianceHalf = stayInAllianceHalf
     )
-    val waypoints = buildPath {
-        for (waypoint in plan.approachWaypoints) {
-            addWaypoint(waypoint)
-        }
-        addWaypoint(plan.target)
-    }
 
-    followPathAndShoot(waypoints, false)
+    followPathAndShoot(plan, false)
 }
 
 suspend fun DecodeRobot.park() {
