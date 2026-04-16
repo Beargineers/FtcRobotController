@@ -9,22 +9,27 @@ import org.beargineers.platform.Robot
 import org.beargineers.platform.RobotCentricLocation
 import org.beargineers.platform.RobotCentricPosition
 import org.beargineers.platform.RobotDimensions
-import org.beargineers.platform.RobotLocations
 import org.beargineers.platform.StateHolder
+import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
 import org.beargineers.platform.between
+import org.beargineers.platform.buildPath
 import org.beargineers.platform.cm
+import org.beargineers.platform.coerceInFieldBounds
 import org.beargineers.platform.config
 import org.beargineers.platform.degrees
 import org.beargineers.platform.headingFromTo
 import org.beargineers.platform.hypot
 import org.beargineers.platform.inch
 import org.beargineers.platform.isWithinFieldBounds
+import org.beargineers.platform.max
+import org.beargineers.platform.min
 import org.beargineers.platform.tileLocation
+import org.beargineers.platform.times
 import org.beargineers.platform.toFieldCentric
-import org.beargineers.platform.toRobotCentric
-import kotlin.math.max
+import kotlin.math.sign
+import kotlin.math.sqrt
 
 interface DecodeRobot : Robot {
     suspend fun shoot(holdPosition: Boolean)
@@ -108,26 +113,7 @@ enum class ShootingZones {
 private object ShootingZoneOptimizationConfig {
     val zoneSafetyMargin by config(5.cm)
     val minGoalDistance by config(80.cm)
-    val coarseSearchStep by config(5.cm)
-    val fineSearchStep by config(1.cm)
-    val fineSearchRadius by config(8.cm)
-    val maxForwardSpeed by config(120.cm)
-    val maxStrafeSpeed by config(60.cm)
-    val maxTurnSpeed by config(180.degrees)
 }
-
-internal data class ShootingApproachPlan(
-    val target: Position,
-    val approachWaypoints: List<Position>,
-    val estimatedTime: Double
-)
-
-private data class SearchBounds(
-    val minX: Distance,
-    val maxX: Distance,
-    val minY: Distance,
-    val maxY: Distance
-)
 
 private fun robotSamplePoints(position: Position): List<Location> {
     val halfWidth = RobotDimensions.ROBOT_WIDTH / 2
@@ -160,49 +146,17 @@ private fun pointInShootingZone(point: Location, shootingZone: ShootingZones, ma
     }
 }
 
-private fun DecodeRobot.isOnOwnAllianceHalf(point: Location): Boolean {
-    return if (alliance == Alliance.RED) {
-        point.y >= 0.cm
-    } else {
-        point.y <= 0.cm
-    }
-}
-
-private fun DecodeRobot.respectsAllianceHalf(position: Position): Boolean {
-    return robotSamplePoints(position).all { isOnOwnAllianceHalf(it) }
-}
-
 private fun DecodeRobot.retreatIntoAllianceHalf(position: Position): Position {
     val robotPoints = robotSamplePoints(position)
     val shiftY = if (alliance == Alliance.RED) {
-        val minY = robotPoints.minOf { it.y.cm() }
-        if (minY < 0.0) (-minY).cm else 0.cm
+        val minY = robotPoints.minOf { it.y } - ShootingZoneOptimizationConfig.zoneSafetyMargin
+        if (minY < 0.cm) -minY else 0.cm
     } else {
-        val maxY = robotPoints.maxOf { it.y.cm() }
-        if (maxY > 0.0) (-maxY).cm else 0.cm
-    }
-    return position.shift(0.cm, shiftY)
-}
-
-private fun DecodeRobot.isSafeShootingPose(
-    position: Position,
-    shootingZone: ShootingZones,
-    stayInAllianceHalf: Boolean = false
-): Boolean {
-    val goal = Locations.GOAL.mirrorForAlliance(alliance)
-    if (position.distanceTo(goal) < ShootingZoneOptimizationConfig.minGoalDistance) {
-        return false
+        val maxY = robotPoints.maxOf { it.y } + ShootingZoneOptimizationConfig.zoneSafetyMargin
+        if (maxY > 0.cm) -maxY else 0.cm
     }
 
-    val robotPoints = robotSamplePoints(position)
-    if (!robotPoints.all { it.isWithinFieldBounds() }) {
-        return false
-    }
-    if (stayInAllianceHalf && !robotPoints.all { isOnOwnAllianceHalf(it) }) {
-        return false
-    }
-
-    return robotPoints.any { pointInShootingZone(it, shootingZone, ShootingZoneOptimizationConfig.zoneSafetyMargin) }
+    return position.shift(sign(position.x.distance) * abs(shiftY), shiftY).coerceInFieldBounds()
 }
 
 private fun DecodeRobot.travelHeadingTo(from: Position, to: Location): Angle {
@@ -211,11 +165,16 @@ private fun DecodeRobot.travelHeadingTo(from: Position, to: Location): Angle {
     }
 
     val headingTo = headingFromTo(from.location(), to)
-    return listOf(headingTo, (headingTo + 180.degrees).normalize())
-        .minBy { abs((from.heading - it).normalize()) }
+    val tangential = listOf(headingTo, (headingTo + 180.degrees).normalize()).minBy { abs((from.heading - it).normalize()) }
+
+    val diff = abs((from.heading - tangential).normalize())
+    val distance = from.distanceTo(to)
+
+    // Heuristics. If we have to turn more than 1 degree for each 2 cm of travel then let's just keep original heading and strafe
+    return if (2 * distance.cm() > diff.degrees()) tangential else from.heading
 }
 
-private fun DecodeRobot.requiredProtectionBackoff(
+private fun requiredProtectionBackoff(
     targetLocation: Location,
     startPosition: Position,
     protectedZones: List<Location>
@@ -227,174 +186,67 @@ private fun DecodeRobot.requiredProtectionBackoff(
         maxBackoff = 15.cm
     }
 
-    val minX = org.beargineers.platform.min(startPosition.x, targetLocation.x)
-    val maxX = org.beargineers.platform.max(startPosition.x, targetLocation.x)
+    val minX = min(startPosition.x, targetLocation.x)
+    val maxX = max(startPosition.x, targetLocation.x)
     for (zone in protectedZones) {
         if (zone.x in minX..maxX) {
-            maxBackoff = org.beargineers.platform.max(maxBackoff, abs(zone.y) - abs(startPosition.y))
+            maxBackoff = max(maxBackoff, abs(zone.y) - abs(startPosition.y))
         }
     }
 
-    return org.beargineers.platform.max(maxBackoff, 0.cm)
+    return maxBackoff
 }
 
-private fun estimateSegmentTime(from: Position, to: Position): Double {
-    val relative = to.location().toRobotCentric(from)
-    val translationTime = max(
-        abs(relative.forward) / ShootingZoneOptimizationConfig.maxForwardSpeed,
-        abs(relative.right) / ShootingZoneOptimizationConfig.maxStrafeSpeed
-    )
-    val rotationTime = abs((to.heading - from.heading).normalize()) / ShootingZoneOptimizationConfig.maxTurnSpeed
-    return max(translationTime, rotationTime)
-}
 
-private fun DecodeRobot.evaluateShootingCandidate(
-    shootingZone: ShootingZones,
-    startPosition: Position,
-    candidateLocation: Location,
-    protectedZones: List<Location>,
-    stayInAllianceHalf: Boolean
-): ShootingApproachPlan? {
-    val approachWaypoints = mutableListOf<Position>()
-    fun addApproachWaypoint(position: Position) {
-        if (approachWaypoints.lastOrNull() != position && startPosition != position) {
-            approachWaypoints += position
-        }
-    }
-
-    var planningStart = startPosition
-    if (stayInAllianceHalf && !respectsAllianceHalf(planningStart)) {
-        planningStart = retreatIntoAllianceHalf(planningStart)
-        if (!respectsAllianceHalf(planningStart)) {
-            return null
-        }
-        addApproachWaypoint(planningStart)
-    }
-
-    val backoff = requiredProtectionBackoff(candidateLocation, planningStart, protectedZones)
-    var backedOffStart = planningStart + RobotCentricPosition(-backoff, 0.cm, 0.degrees)
-    if (stayInAllianceHalf && !respectsAllianceHalf(backedOffStart)) {
-        backedOffStart = retreatIntoAllianceHalf(backedOffStart)
-        if (!respectsAllianceHalf(backedOffStart)) {
-            return null
-        }
-    }
-    addApproachWaypoint(backedOffStart)
-
-    val target = candidateLocation.withHeading(travelHeadingTo(backedOffStart, candidateLocation))
-    if (!isSafeShootingPose(target, shootingZone, stayInAllianceHalf)) {
-        return null
-    }
-
-    val path = buildList {
-        add(startPosition)
-        addAll(approachWaypoints)
-        add(target)
-    }
-
-    return ShootingApproachPlan(
-        target = target,
-        approachWaypoints = approachWaypoints,
-        estimatedTime = path.zipWithNext().sumOf { (from, to) -> estimateSegmentTime(from, to) }
-    )
-}
-
-private fun generateSearchGrid(bounds: SearchBounds, step: Distance): Sequence<Location> = sequence {
-    var x = bounds.minX.cm()
-    while (x <= bounds.maxX.cm() + 1e-9) {
-        var y = bounds.minY.cm()
-        while (y <= bounds.maxY.cm() + 1e-9) {
-            yield(Location(x.cm, y.cm))
-            y += step.cm()
-        }
-        x += step.cm()
-    }
-}
-
-private fun searchBoundsFor(shootingZone: ShootingZones): SearchBounds {
-    val fieldExtent = (24 * 3).inch
-    val robotReach = org.beargineers.platform.max(
-        org.beargineers.platform.max(RobotDimensions.ROBOT_FRONT_OFFSET, RobotDimensions.ROBOT_BACK_OFFSET),
-        RobotDimensions.ROBOT_WIDTH / 2
-    ) + ShootingZoneOptimizationConfig.zoneSafetyMargin
-
-    return when (shootingZone) {
-        ShootingZones.FRONT -> SearchBounds(
-            minX = -fieldExtent,
-            maxX = robotReach,
-            minY = -fieldExtent,
-            maxY = fieldExtent
-        )
-        ShootingZones.BACK -> SearchBounds(
-            minX = 48.inch - robotReach,
-            maxX = fieldExtent,
-            minY = -fieldExtent,
-            maxY = fieldExtent
-        )
-        ShootingZones.CLOSEST -> error("Closest zone should be expanded before computing bounds")
-    }
-}
-
-private fun DecodeRobot.bestPlanInZone(
+fun DecodeRobot.planShootingApproach(
     shootingZone: ShootingZones,
     startPosition: Position,
     protectedZones: List<Location>,
     stayInAllianceHalf: Boolean
-): ShootingApproachPlan? {
-    val bounds = searchBoundsFor(shootingZone)
-    val candidates = mutableListOf(startPosition.location())
-    candidates += generateSearchGrid(bounds, ShootingZoneOptimizationConfig.coarseSearchStep).toList()
+): List<Waypoint> {
+    val firstCandidate = closestPointInShootingZone(shootingZone, startPosition.location())
+    val backoff = requiredProtectionBackoff(firstCandidate, startPosition, protectedZones)
+    val backedOffStart = startPosition + RobotCentricPosition(-backoff, 0.cm, 0.degrees)
 
-    val coarseBest = candidates.asSequence()
-        .mapNotNull { evaluateShootingCandidate(shootingZone, startPosition, it, protectedZones, stayInAllianceHalf) }
-        .minByOrNull { it.estimatedTime }
-        ?: return null
+    val secondCandidate = closestPointInShootingZone(shootingZone, backedOffStart.location())
+    val targetHeading = travelHeadingTo(backedOffStart, secondCandidate)
 
-    val fineBounds = SearchBounds(
-        minX = coarseBest.target.x - ShootingZoneOptimizationConfig.fineSearchRadius,
-        maxX = coarseBest.target.x + ShootingZoneOptimizationConfig.fineSearchRadius,
-        minY = coarseBest.target.y - ShootingZoneOptimizationConfig.fineSearchRadius,
-        maxY = coarseBest.target.y + ShootingZoneOptimizationConfig.fineSearchRadius
-    )
-
-    return generateSearchGrid(fineBounds, ShootingZoneOptimizationConfig.fineSearchStep)
-        .plus(sequenceOf(coarseBest.target.location()))
-        .mapNotNull { evaluateShootingCandidate(shootingZone, startPosition, it, protectedZones, stayInAllianceHalf) }
-        .minByOrNull { it.estimatedTime }
-        ?: coarseBest
-}
-
-internal fun DecodeRobot.planShootingApproach(
-    shootingZone: ShootingZones,
-    startPosition: Position = currentPosition,
-    protectedZones: List<Location> = emptyList(),
-    stayInAllianceHalf: Boolean = false
-): ShootingApproachPlan {
-    val zones = when (shootingZone) {
-        ShootingZones.CLOSEST -> listOf(ShootingZones.FRONT, ShootingZones.BACK)
-        else -> listOf(shootingZone)
+    val target = findClosestPointOnLine(
+        backedOffStart.location(),
+        secondCandidate.withHeading(targetHeading).location()) {
+        val pos = it.withHeading(targetHeading)
+        inShootingZone(pos, shootingZone)
+    }.withHeading(targetHeading).let {
+        if (stayInAllianceHalf) retreatIntoAllianceHalf(it) else it
+    }.let {
+        moveAwayFromGoal(it)
     }
 
-    return zones.asSequence()
-        .mapNotNull { bestPlanInZone(it, startPosition, protectedZones, stayInAllianceHalf) }
-        .minByOrNull { it.estimatedTime }
-        ?: error("Unable to find a valid shooting pose for $shootingZone")
+    val path = buildPath {
+        if (backedOffStart != startPosition) {
+            addRelaxedWaypoint(backedOffStart)
+        }
+
+        if (hasTurret) {
+            addRelaxedWaypoint(target)
+        }
+        else {
+            addStrictHeadingWaypoint(target)
+        }
+    }
+
+    return path
 }
 
 fun DecodeRobot.inShootingZone(shootingZone: ShootingZones = ShootingZones.CLOSEST): Boolean {
-    val l = getPart(RobotLocations)
-    val points = listOf(
-        l.rf_corner,
-        l.lf_corner,
-        l.rb_corner,
-        l.lb_corner,
-        l.rf_corner.between(l.lf_corner),
-        l.lf_corner.between(l.lb_corner),
-        l.lb_corner.between(l.rb_corner),
-        l.rb_corner.between(l.rf_corner)
-    )
+    val cp = currentPosition
+    return inShootingZone(cp, shootingZone)
+}
 
-    return points.any { pointInShootingZone(it, shootingZone) }
+fun inShootingZone(position: Position, shootingZone: ShootingZones): Boolean {
+    return robotSamplePoints(position).any {
+        pointInShootingZone(it, shootingZone, ShootingZoneOptimizationConfig.zoneSafetyMargin)
+    }
 }
 
 fun DecodeRobot.clearForShooting(): Boolean{
@@ -413,29 +265,104 @@ fun DecodeRobot.clearForShooting(): Boolean{
     return inShootingZone() && headingIsAtGoal() && flySpeedIsCorrect()
 }
 
+fun DecodeRobot.moveAwayFromGoal(pos: Position): Position {
+    val goal = Locations.GOAL.mirrorForAlliance(alliance)
+    val clearance = goal.distanceTo(pos) - ShootingZoneOptimizationConfig.minGoalDistance
+    if (clearance >= 0.cm) return pos
 
-fun DecodeRobot.closestPointInShootingZone(
-    shootingZone: ShootingZones,
-    position: Position = currentPosition,
-    protectedZones: List<Location> = emptyList(),
-    stayInAllianceHalf: Boolean = false
-): Location {
-    return planShootingApproach(shootingZone, position, protectedZones, stayInAllianceHalf).target.location()
+    val allowedZones = listOf(ShootingZones.FRONT, ShootingZones.BACK).filter { inShootingZone(pos, it) }
+        .ifEmpty { listOf(ShootingZones.FRONT, ShootingZones.BACK) }
+
+    fun isValid(candidate: Position): Boolean {
+        return goal.distanceTo(candidate) >= ShootingZoneOptimizationConfig.minGoalDistance &&
+            allowedZones.any { inShootingZone(candidate, it) } &&
+            robotSamplePoints(candidate).all { it.isWithinFieldBounds() }
+    }
+
+    fun attempt(
+        dxPerStep: Double,
+        dyPerStep: Double,
+        move: (Distance) -> Position
+    ): Position? {
+        val relX = (pos.x - goal.x).cm()
+        val relY = (pos.y - goal.y).cm()
+        val minDistance = ShootingZoneOptimizationConfig.minGoalDistance.cm()
+        val a = dxPerStep * dxPerStep + dyPerStep * dyPerStep
+        val b = 2 * (relX * dxPerStep + relY * dyPerStep)
+        val c = relX * relX + relY * relY - minDistance * minDistance
+        val discriminant = b * b - 4 * a * c
+        if (discriminant < 0.0) return null
+
+        val step = ((-b + sqrt(discriminant)) / (2 * a)).cm
+        return move(step).takeIf(::isValid)
+    }
+
+    val oneCentimeterForward = pos + RobotCentricPosition(1.cm, 0.cm, 0.degrees)
+    val forwardDx = (oneCentimeterForward.x - pos.x).cm()
+    val forwardDy = (oneCentimeterForward.y - pos.y).cm()
+    attempt(forwardDx, forwardDy) { pos + RobotCentricPosition(it, 0.cm, 0.degrees) }?.let { return it }
+    attempt(-forwardDx, -forwardDy) { pos + RobotCentricPosition(-it, 0.cm, 0.degrees) }?.let { return it }
+    attempt(1.0, 0.0) { pos.shift(it, 0.cm) }?.let { return it }
+
+    val ySign = -sign(goal.y.distance)
+    attempt(1.0, ySign) { pos.shift(it, ySign * it) }?.let { return it }
+
+    return pos
 }
 
-fun DecodeRobot.closestPointInShootingZone(
-    shootingZone: ShootingZones,
-    position: Location,
-    protectedZones: List<Location> = emptyList(),
-    stayInAllianceHalf: Boolean = false
-): Location {
-    return closestPointInShootingZone(
-        shootingZone = shootingZone,
-        position = position.withHeading(currentPosition.heading),
-        protectedZones = protectedZones,
-        stayInAllianceHalf = stayInAllianceHalf
-    )
+fun DecodeRobot.closestPointInFrontZone(from: Location): Location {
+    if (inShootingZone(ShootingZones.FRONT)) return from
+
+    val (x, y) = from
+    val close = if (y <= 0.cm) { // blue side
+        if (y < -x) {
+            Location((x + y) * 0.5, (x + y) * 0.5)
+        } else {
+            Location(0.cm, 0.cm)
+        }
+    } else { // RED side
+        if (y > x) {
+            Location(-(y - x) * 0.5, (y - x) * 0.5)
+        } else {
+            Location(0.cm, 0.cm)
+        }
+    }
+
+    return close
 }
+
+fun findClosestPointOnLine(from: Location, to: Location, f: (Location) -> Boolean ): Location {
+    var left = from
+    var right = to
+
+    repeat(10) {
+        val mid = left.between(right)
+        if (f(mid)) {
+            right = mid
+        } else {
+            left = mid
+        }
+    }
+
+    return right
+}
+
+fun DecodeRobot.closestPointInBackZone(from: Location): Location {
+    if (inShootingZone(ShootingZones.BACK)) return from
+    return AutoPositions.SOUTH_SHOOTING.mirrorForAlliance(alliance).location()
+}
+
+fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones, from: Location = currentPosition.location()): Location {
+    val close = closestPointInFrontZone(from)
+    val far = closestPointInBackZone(from)
+
+    return when (shootingZone) {
+        ShootingZones.CLOSEST -> if (from.distanceTo(close) < from.distanceTo(far)) close else far
+        ShootingZones.FRONT -> close
+        ShootingZones.BACK -> far
+    }
+}
+
 
 fun spikeStart(n: Int): Position {
     val x = ((2 - n)*24).inch + 12.inch

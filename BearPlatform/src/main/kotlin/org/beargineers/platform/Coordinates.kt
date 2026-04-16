@@ -244,6 +244,10 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
         )
     }
 
+    operator fun plus(other: RobotCentricLocation): Position {
+        return this + other.withHeading(0.degrees)
+    }
+
     operator fun times(other: Double): Position {
         return Position(x * other, y * other, heading * other)
     }
@@ -374,9 +378,25 @@ fun Location.between(other: Location): Location {
     return Location((other.x + x)/2, (other.y + y)/2)
 }
 
+private val highestCoord = (24 * 3).inch
+
 fun Location.isWithinFieldBounds(): Boolean {
-    val highestCoord = (24 * 3).inch
     return abs(x) < highestCoord && abs(y) < highestCoord
+}
+
+fun Location.coerceInFieldBounds(): Location {
+    return Location(
+        x.coerceIn(-highestCoord, highestCoord),
+        y.coerceIn(-highestCoord, highestCoord)
+    )
+}
+
+fun Position.coerceInFieldBounds(): Position {
+    return Position(
+        x.coerceIn(-highestCoord, highestCoord),
+        y.coerceIn(-highestCoord, highestCoord),
+        heading
+    )
 }
 
 fun Position.toPose2d() = Pose2d(x.inch(), y.inch(), heading.radians())
