@@ -174,23 +174,29 @@ private fun DecodeRobot.travelHeadingTo(from: Position, to: Location): Angle {
     return if (2 * distance.cm() > diff.degrees()) tangential else from.heading
 }
 
-private fun requiredProtectionBackoff(
+private fun DecodeRobot.isPositionCloseToLever(pos: Position): Boolean {
+    if (pos.x < 0.cm) return false
+
+    val rampLever = tileLocation("F3TR").shift(0.cm, -20.cm).mirrorForAlliance(alliance)
+    val clearance = pos.distanceTo(rampLever)
+    return clearance < RobotDimensions.ROBOT_LENGTH
+}
+
+private fun DecodeRobot.requiredProtectionBackoff(
     targetLocation: Location,
     startPosition: Position,
     protectedZones: List<Location>
 ): Distance {
     var maxBackoff = 0.cm
-    if (startPosition.distanceTo(Locations.OPEN_RAMP_COLLECT) < 10.cm ||
-        startPosition.distanceTo(Locations.OPEN_RAMP) < 10.cm
-    ) {
-        maxBackoff = 15.cm
+    if (isPositionCloseToLever(startPosition)) {
+        maxBackoff = 40.cm
     }
 
     val minX = min(startPosition.x, targetLocation.x)
     val maxX = max(startPosition.x, targetLocation.x)
     for (zone in protectedZones) {
         if (zone.x in minX..maxX) {
-            maxBackoff = max(maxBackoff, abs(zone.y) - abs(startPosition.y))
+            maxBackoff = max(maxBackoff, abs(zone.y))
         }
     }
 
@@ -206,7 +212,7 @@ fun DecodeRobot.planShootingApproach(
 ): List<Waypoint> {
     val firstCandidate = closestPointInShootingZone(shootingZone, startPosition.location())
     val backoff = requiredProtectionBackoff(firstCandidate, startPosition, protectedZones)
-    val backedOffStart = startPosition + RobotCentricPosition(-backoff, 0.cm, 0.degrees)
+    val backedOffStart = startPosition.shift(0.cm, -backoff * alliance.sign)
 
     val secondCandidate = closestPointInShootingZone(shootingZone, backedOffStart.location())
     val targetHeading = travelHeadingTo(backedOffStart, secondCandidate)
