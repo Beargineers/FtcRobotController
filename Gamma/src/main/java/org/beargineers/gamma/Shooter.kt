@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
+import com.qualcomm.robotcore.util.RobotLog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
@@ -28,6 +29,7 @@ import org.beargineers.platform.motorPower
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.roundMotorPower
 import org.beargineers.platform.submitJob
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -56,8 +58,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     val pid = PID()
 
-    val fly1 by hardware<DcMotor>()
-    val fly2 by hardware<DcMotor>()
+    val fly1 by hardware<DcMotorEx>()
+    val fly2 by hardware<DcMotorEx>()
 
     val latch by hardware<Servo>()
 
@@ -108,11 +110,11 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         val p = targetFlywheelPower()
         pid.updateCoefficients(SHOOTER_PID)
         pid.setTarget(p)
-        pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
+        pid.updateCurrent(fly1.velocity / (maxTicks))
         Frame.addData("Shooter error", pid.error())
         Frame.graph("Shooter error", pid.error())
         Frame.graph("FW Target", p * 6000)
-        Frame.graph("FW Actual", 6000 * (fly1 as DcMotorEx).velocity / (maxTicks))
+        Frame.graph("FW Actual", 6000 * fly1.velocity / (maxTicks))
 
         val v = roundMotorPower(pid.result() + p)
         return v
@@ -157,6 +159,34 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             else -> 0.0
         }
         powerFlywheel(nominalPower)
+        checkMotorsConnected()
+    }
+
+    val lastMotorChecked = ElapsedTime()
+    var failedChecks = 0
+    private fun checkMotorsConnected() {
+        if (bot.flywheelEnabled) {
+            if (lastMotorChecked.seconds() > 1) {
+                lastMotorChecked.reset()
+
+                val c1 = fly1.getCurrent(CurrentUnit.MILLIAMPS)
+                val c2 = fly2.getCurrent(CurrentUnit.MILLIAMPS)
+
+                RobotLog.i("Flywheel currents F1: $c1, F2: $c2")
+
+                if (c1 < 4 || c2 < 4) {
+                    failedChecks++
+
+                    if (failedChecks > 3) {
+                        RobotLog.clearGlobalWarningMsg()
+                        RobotLog.addGlobalWarningMessage("FLYWHEEL MOTOR DISCONNECTED")
+                    }
+                }
+                else {
+                    failedChecks = 0
+                }
+            }
+        }
     }
 
     // According to the experimental data this linear approximation gives coefficient of determination of 0.95. Also, voltage degradation seem to be handled quite well
