@@ -27,6 +27,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
 
     override fun init() {
         intake.direction = DcMotorSimple.Direction.REVERSE
+        intake.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
     override fun loop() {
