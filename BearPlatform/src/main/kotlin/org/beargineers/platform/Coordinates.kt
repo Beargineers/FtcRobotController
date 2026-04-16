@@ -62,6 +62,10 @@ class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparab
         return Distance(distance * other, distanceUnit)
     }
 
+    operator fun times(other: Int): Distance {
+        return Distance(distance * other, distanceUnit)
+    }
+
     operator fun div(other: Double): Distance {
         return Distance(distance / other, distanceUnit)
     }
