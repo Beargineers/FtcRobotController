@@ -162,7 +162,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
     companion object {
         // This will be used to transfer last known position between different OpModes (like to start Teleop where Auto has finished)
-        var lastKnownPosition: Position = Position.ZERO
+        var lastKnownPosition: Position = Position.NA
         var lastKnownTurretAngle: Angle = 0.degrees
     }
 }

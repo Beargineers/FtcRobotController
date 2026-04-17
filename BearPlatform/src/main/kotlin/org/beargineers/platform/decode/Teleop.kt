@@ -6,6 +6,7 @@ import org.beargineers.platform.Angle
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
+import org.beargineers.platform.RobotDimensions
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
@@ -13,6 +14,7 @@ import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.sin
+import org.beargineers.platform.tilePosition
 import kotlin.math.abs
 
 open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>() {
@@ -127,6 +129,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     override fun bearStart() {
         super.bearStart()
 
+        if (lastKnownPosition.isNA()) {
+            error("Position is not initialized. Cannot start")
+        }
+
         robot.assumePosition(lastKnownPosition, lastKnownTurretAngle)
 
 /*
@@ -137,8 +143,32 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
     override fun init_loop() {
         super.init_loop()
-        if (gamepad1.xWasPressed()) {
+        Frame.addData("Position", if (lastKnownPosition.isNA()) "NOT INITIALIZED!" else lastKnownPosition)
+        Frame.addLine("[X] for back corner on BLUE side")
+        Frame.addLine("[B] for back corner on RED side")
+        Frame.addLine("[Y] for center facing goals wall")
+        Frame.addLine("[A] for center facing back wall")
+        Frame.addLine("Turret must be aligned with robot's heading in all cases")
+
+        if (gamepad1.aWasPressed()) {
             robot.assumePosition(Position.ZERO, 0.degrees)
+            robot.resetTurret()
+        }
+
+        if (gamepad1.yWasPressed()) {
+            robot.assumePosition(Position.ZERO.rotate(180.degrees), 0.degrees)
+            robot.resetTurret()
+        }
+
+        if (gamepad1.xWasPressed()) {
+            val pos = tilePosition("A1LB:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, (RobotDimensions.ROBOT_WIDTH / 2))
+            robot.assumePosition(pos, 0.degrees)
+            robot.resetTurret()
+        }
+
+        if (gamepad1.bWasPressed()) {
+            val pos = tilePosition("F1RB:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, -(RobotDimensions.ROBOT_WIDTH / 2))
+            robot.assumePosition(pos, 0.degrees)
             robot.resetTurret()
         }
     }
