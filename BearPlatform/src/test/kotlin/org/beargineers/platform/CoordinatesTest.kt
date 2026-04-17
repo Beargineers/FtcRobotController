@@ -42,28 +42,28 @@ class CoordinatesTest : RobotTest() {
             assertEquals(expected, robot.inShootingZone())
         }
 
-        test(Position.zero(), true)
-        test(Position.zero().shift(0.cm, 50.cm), false)
+        test(Position.ZERO, true)
+        test(Position.ZERO.shift(0.cm, 50.cm), false)
         test(Position(180.cm, 0.cm, 0.degrees), true)
     }
 
 
     @Test
     fun testHeadinToFrom() {
-        assertEquals(0.degrees, headingFromTo(Position.zero().location(), Location(10.cm, 0.cm)))
-        assertEquals(90.degrees, headingFromTo(Position.zero().location(), Location(0.cm, 10.cm)))
-        assertEquals(180.degrees, headingFromTo(Position.zero().location(), Location(-10.cm, 0.cm)))
+        assertEquals(0.degrees, headingFromTo(Position.ZERO.location(), Location(10.cm, 0.cm)))
+        assertEquals(90.degrees, headingFromTo(Position.ZERO.location(), Location(0.cm, 10.cm)))
+        assertEquals(180.degrees, headingFromTo(Position.ZERO.location(), Location(-10.cm, 0.cm)))
     }
 
     @Test
     fun testToFieldCentricCardinalDirections() {
         assertLocationEquals(
             Location(10.cm, 0.cm),
-            RobotCentricLocation(10.cm, 0.cm).toFieldCentric(Position.zero())
+            RobotCentricLocation(10.cm, 0.cm).toFieldCentric(Position.ZERO)
         )
         assertLocationEquals(
             Location(0.cm, -10.cm),
-            RobotCentricLocation(0.cm, 10.cm).toFieldCentric(Position.zero())
+            RobotCentricLocation(0.cm, 10.cm).toFieldCentric(Position.ZERO)
         )
         assertLocationEquals(
             Location(0.cm, 10.cm),
