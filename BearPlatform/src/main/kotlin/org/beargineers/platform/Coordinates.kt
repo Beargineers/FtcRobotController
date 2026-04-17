@@ -265,7 +265,7 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
     }
 
     companion object {
-        fun zero() : Position = Position(0.cm, 0.cm, 0.degrees)
+        val ZERO = Position(0.cm, 0.cm, 0.degrees)
     }
 
     fun distanceTo(other: Position) : Distance {

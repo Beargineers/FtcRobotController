@@ -120,7 +120,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
 
         button( gamepad1::x){
-            robot.assumePosition(Position.zero(), 0.degrees)
+            robot.assumePosition(Position.ZERO, 0.degrees)
         }
     }
 
@@ -138,7 +138,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     override fun init_loop() {
         super.init_loop()
         if (gamepad1.xWasPressed()) {
-            robot.assumePosition(Position.zero(), 0.degrees)
+            robot.assumePosition(Position.ZERO, 0.degrees)
             robot.resetTurret()
         }
     }
