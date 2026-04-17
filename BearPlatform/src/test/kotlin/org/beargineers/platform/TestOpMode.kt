@@ -75,7 +75,7 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
 }
 
 class TestLocalizer : Localizer {
-    var currentPosition: Position = Position.zero()
+    var currentPosition: Position = Position.ZERO
     override fun setStartingPosition(position: Position) {
         currentPosition = position
     }
@@ -88,6 +88,6 @@ class TestLocalizer : Localizer {
     }
 
     override fun getVelocity(): Position {
-        return Position.zero()
+        return Position.ZERO
     }
 }

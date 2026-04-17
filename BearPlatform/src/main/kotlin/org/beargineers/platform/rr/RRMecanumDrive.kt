@@ -91,7 +91,7 @@ object RRMecanumTuning {
 }
 
 class RRMecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer) {
-    val pl = PinpointLocalizer(hardwareMap, Position.zero().toPose2d())
+    val pl = PinpointLocalizer(hardwareMap, Position.ZERO.toPose2d())
     val localizer = TuningOpModes.SimplePinpointLocalizer(pl)
 
     constructor(robot: BaseRobot) : this(robot.opMode.hardwareMap, SimpleRobotLocalizer(robot))
