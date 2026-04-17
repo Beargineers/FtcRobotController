@@ -260,12 +260,15 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
         return Position(x, y, heading.normalize())
     }
 
+    fun isNA() = this === NA
+
     override fun toString(): String {
         return String.format(Locale.getDefault(), "(%s %s) %s", x, y, heading)
     }
 
     companion object {
         val ZERO = Position(0.cm, 0.cm, 0.degrees)
+        val NA = Position(500.cm, 500.cm, 500.degrees)
     }
 
     fun distanceTo(other: Position) : Distance {
