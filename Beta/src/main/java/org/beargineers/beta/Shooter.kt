@@ -116,7 +116,7 @@ class Shooter(val bot: BetaRobot): Hardware(bot) {
             stopFeederAt = 0L
         }
 
-        val flywheelPoweredUp = abs(pid.error()) < SHOOTER_ERROR_MARGIN
+        val flywheelPoweredUp = isUpToSpeed()
         if (isShooting() && !flywheelPoweredUp) {
             pausedFeederFlag = true
         }
@@ -142,5 +142,9 @@ class Shooter(val bot: BetaRobot): Hardware(bot) {
 
     fun isShooting(): Boolean {
         return stopFeederAt != 0L
+    }
+
+    fun isUpToSpeed(): Boolean {
+        return abs(pid.error()) < SHOOTER_ERROR_MARGIN
     }
 }

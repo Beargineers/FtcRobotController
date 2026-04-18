@@ -109,4 +109,8 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val artifactsCount: Int
         get() = intake.artifacts
+
+    override fun shooterIsReady(): Boolean {
+        return super.shooterIsReady() && shooter.isUpToSpeed()
+    }
 }
