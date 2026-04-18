@@ -50,6 +50,12 @@ internal class PathFollower(
         translationalPID.updateCoefficients(robot.heading_K)
     }
 
+    fun Robot.isSlow(): Boolean {
+        val vel = currentVelocity
+        val lateral = hypot(vel.x, vel.y)
+        return lateral < 10.cm
+    }
+
     /**
      * Execute one update cycle of path following.
      * Calculates drive powers and commands the robot directly.
@@ -72,8 +78,11 @@ internal class PathFollower(
         val ht = currentWaypoint.headingTolerance ?:
             if (currentWaypointIndex == path.lastIndex) PathFollowingConfig.headingTolerance else PathFollowingConfig.intermediateWaypointHeadingTolerance
 
+        val isLastWaypoint = currentWaypointIndex == path.lastIndex
+
         val waypointReached = currentPosition.distanceTo(currentTarget) < pt &&
-                abs((currentPosition.heading - currentTarget.heading).normalize()) < ht
+                abs((currentPosition.heading - currentTarget.heading).normalize()) < ht &&
+                !(isLastWaypoint && robot.isSlow())
 
         if (waypointReached) {
             currentWaypointIndex++
