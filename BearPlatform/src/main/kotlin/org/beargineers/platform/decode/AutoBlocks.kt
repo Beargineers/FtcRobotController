@@ -18,9 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 
 object AutoPositions {
     val NORTH_START by config(tilePosition("F6BL:+135"))
-    val NORTH_SHOOTING by config(tilePosition("D4:+135"))
     val SOUTH_START by config(Position(160.cm,44.cm,180.degrees))
-    val SOUTH_SHOOTING by config(tilePosition("D1:+160"))
     val BOX_APPROACH by config(tilePosition("D4:+135"))
     val BOX_SCOOP by config(tilePosition("D4:+135"))
     val BOX_SCOOP_SPEED by config(1.0)
@@ -69,9 +67,9 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
 }
 
 suspend fun DecodeRobot.interpretProgram(program: String) {
-    val (startingPoint, initialShootingPoint) = when (program.first()) {
-        'F' -> Pair(AutoPositions.NORTH_START, AutoPositions.NORTH_SHOOTING)
-        'B' -> Pair(AutoPositions.SOUTH_START, AutoPositions.SOUTH_SHOOTING)
+    val (startingPoint, initialShootingZone) = when (program.first()) {
+        'F' -> Pair(AutoPositions.NORTH_START, ShootingZones.FRONT)
+        'B' -> Pair(AutoPositions.SOUTH_START, ShootingZones.BACK)
         else -> error("Program should start from either F or B to indicate starting position. Actual symbol: ${program.first()}")
     }
 
@@ -89,7 +87,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
 
     suspend fun goAndShootIfHasLoad() {
         if (hasInitialLoad) {
-            shootInitialLoad(initialShootingPoint)
+            goToShootingZoneAndShoot(initialShootingZone, stayInAllianceHalf = true)
             hasInitialLoad = false
         }
         else if (hasCollectedLoad) {
