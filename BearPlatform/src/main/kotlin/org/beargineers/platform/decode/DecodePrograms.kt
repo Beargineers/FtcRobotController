@@ -4,7 +4,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
-import org.beargineers.platform.Position
 import org.beargineers.platform.RobotDimensions
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
@@ -106,10 +105,6 @@ suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Locatio
             }
         }
     }
-}
-
-suspend fun DecodeRobot.shootInitialLoad(launchPose: Position) {
-    followPathAndShoot(pathTo(launchPose, Locations.INITIAL_SHOT_SPEED), true)
 }
 
 suspend fun DecodeRobot.goToShootingZoneAndShoot(
