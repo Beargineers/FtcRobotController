@@ -55,7 +55,17 @@ interface DecodeRobot : Robot {
      */
     val shooterAngle: Angle get() = currentPosition.heading
 
+    fun shooterIsReady(): Boolean = flywheelEnabled
+
     fun resetTurret() {}
+}
+
+fun DecodeRobot.headingIsAtGoal(): Boolean {
+    val sideDistanceDeviation = 15.cm
+    val distanceToGoal = goalDistance()
+    val maxHeadingDeviation = atan2(sideDistanceDeviation, distanceToGoal)
+    val headingToGoal = headingToGoal()
+    return shooterAngle in headingToGoal - maxHeadingDeviation .. headingToGoal + maxHeadingDeviation
 }
 
 var DecodeRobot.intakeMode by StateHolder("Intake", IntakeMode.OFF)
@@ -255,20 +265,15 @@ fun inShootingZone(position: Position, shootingZone: ShootingZones): Boolean {
     }
 }
 
-fun DecodeRobot.clearForShooting(): Boolean{
-    fun headingIsAtGoal(): Boolean{
-        val sideDistanceDeviation = 15.cm
-        val distanceToGoal = goalDistance()
-        val maxHeadingDeviation = atan2(sideDistanceDeviation, distanceToGoal)
-        val headingToGoal = headingToGoal()
-        return shooterAngle in headingToGoal - maxHeadingDeviation .. headingToGoal + maxHeadingDeviation
-    }
+fun DecodeRobot.clearForShooting(): String? {
+    if (!flywheelEnabled) return "FLYWHEEL IS OFF"
+    if (!inShootingZone()) return "NOT IN SHOOTING ZONE"
 
-    fun flySpeedIsCorrect(): Boolean{
-        return true
-    }
-    // TODO: add a check if the speed if the flywheel is good
-    return inShootingZone() && headingIsAtGoal() && flySpeedIsCorrect()
+
+    if (!headingIsAtGoal()) return "AIMING IS INCORRECT"
+    if (!shooterIsReady()) return "SHOOTER IS NOT READY"
+
+    return null
 }
 
 fun DecodeRobot.moveAwayFromGoal(pos: Position): Position {

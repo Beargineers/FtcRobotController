@@ -24,6 +24,7 @@ import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistance
+import org.beargineers.platform.decode.headingIsAtGoal
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.motorPower
 import org.beargineers.platform.nextTick
@@ -146,7 +147,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     private suspend fun waitForFlywheelSpeed() {
-        while (abs(pid.error()) > SHOOTER_ERROR_MARGIN) {
+        while (!isUpToSpeed() || !bot.headingIsAtGoal()) {
             bot.nextTick()
         }
     }
@@ -270,5 +271,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             delay(1500.milliseconds)
             bot.intakeMode = IntakeMode.ON
         }
+    }
+
+    fun isUpToSpeed(): Boolean {
+        return abs(pid.error()) < SHOOTER_ERROR_MARGIN
     }
 }

@@ -131,4 +131,8 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
             circle(1.0)
         }
     }
+
+    override fun shooterIsReady(): Boolean {
+        return super.shooterIsReady() && shooter.isUpToSpeed()
+    }
 }

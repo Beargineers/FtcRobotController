@@ -175,11 +175,8 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
     override fun bearLoop() {
         super.bearLoop()
-        if (robot.clearForShooting()) {
-            Frame.addData("Shooting", "Ready")
-        }else{
-            Frame.addData("Shooting", "NOT READY FOR SHOOTING")
-        }
+        Frame.addData("Shooting", robot.clearForShooting() ?: "Ready")
+
         val slow = gamepad1.left_bumper
 
         Frame.addData("Mode", if (slow) "SLOW" else "FULL")
