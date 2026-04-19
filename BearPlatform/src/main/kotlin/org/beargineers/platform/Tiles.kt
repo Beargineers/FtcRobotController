@@ -24,16 +24,18 @@ enum class TileOffset(val yoffset: Int, val xoffset: Int) {
 
 fun tileLocation(tileCodeAndOffset: String): Location {
     val tileCode = tileCodeAndOffset.take(2)
-    val tileOffset = when(tileCodeAndOffset.drop(2)) {
-        "TL" -> TileOffset.TOP_LEFT
-        "TR" -> TileOffset.TOP_RIGHT
-        "BL" -> TileOffset.BOTTOM_LEFT
-        "BR" -> TileOffset.BOTTOM_RIGHT
-        "CL" -> TileOffset.CENTER_LEFT
-        "CR" -> TileOffset.CENTER_RIGHT
-        "TC" -> TileOffset.TOP_CENTER
-        "BC" -> TileOffset.BOTTOM_CENTER
-        else -> TileOffset.CENTER
+    val tileOffsetCode = tileCodeAndOffset.drop(2)
+    val tileOffset = when(tileOffsetCode) {
+        "TL", "LT" -> TileOffset.TOP_LEFT
+        "TR", "RT" -> TileOffset.TOP_RIGHT
+        "BL", "LB" -> TileOffset.BOTTOM_LEFT
+        "BR", "RB" -> TileOffset.BOTTOM_RIGHT
+        "CL", "LC" -> TileOffset.CENTER_LEFT
+        "CR", "RC" -> TileOffset.CENTER_RIGHT
+        "TC", "CT" -> TileOffset.TOP_CENTER
+        "BC", "BT" -> TileOffset.BOTTOM_CENTER
+        "" -> TileOffset.CENTER
+        else -> error("Unknown tile offset $tileOffsetCode")
     }
 
     val (rowCode, columnCode) = tileCode.partition { it.isDigit() }
