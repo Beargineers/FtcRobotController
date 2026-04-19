@@ -161,13 +161,13 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
 
         if (gamepad1.xWasPressed()) {
-            val pos = tilePosition("A1LB:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, (RobotDimensions.ROBOT_WIDTH / 2))
+            val pos = tilePosition("A1BL:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, (RobotDimensions.ROBOT_WIDTH / 2))
             robot.assumePosition(pos, 0.degrees)
             robot.resetTurret()
         }
 
         if (gamepad1.bWasPressed()) {
-            val pos = tilePosition("F1RB:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, -(RobotDimensions.ROBOT_WIDTH / 2))
+            val pos = tilePosition("F1BR:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, -(RobotDimensions.ROBOT_WIDTH / 2))
             robot.assumePosition(pos, 0.degrees)
             robot.resetTurret()
         }
