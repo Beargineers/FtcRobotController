@@ -1,8 +1,10 @@
 package org.beargineers.platform
 
 import com.bylazar.telemetry.TelemetryManager
+import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.RobotLog
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import java.util.concurrent.ConcurrentHashMap
 
 object Frame {
     internal var telemetry: Telemetry? = null
@@ -17,6 +19,20 @@ object Frame {
             it.update()
         }
     }
+
+    private val messages = ConcurrentHashMap<String, ElapsedTime>()
+
+    fun log(tag: String, msg: String) {
+        if ((messages[tag]?.seconds() ?: 100.0) > 1.0) {
+            messages.getOrPut(tag) { ElapsedTime() }.reset()
+            log(msg)
+        }
+    }
+
+    fun log(msg: String) {
+        RobotLog.i(msg)
+    }
+
 
     fun graph(name: String, value: Double) {
         panelsTelemetry?.addData(name, value)
