@@ -3,6 +3,7 @@ package org.beargineers.platform
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -43,6 +44,11 @@ class LoopRuntime {
             nextTickWaiters.offer(cont)
 
             cont.invokeOnCancellation {
+                cont.context[CoroutineName]?.let {
+                    if (!it.name.startsWith("!")) {
+                        Frame.log("Cancelling ${it.name}")
+                    }
+                }
                 // O(n), but fine for a minimal example.
                 nextTickWaiters.remove(cont)
             }
@@ -52,8 +58,8 @@ class LoopRuntime {
      * Convenience boundary for non-coroutine callers that want a result.
      * If it fails, the exception is rethrown from the next [tick] that observes it.
      */
-    fun <T> submit(block: suspend CoroutineScope.() -> T): Deferred<T> {
-        val deferred = scope.async(block = block)
+    fun <T> submit(name: String, block: suspend CoroutineScope.() -> T): Deferred<T> {
+        val deferred = scope.async(block = block, context = CoroutineName(name))
 
         deferred.invokeOnCompletion { throwable ->
             if (throwable != null && throwable !is CancellationException) {

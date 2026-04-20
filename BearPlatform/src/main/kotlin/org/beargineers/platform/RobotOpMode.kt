@@ -87,7 +87,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         bearStart()
         elapsedTime.reset()
 
-        submitJob { robot.autoProgram() }
+        submitJob("Auto Program") { robot.autoProgram() }
     }
 
     override fun stop() {
@@ -123,7 +123,12 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         return button
     }
 
-    fun submitJob(body: suspend CoroutineScope.() -> Unit): Job = loop.submit(body)
+    fun submitJob(name: String = "", body: suspend CoroutineScope.() -> Unit): Job {
+        if (!name.startsWith("!")) {
+            Frame.log("Submitting job: $name")
+        }
+        return loop.submit(name, body)
+    }
 
     suspend fun nextTick() {
         loop.nextTick()
@@ -131,7 +136,7 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
     fun auto(name: String, b: suspend T.() -> Unit) {
         cancelAuto()
-        auto = submitJob {
+        auto = submitJob(name) {
             robot.b()
         }
     }

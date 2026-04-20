@@ -209,10 +209,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val heading: Angle = commandedHeading()
         val deltaPosition = Position(delta.x, delta.y, heading - robot.currentPosition.heading)
 
-        if (!isAutoActive()) {
+        if (!isAutoActive() && deltaPosition != Position.ZERO) {
             val targetPosition = robot.currentPosition.plus(deltaPosition)
 
-            submitJob {
+            submitJob("!Driving") {
                 robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
             }
         }
