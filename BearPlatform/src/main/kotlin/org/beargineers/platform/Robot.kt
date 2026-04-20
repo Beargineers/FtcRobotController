@@ -24,8 +24,8 @@ interface Robot {
     val alliance: Alliance get() = opMode.alliance
 }
 
-fun Robot.submitJob(block: suspend CoroutineScope.() -> Unit): Job {
-    return opMode.submitJob(block)
+fun Robot.submitJob(name: String, block: suspend CoroutineScope.() -> Unit): Job {
+    return opMode.submitJob(name, block)
 }
 
 suspend fun Robot.nextTick() {
