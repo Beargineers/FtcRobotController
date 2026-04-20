@@ -85,6 +85,8 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
             hypot(currentVelocity.x, currentVelocity.y),
             abs(currentVelocity.heading))
 
+        Frame.log("POS", "Position: $currentPosition. Velocity: ${String.format("%s/s, %s/s", hypot(currentVelocity.x, currentVelocity.y), abs(currentVelocity.heading))}")
+
         Frame.graph("Linear V", hypot(currentVelocity.x, currentVelocity.y).cm())
         Frame.graph("Angular V", abs(currentVelocity.heading).degrees())
 

@@ -26,6 +26,8 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean) 
         waypoints
     }
 
+    Frame.log("DRV", "drivePath: $waypoints")
+
     if (WheelsConfig.RoadRunnerEnabled) {
         move {
             var prev = currentPosition
