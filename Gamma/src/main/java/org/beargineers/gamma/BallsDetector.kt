@@ -4,6 +4,7 @@ import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.hardware.DigitalChannel
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.delay
+import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
@@ -84,7 +85,7 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
 
         if (seenUpper || seenLower) {
             if (bot.shooter.pusherActive) {
-                bot.shooter.abortShooting()
+                bot.abortShooting()
             }
 
             if (artifactsCount == 0) {
@@ -104,9 +105,11 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
     }
 
     suspend fun waitTillNoBalls(delay: Duration) {
+        Frame.log("Waiting to clear balls")
         do {
             delay(delay)
             bot.nextTick()
         } while(bot.isShooting() && lastSeenBall.milliseconds() < delay.inWholeMilliseconds)
+        Frame.log("waitTillNoBalls completed")
     }
 }
