@@ -360,7 +360,7 @@ fun findClosestPointOnLine(from: Location, to: Location, f: (Location) -> Boolea
 
 fun DecodeRobot.closestPointInBackZone(from: Location): Location {
     if (inShootingZone(ShootingZones.BACK)) return from
-    return tileLocation("D1:CL")
+    return tileLocation("D1CL")
 }
 
 fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones, from: Location = currentPosition.location()): Location {
