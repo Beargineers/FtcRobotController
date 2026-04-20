@@ -66,6 +66,8 @@ class FusionLocalizer(
             Frame.addData("Vision", "✓ acquired")
             val res = abs.location().withHeading(rel.heading)
             relativeLocalizer.updatePositionEstimate(res)
+
+            Frame.log("VISION", "Vision position acquired: $res")
             updateCurrentPosition(res)
         }
         else {
