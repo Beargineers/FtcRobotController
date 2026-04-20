@@ -1,8 +1,12 @@
 package org.beargineers.gamma
 
 import com.bylazar.field.FieldManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
@@ -25,6 +29,8 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.sin
+import org.beargineers.platform.submitJob
+import kotlin.time.Duration.Companion.milliseconds
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
@@ -61,25 +67,41 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         ledIndicator.counter(artifactsCount, 'G')
     }
 
+    private var shootingJob: Job? = null
+
     override suspend fun shoot(holdPosition: Boolean) {
+        val initialPosition = currentPosition
         coroutineScope {
-            val hold = launch {
-                val initialPosition = currentPosition
-                do {
-                    nextTick()
-                    if (holdPosition) {
-                        driveTo(initialPosition, applyMirroring = false)
+            shootingJob = launch {
+                val hold = launch {
+                    if (false && holdPosition) { // TODO
+                        while (true) {
+                            driveTo(initialPosition, applyMirroring = false)
+                            nextTick()
+                        }
                     }
-                } while (isShooting())
+                }
+
+                try {
+                    shooter.shoot()
+                    hold.cancel()
+                } finally {
+                    intakeMode = IntakeMode.ON
+                    ballsDetector.reset()
+                    opMode.gamepad1.rumble(300)
+                }
             }
+        }
+    }
 
-            shooter.startShooting()
-            hold.join()
-
-            shooter.closeLatch(false)
-            intakeMode = IntakeMode.ON
-            ballsDetector.reset()
-            opMode.gamepad1.rumble(300)
+    fun abortShooting() {
+        shootingJob?.cancel()
+        submitJob("Reversing intake on aborted shooting") {
+            withContext(NonCancellable) {
+                intakeMode = IntakeMode.REVERSE
+                delay(1000.milliseconds)
+                intakeMode = IntakeMode.ON
+            }
         }
     }
 
@@ -105,7 +127,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val artifactsCount: Int get() = ballsDetector.artifactsCount()
 
-    override val shooterAngle: Angle get() = currentPosition.heading + turret.currentTurretAngle()
+    override val shooterAngle: Angle get() = (currentPosition.heading + turret.currentTurretAngle()).normalize()
 
     override fun FieldManager.drawExtraFeatures() {
         drawVisualTarget()
