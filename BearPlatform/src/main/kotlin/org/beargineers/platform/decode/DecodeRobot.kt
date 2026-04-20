@@ -111,9 +111,7 @@ fun DecodeRobot.headingToGoal(): Angle {
 
 fun DecodeRobot.headingToGoalFrom(position: Location): Angle {
     val goal = Locations.GOAL.mirrorForAlliance(alliance)
-    val dx = goal.x - position.x
-    val dy = goal.y - position.y
-    return atan2(dy, dx) + shootingAngleCorrection
+    return headingFromTo(position, goal) + shootingAngleCorrection
 }
 
 enum class ShootingZones {
