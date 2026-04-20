@@ -1,7 +1,7 @@
 package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -120,22 +120,29 @@ class CoroutinesLoopTest : RobotTest() {
 
     @Test
     fun testCancellation() {
-        var counter = 0
-        opMode.submitJob {
-            var job: Job? = null
+        var startedCounter = 0
+        var cancellationCounter = 0
 
-            repeat(5) {
-                job?.cancel()
-                job = opMode.submitJob {
-                    while (true) {
-                        counter++
-                        opMode.nextTick()
-                    }
+        repeat(5) {
+            val job = opMode.submitJob {
+                try {
+                    startedCounter++
+                    opMode.nextTick()
+                    error("nextTick() should throw CancellationException when the job is cancelled")
+                } catch (exception: CancellationException) {
+                    cancellationCounter++
+                    throw exception
                 }
             }
+
+            opMode.loop.tick()
+            job.cancel()
+            opMode.loop.tick()
+
+            assert(job.isCancelled)
         }
 
-        repeat(5) {opMode.loop.tick()}
-        assert(counter == 5)
+        assert(startedCounter == 5)
+        assert(cancellationCounter == 5)
     }
 }
