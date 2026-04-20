@@ -57,7 +57,7 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
 
     fun cutoff() {
         robot.opMode.gamepad1.rumble(300)
-        bot.submitJob {
+        bot.submitJob("Cutoff intake") {
             delay(INTAKE_CUTOFF_DELAY_MS.milliseconds)
             bot.intakeMode = IntakeMode.OFF
         }
