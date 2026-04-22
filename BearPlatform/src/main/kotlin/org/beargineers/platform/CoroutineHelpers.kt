@@ -4,9 +4,11 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.decode.mirrorForAlliance
 import org.beargineers.platform.rr.MovesBuilder
+import kotlin.time.Duration
 
 suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
     require (WheelsConfig.RoadRunnerEnabled) {"This API is only available in RoadRunner mode"}
@@ -80,6 +82,16 @@ suspend fun Robot.cancelWhen(condition: () -> Boolean, block: suspend CoroutineS
             nextTick()
         }
 
+        if (childJob.isActive) {
+            childJob.cancel()
+        }
+    }
+}
+
+suspend fun doNoLongerThan(duration: Duration, block: suspend CoroutineScope.() -> Unit) {
+    coroutineScope {
+        val childJob = launch(block = block)
+        delay(duration)
         if (childJob.isActive) {
             childJob.cancel()
         }
