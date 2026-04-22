@@ -5,6 +5,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 private val executor = Executors.newSingleThreadScheduledExecutor()
 
@@ -13,6 +14,7 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
     val Camera_angleRange by config(15)
     val Camera_headingTolerance by config(1.0)
 
+    private val normalizerMT2: PositionMedian = PositionMedian(5)
     private val normalizer: PositionMedian = PositionMedian(5)
 
     private var lastUpdated = 0.0
@@ -29,8 +31,9 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
             val latestResult = limelight.latestResult
             if (latestResult.timestamp != lastUpdated && latestResult.isValid && latestResult.staleness < 50) {
                 lastUpdated = latestResult.timestamp
-                val position = position(latestResult)
-                if (position != null) normalizer.update(position)
+
+                positionMT2(latestResult)?.let { normalizerMT2.update(it) }
+                position(latestResult)?.let { normalizer.update(it) }
             }
 
         }, 0L, 5, TimeUnit.MILLISECONDS)
@@ -42,7 +45,13 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
     }
 
     override fun loop() {
-        limelight.updateRobotOrientation(camHeading().degrees())
+        val heading = camHeading()
+        limelight.updateRobotOrientation(heading.degrees())
+
+        val result = normalizer.result(Camera_positionTolerance.cm, Camera_headingTolerance.degrees)
+        if (result != null) {
+            Frame.graph("TURRET HEADING DRIFT", abs((result.heading - heading).normalize().degrees()))
+        }
     }
 
     override fun getRobotPose(): Position? {
@@ -50,10 +59,11 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
         val velocity = hypot(shift.x, shift.y)
         if (velocity > Camera_positionTolerance.cm) {
             normalizer.reset()
+            normalizerMT2.reset()
             return null
         }
 
-        val result = normalizer.result(Camera_positionTolerance.cm, Camera_headingTolerance.degrees)
+        val result = normalizerMT2.result(Camera_positionTolerance.cm, Camera_headingTolerance.degrees)
         return result?.takeIf { isGoodResult(it) }
     }
 
@@ -68,8 +78,12 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
         return true
     }
 
-    private fun position(latestResult: LLResult): Position? {
+    private fun positionMT2(latestResult: LLResult): Position? {
         return latestResult.botpose_MT2?.robotPose()
+    }
+
+    private fun position(latestResult: LLResult): Position? {
+        return latestResult.botpose?.robotPose()
     }
 
     private val BLUE_GOAL = Position(-58.3727.inch, -55.6425.inch, -128.degrees)
