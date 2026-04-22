@@ -122,7 +122,8 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
 
         button( gamepad1::x){
-            robot.assumePosition(Position.ZERO, 0.degrees)
+            robot.assumePosition(Position.ZERO)
+            robot.resetTurret()
         }
     }
 
@@ -133,7 +134,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             error("Position is not initialized. Cannot start")
         }
 
-        robot.assumePosition(lastKnownPosition, lastKnownTurretAngle)
+        robot.assumePosition(lastKnownPosition)
 
 /*
         robot.flywheelEnabled = true
@@ -151,24 +152,24 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         Frame.addLine("Turret must be aligned with robot's heading in all cases")
 
         if (gamepad1.aWasPressed()) {
-            robot.assumePosition(Position.ZERO, 0.degrees)
+            robot.assumePosition(Position.ZERO)
             robot.resetTurret()
         }
 
         if (gamepad1.yWasPressed()) {
-            robot.assumePosition(Position.ZERO.rotate(180.degrees), 0.degrees)
+            robot.assumePosition(Position.ZERO.rotate(180.degrees))
             robot.resetTurret()
         }
 
         if (gamepad1.xWasPressed()) {
             val pos = tilePosition("A1BL:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, (RobotDimensions.ROBOT_WIDTH / 2))
-            robot.assumePosition(pos, 0.degrees)
+            robot.assumePosition(pos)
             robot.resetTurret()
         }
 
         if (gamepad1.bWasPressed()) {
             val pos = tilePosition("F1BR:180").shift(-RobotDimensions.ROBOT_BACK_OFFSET, -(RobotDimensions.ROBOT_WIDTH / 2))
-            robot.assumePosition(pos, 0.degrees)
+            robot.assumePosition(pos)
             robot.resetTurret()
         }
     }

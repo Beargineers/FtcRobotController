@@ -38,7 +38,7 @@ class CoordinatesTest : RobotTest() {
     @Test
     fun testInShootingZone() {
         fun test(p: Position, expected: Boolean) {
-            robot.assumePosition(p, 0.degrees)
+            robot.assumePosition(p)
             assertEquals(expected, robot.inShootingZone())
         }
 

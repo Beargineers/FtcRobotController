@@ -44,7 +44,7 @@ class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
         } as T
     }
 
-    override fun assumePosition(position: Position, turretAngle: Angle) {
+    override fun assumePosition(position: Position) {
         localizer.setStartingPosition(position)
     }
 

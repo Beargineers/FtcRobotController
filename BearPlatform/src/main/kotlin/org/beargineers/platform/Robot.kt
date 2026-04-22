@@ -6,7 +6,7 @@ import kotlinx.coroutines.Job
 interface Robot {
     fun <T:Any > getPart(part: Part<T>): T
 
-    fun assumePosition(position: Position, turretAngle: Angle)
+    fun assumePosition(position: Position)
 
     fun init()
     fun start()
