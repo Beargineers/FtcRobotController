@@ -145,7 +145,7 @@ private suspend fun DecodeRobot.doTuning(
     shiftBack:(pos: Position)->Position,
     coeff: (robot: BaseRobot)-> PIDFTCoeffs
 ) {
-    assumePosition(startingPos.mirrorForAlliance(alliance), 0.degrees)
+    assumePosition(startingPos.mirrorForAlliance(alliance))
 
     repeat(1000) {
 
@@ -178,7 +178,7 @@ translational_K=0.025, 0.002, 0.0035, 0.3
 @Autonomous(group = "Tune")
 class Tune_C1ToC6Forward : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
-        assumePosition(tilePosition("C1:180"), 0.degrees)
+        assumePosition(tilePosition("C1:180"))
         driveTo(tilePosition("C6:180"), applyMirroring = false)
     }
 }
@@ -186,7 +186,7 @@ class Tune_C1ToC6Forward : TestOp() {
 @Autonomous(group = "Tune")
 class Tune_B1ToB6Left : TestOp() {
     override suspend fun DecodeRobot.autoProgram() {
-        assumePosition(tilePosition("B1:90"), 0.degrees)
+        assumePosition(tilePosition("B1:90"))
         driveTo(tilePosition("B6:90"), applyMirroring = false)
     }
 }

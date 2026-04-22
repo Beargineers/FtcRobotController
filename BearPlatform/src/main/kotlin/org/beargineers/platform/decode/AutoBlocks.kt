@@ -120,7 +120,9 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
         collectedSet += from
     }
 
-    assumePosition(startingPoint.mirrorForAlliance(alliance), 0.degrees)
+    assumePosition(startingPoint.mirrorForAlliance(alliance))
+    resetTurret()
+
     flywheelEnabled = true
 
     for (c in program) {

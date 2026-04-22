@@ -18,7 +18,6 @@ import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.Location
 import org.beargineers.platform.PinpointLocalizer
-import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.cos
 import org.beargineers.platform.decode.DecodeRobot
@@ -47,7 +46,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val localizer: Localizer =
         FusionLocalizer(
-            RotatingCameraAdjuster(LimelightCam(this) {currentPosition.heading + turret.currentTurretAngle()}, turret),
+            RotatingCameraAdjuster(LimelightCam(this) {turret.turretHeading()}, turret),
             IndicatingRelativeLocalizer(PinpointLocalizer(this), ledIndicator)
         )
 
@@ -113,11 +112,6 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         return shooter.isShooting()
     }
 
-    override fun assumePosition(position: Position, turretAngle: Angle) {
-        super.assumePosition(position, turretAngle)
-        turret.assumeAngle(turretAngle)
-    }
-
     override fun resetTurret() {
         turret.reset()
     }
@@ -127,7 +121,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val artifactsCount: Int get() = ballsDetector.artifactsCount()
 
-    override val shooterAngle: Angle get() = (currentPosition.heading + turret.currentTurretAngle()).normalize()
+    override val shooterAngle: Angle get() = turret.turretHeading()
 
     override fun FieldManager.drawExtraFeatures() {
         drawVisualTarget()
