@@ -65,7 +65,8 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
         turret.direction = TURRET_MOTOR_DIRECTION
         turret.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
 
-        while (navx.isCalibrating()) {
+        var attempts = 0
+        while (navx.isCalibrating() && attempts++ < 50) {
             Thread.sleep(50)
         }
 
@@ -81,7 +82,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     private var accumulatedYawDeg = 0.0
 
     private fun navxHeading(): Angle {
-        navx.deviceClient.healthStatus
+        if (isNavxHealthy()) return 0.degrees
         val o = navx.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES)
 
         val yawDeg = o.firstAngle.toDouble() // Z angle, wrapped -180..+180
