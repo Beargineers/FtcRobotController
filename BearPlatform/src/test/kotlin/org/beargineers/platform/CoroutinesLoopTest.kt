@@ -2,9 +2,11 @@ package org.beargineers.platform
 
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.junit.Test
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -107,7 +109,7 @@ class CoroutinesLoopTest : RobotTest() {
 
     @Test
     fun testSubmitRethrowsImmediateException() {
-        opMode.loop.submit {
+        opMode.loop.submit("") {
             error("throw me")
         }
 
@@ -144,5 +146,32 @@ class CoroutinesLoopTest : RobotTest() {
 
         assert(startedCounter == 5)
         assert(cancellationCounter == 5)
+    }
+
+    @Test
+    fun testLaunchingInCancelledContext() {
+        var worked = false
+        val job = opMode.submitJob {
+            try {
+                opMode.nextTick()
+                error("nextTick() should throw CancellationException when the job is cancelled")
+            } catch (exception: CancellationException) {
+                withContext(NonCancellable) {
+                    coroutineScope {
+                        launch {
+                            worked = true
+                        }
+                    }
+                }
+                throw exception
+            }
+        }
+
+        opMode.loop.tick()
+        job.cancel()
+
+        repeat(10) {opMode.loop.tick()}
+
+        assert(worked)
     }
 }
