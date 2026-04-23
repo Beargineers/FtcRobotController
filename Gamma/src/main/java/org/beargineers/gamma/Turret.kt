@@ -21,6 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 // https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-5-2-1-ratio-24mm-length-8mm-rex-shaft-1150-rpm-3-3-5v-encoder
@@ -74,7 +75,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             firstTimeInitialPosition = turret.currentPosition
         }
         initialEncoderPosition = firstTimeInitialPosition!!
-        initialNavXHeading = bot.currentPosition.heading + currentTurretAngle()
+        initialNavXHeading = (bot.currentPosition.heading + currentTurretAngle()).normalize()
     }
 
     private var initialized = false
@@ -115,7 +116,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
         return if (isNavxHealthy())
             currentHeading
         else
-            bot.currentPosition.heading + currentTurretAngle()
+            (bot.currentPosition.heading + currentTurretAngle()).normalize()
     }
 
     val centerOffset get() = TURRET_CENTER_OFFSET
@@ -128,7 +129,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
 
         if (isNavxHealthy() && abs(ticksCorrection) > 1) { // Avoid jittering if correction could have been just a result of rounding
             Frame.log("Ticks correction: $ticksCorrection")
-            initialEncoderPosition += ticksCorrection
+            initialEncoderPosition += max(5, ticksCorrection)
         }
 
         if (TURRET_AUTOROTATION_ENABLED) {
@@ -140,8 +141,10 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
         Frame.graph("TURRET ERROR", (targetEncoderPosition - turret.currentPosition).toDouble())
     }
 
-    private fun isNavxHealthy(): Boolean =
-        navx.deviceClient.healthStatus == HardwareDeviceHealth.HealthStatus.HEALTHY
+    private fun isNavxHealthy(): Boolean {
+        val status = navx.deviceClient.healthStatus
+        return status == HardwareDeviceHealth.HealthStatus.HEALTHY || status == HardwareDeviceHealth.HealthStatus.UNKNOWN
+    }
 
     private fun setTurretAngle(angle: Angle) {
         control.updateCoefficients(TURRET_MOTOR_PIDF)
