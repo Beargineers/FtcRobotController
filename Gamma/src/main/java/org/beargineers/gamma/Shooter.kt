@@ -7,10 +7,12 @@ import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.RobotLog
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.beargineers.gamma.Shooter.LatchState.CLOSED
 import org.beargineers.gamma.Shooter.LatchState.CLOSING
 import org.beargineers.gamma.Shooter.LatchState.OPEN
@@ -43,7 +45,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val SHOOTER_FREE_QUOTIENT by config(0.556)
     val SHOOTER_ERROR_MARGIN by config(0.03)
 
-    val SHOOTING_TIME_MAX_SECONDS by config(2)
+    val SHOOTING_TIME_MAX_SECONDS by config(2.0)
 
     val SHOOTER_PID by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
     val SHOOTER_ANGLE_CORRECTION by config(0.0)
@@ -136,8 +138,10 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
                 activatePusher(true)
                 delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
             } finally {
-                isShooting = false
-                closeLatch(false)
+                withContext(NonCancellable) {
+                    isShooting = false
+                    closeLatch(false)
+                }
             }
         }
     }
