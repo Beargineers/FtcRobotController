@@ -97,8 +97,22 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     }
 
     open fun bearLoop() {}
+    open fun bearInitLoop() {}
+
+    private fun gameModeControls() {
+        if (gamepad1.startWasPressed()) {
+            setDevMode(false)
+        }
+
+        if (gamepad1.backWasPressed()) {
+            setDevMode(true)
+        }
+
+        Frame.addLine(if (isDevMode()) "DEV MODE" else "GAME MODE")
+    }
 
     final override fun loop() {
+        gameModeControls()
         checkPanelsState()
 
         for (hub in allHubs) {
@@ -115,6 +129,11 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
 
         bearLoop()
         loop.tick()
+    }
+
+    final override fun init_loop() {
+        gameModeControls()
+        bearInitLoop()
     }
 
     fun button(test: () -> Boolean, callback: () -> Unit): Button {
@@ -163,6 +182,14 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         return left_trigger.touched() || right_trigger.touched() ||
                 left_stick_x.touched() || left_stick_y.touched() ||
                 right_stick_x.touched() || right_stick_y.touched()
+    }
+
+    fun isDevMode(): Boolean {
+        return PersistentSettings.getValue("devMode", "false") == "true"
+    }
+
+    fun setDevMode(value: Boolean) {
+        PersistentSettings.setValue("devMode", if (value) "true" else "false")
     }
 
     companion object {

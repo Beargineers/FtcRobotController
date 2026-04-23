@@ -142,8 +142,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 */
     }
 
-    override fun init_loop() {
-        super.init_loop()
+    override fun bearInitLoop() {
         Frame.addData("Position", if (lastKnownPosition.isNA()) "NOT INITIALIZED!" else lastKnownPosition)
         Frame.addLine("[X] for back corner on BLUE side")
         Frame.addLine("[B] for back corner on RED side")
