@@ -65,7 +65,7 @@ class CatalogueAuto: ProgrammedAuto() {
         }
     }
 
-    override fun init_loop() {
+    override fun bearInitLoop() {
         val active = with(selector) {
             update()
         }
