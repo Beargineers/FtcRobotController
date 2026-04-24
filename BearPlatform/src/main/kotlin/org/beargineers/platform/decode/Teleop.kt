@@ -136,10 +136,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         robot.assumePosition(lastKnownPosition)
 
-/*
-        robot.flywheelEnabled = true
-        robot.intakeMode = IntakeMode.ON
-*/
+        if (!isDevMode()) {
+            robot.flywheelEnabled = true
+            robot.intakeMode = IntakeMode.ON
+        }
     }
 
     override fun bearInitLoop() {
