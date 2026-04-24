@@ -209,7 +209,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val heading: Angle = commandedHeading()
         val deltaPosition = Position(delta.x, delta.y, heading - robot.currentPosition.heading)
 
-        if (!isAutoActive() && deltaPosition != Position.ZERO) {
+        if (!isAutoActive()) {
             val targetPosition = robot.currentPosition.plus(deltaPosition)
 
             submitJob("!Driving") {
