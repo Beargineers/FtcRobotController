@@ -2,6 +2,7 @@ package org.beargineers.platform
 
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.max
 import kotlin.math.min
 
 class DoubleMedian(val maxSamples:Int = 20) {
@@ -73,40 +74,76 @@ class DoubleMedian(val maxSamples:Int = 20) {
     }
 }
 
-class PositionMedian(val minSamples: Int) {
+class PositionMedian(private val minSamples: Int) {
     private val lock = Any()
     private val samples = ArrayDeque<Position>(MAX_SAMPLES)
 
     fun update(p: Position) {
         synchronized(lock) {
             if (samples.size == MAX_SAMPLES) {
-                samples.removeAt(0)
+                samples.removeFirst()
             }
-            samples.add(p.normalizeHeading())
+            samples.addLast(p.normalizeHeading())
         }
     }
 
-    fun result(positionTolerance: Distance, headingTolerance: Angle): Position? {
+    fun result(
+        positionTolerance: Distance,
+        headingTolerance: Angle,
+        referencePosition: Position? = null
+    ): Position? {
         val snapshot = synchronized(lock) { samples.toList() }
         if (snapshot.size < minSamples) return null
 
-        val consensus = bestConsensus(snapshot, positionTolerance, headingTolerance) ?: return null
-        if (consensus.samples.size < snapshot.size * 0.75) return null // Require 3/4 good samples
+        val positionToleranceCm = positionTolerance.cm()
+        val headingToleranceDeg = headingTolerance.degrees()
+        val reference = referencePosition?.normalizeHeading()
 
-        val result = weightedAverage(consensus.center, consensus.samples, positionTolerance, headingTolerance)
-        val positionSpread = median(consensus.samples.map { translationErrorCm(it, result) })
-        val headingSpread = median(consensus.samples.map { headingErrorDeg(it, result) })
+        val candidates = reference
+            ?.let { filterNearReference(snapshot, it, positionToleranceCm, headingToleranceDeg) }
+            ?.takeIf { it.size >= minSamples }
+            ?: snapshot
+
+        val center = robustCenter(candidates, reference)
+        val inliers = filterInliers(candidates, center, positionToleranceCm, headingToleranceDeg)
+
+        if (
+            inliers.size < minSamples ||
+            inliers.size.toDouble() < snapshot.size * MIN_SERIES_INLIER_RATIO
+        ) {
+            Frame.addData("Vision errors", "rejected %d/%d", inliers.size, snapshot.size)
+            return null
+        }
+
+        val averaged = average(inliers, center.heading)
+        val positionSpread = medianError(inliers) { sample -> translationErrorCm(sample, averaged) }
+        val headingSpread = medianError(inliers) { sample -> headingErrorDeg(sample, averaged) }
+
+        if (
+            positionSpread > positionToleranceCm * MAX_MEDIAN_SPREAD_RATIO ||
+            headingSpread > headingToleranceDeg * MAX_MEDIAN_SPREAD_RATIO
+        ) {
+            Frame.addData(
+                "Vision errors",
+                "noisy %.2fcm %.2fdeg %d/%d",
+                positionSpread,
+                headingSpread,
+                inliers.size,
+                snapshot.size
+            )
+            return null
+        }
 
         Frame.addData(
             "Vision errors",
             "%.2fcm %.2fdeg %d/%d",
             positionSpread,
             headingSpread,
-            consensus.samples.size,
+            inliers.size,
             snapshot.size
         )
 
-        return result
+        return averaged
     }
 
     fun reset() {
@@ -117,85 +154,126 @@ class PositionMedian(val minSamples: Int) {
 
     val n: Int get() = synchronized(lock) { samples.size }
 
-    private fun bestConsensus(
+    private fun filterNearReference(
         samples: List<Position>,
-        positionTolerance: Distance,
-        headingTolerance: Angle
-    ): PoseConsensus? {
-        val positionToleranceCm = positionTolerance.cm()
-        val headingToleranceDeg = headingTolerance.degrees()
+        reference: Position,
+        positionToleranceCm: Double,
+        headingToleranceDeg: Double
+    ): List<Position> {
+        val positionGate = positionToleranceCm * REFERENCE_GATE_MULTIPLIER
+        val headingGate = headingToleranceDeg * REFERENCE_GATE_MULTIPLIER
 
-        var best: PoseConsensus? = null
-        var bestScore = Double.POSITIVE_INFINITY
-
-        for (center in samples) {
-            val consensus = PoseConsensus(
-                center = center,
-                samples = samples.filter { sample -> isInTolerance(sample, center, positionToleranceCm, headingToleranceDeg) }
-            )
-            val score = consensus.score(positionToleranceCm, headingToleranceDeg)
-
-            if (
-                best == null ||
-                consensus.samples.size > best.samples.size ||
-                (consensus.samples.size == best.samples.size && score < bestScore)
-            ) {
-                best = consensus
-                bestScore = score
-            }
+        return samples.filter { sample ->
+            translationErrorCm(sample, reference) <= positionGate &&
+                headingErrorDeg(sample, reference) <= headingGate
         }
-
-        return best
     }
 
-    private fun isInTolerance(
-        sample: Position,
+    private fun robustCenter(samples: List<Position>, reference: Position?): Position {
+        val xValues = DoubleArray(samples.size)
+        val yValues = DoubleArray(samples.size)
+        val headingOffsets = DoubleArray(samples.size)
+        val headingAnchor = reference?.heading ?: samples.first().heading
+
+        for (i in samples.indices) {
+            val sample = samples[i]
+            xValues[i] = sample.x.cm()
+            yValues[i] = sample.y.cm()
+            headingOffsets[i] = (sample.heading - headingAnchor).normalize().degrees()
+        }
+
+        return Position(
+            x = median(xValues).cm,
+            y = median(yValues).cm,
+            heading = (headingAnchor + median(headingOffsets).degrees).normalize()
+        )
+    }
+
+    private fun filterInliers(
+        samples: List<Position>,
         center: Position,
         positionToleranceCm: Double,
         headingToleranceDeg: Double
-    ): Boolean {
-        return translationErrorCm(sample, center) <= positionToleranceCm &&
-            headingErrorDeg(sample, center) <= headingToleranceDeg
+    ): List<Position> {
+        val scoredSamples = ArrayList<ScoredSample>(samples.size)
+        val translationErrors = DoubleArray(samples.size)
+        val headingErrors = DoubleArray(samples.size)
+
+        for (i in samples.indices) {
+            val sample = samples[i]
+            val translationError = translationErrorCm(sample, center)
+            val headingError = headingErrorDeg(sample, center)
+            scoredSamples.add(ScoredSample(sample, translationError, headingError))
+            translationErrors[i] = translationError
+            headingErrors[i] = headingError
+        }
+
+        val translationLimit = robustLimit(
+            errors = translationErrors,
+            tolerance = positionToleranceCm,
+            noiseFloor = MIN_POSITION_NOISE_CM
+        )
+        val headingLimit = robustLimit(
+            errors = headingErrors,
+            tolerance = headingToleranceDeg,
+            noiseFloor = MIN_HEADING_NOISE_DEG
+        )
+
+        return scoredSamples
+            .filter { sample ->
+                sample.translationErrorCm <= translationLimit &&
+                    sample.headingErrorDeg <= headingLimit
+            }
+            .map { it.sample }
     }
 
-    private fun weightedAverage(
-        center: Position,
-        clusteredSamples: List<Position>,
-        positionTolerance: Distance,
-        headingTolerance: Angle
-    ): Position {
-        val positionToleranceCm = positionTolerance.cm().coerceAtLeast(EPSILON)
-        val headingToleranceDeg = headingTolerance.degrees().coerceAtLeast(EPSILON)
+    private fun robustLimit(
+        errors: DoubleArray,
+        tolerance: Double,
+        noiseFloor: Double
+    ): Double {
+        if (errors.isEmpty()) return tolerance
 
+        val medianError = median(errors.copyOf())
+        val deviations = DoubleArray(errors.size)
+        for (i in errors.indices) {
+            deviations[i] = abs(errors[i] - medianError)
+        }
+        val sigma = median(deviations) * MAD_TO_SIGMA
+
+        return min(
+            tolerance,
+            medianError + max(noiseFloor, sigma * OUTLIER_SIGMA_SCALE)
+        )
+    }
+
+    private fun average(
+        samples: List<Position>,
+        headingAnchor: Angle
+    ): Position {
         var sumX = 0.0
         var sumY = 0.0
         var sumSin = 0.0
         var sumCos = 0.0
-        var totalWeight = 0.0
 
-        for (sample in clusteredSamples) {
-            val positionRatio = translationErrorCm(sample, center) / positionToleranceCm
-            val headingRatio = headingErrorDeg(sample, center) / headingToleranceDeg
-            val weight = 1.0 / (1.0 + positionRatio * positionRatio + headingRatio * headingRatio)
+        for (sample in samples) {
+            sumX += sample.x.cm()
+            sumY += sample.y.cm()
 
-            sumX += sample.x.cm() * weight
-            sumY += sample.y.cm() * weight
-            sumSin += kotlin.math.sin(sample.heading.radians()) * weight
-            sumCos += kotlin.math.cos(sample.heading.radians()) * weight
-            totalWeight += weight
+            val headingOffset = (sample.heading - headingAnchor).normalize()
+            sumSin += kotlin.math.sin(headingOffset.radians())
+            sumCos += kotlin.math.cos(headingOffset.radians())
         }
 
-        if (totalWeight <= EPSILON) return center.normalizeHeading()
-
         val averageHeading = if (abs(sumSin) <= EPSILON && abs(sumCos) <= EPSILON) {
-            center.heading
+            headingAnchor
         } else {
-            atan2(sumSin, sumCos).radians
+            (headingAnchor + atan2(sumSin, sumCos).radians).normalize()
         }
 
         return Position(
-            x = (sumX / totalWeight).cm,
-            y = (sumY / totalWeight).cm,
+            x = (sumX / samples.size).cm,
+            y = (sumY / samples.size).cm,
             heading = averageHeading
         ).normalizeHeading()
     }
@@ -208,36 +286,43 @@ class PositionMedian(val minSamples: Int) {
         return abs((a.heading - b.heading).normalize()).degrees()
     }
 
-    private fun median(values: List<Double>): Double {
+    private fun median(values: DoubleArray): Double {
         if (values.isEmpty()) return 0.0
 
-        val sorted = values.sorted()
-        val mid = sorted.size / 2
-        return if (sorted.size % 2 == 0) {
-            (sorted[mid - 1] + sorted[mid]) / 2.0
+        values.sort()
+        val mid = values.size / 2
+        return if (values.size % 2 == 0) {
+            (values[mid - 1] + values[mid]) / 2.0
         } else {
-            sorted[mid]
+            values[mid]
         }
     }
 
-    private data class PoseConsensus(
-        val center: Position,
-        val samples: List<Position>
-    ) {
-        fun score(positionToleranceCm: Double, headingToleranceDeg: Double): Double {
-            val safePositionTolerance = positionToleranceCm.coerceAtLeast(EPSILON)
-            val safeHeadingTolerance = headingToleranceDeg.coerceAtLeast(EPSILON)
+    private inline fun medianError(samples: List<Position>, error: (Position) -> Double): Double {
+        if (samples.isEmpty()) return 0.0
 
-            return samples.sumOf { sample ->
-                val positionRatio = sample.distanceTo(center).cm() / safePositionTolerance
-                val headingRatio = abs((sample.heading - center.heading).normalize()).degrees() / safeHeadingTolerance
-                positionRatio * positionRatio + headingRatio * headingRatio
-            }
+        val errors = DoubleArray(samples.size)
+        for (i in samples.indices) {
+            errors[i] = error(samples[i])
         }
+        return median(errors)
     }
+
+    private data class ScoredSample(
+        val sample: Position,
+        val translationErrorCm: Double,
+        val headingErrorDeg: Double
+    )
 
     private companion object {
         const val MAX_SAMPLES = 20
         const val EPSILON = 1e-9
+        const val REFERENCE_GATE_MULTIPLIER = 3.0
+        const val MIN_SERIES_INLIER_RATIO = 0.6
+        const val OUTLIER_SIGMA_SCALE = 3.0
+        const val MAD_TO_SIGMA = 1.4826
+        const val MIN_POSITION_NOISE_CM = 0.25
+        const val MIN_HEADING_NOISE_DEG = 0.25
+        const val MAX_MEDIAN_SPREAD_RATIO = 0.75
     }
 }

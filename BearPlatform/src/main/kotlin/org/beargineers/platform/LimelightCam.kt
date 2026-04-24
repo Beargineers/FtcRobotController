@@ -20,6 +20,8 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
     private var lastUpdated = 0.0
     private val limelight by hardware<Limelight3A>("limelight")
 
+    private var yaw: Double = 0.0
+
     @Volatile
     private lateinit var pollingTask: ScheduledFuture<*>
 
@@ -28,6 +30,8 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
         limelight.start()
 
         pollingTask = executor.scheduleWithFixedDelay({
+            limelight.updateRobotOrientation(yaw)
+
             val latestResult = limelight.latestResult
             if (latestResult.timestamp != lastUpdated && latestResult.isValid && latestResult.staleness < 50) {
                 lastUpdated = latestResult.timestamp
@@ -45,12 +49,15 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
     }
 
     override fun loop() {
-        val heading = camHeading()
-        limelight.updateRobotOrientation(heading.degrees())
+        yaw = camHeading().degrees()
 
-        val result = normalizer.result(Camera_positionTolerance.cm, Camera_headingTolerance.degrees)
+        val result = normalizer.result(
+            Camera_positionTolerance.cm,
+            Camera_headingTolerance.degrees,
+            robot.currentPosition
+        )
         if (result != null) {
-            Frame.graph("TURRET HEADING DRIFT", abs((result.heading - heading).normalize().degrees()))
+            Frame.graph("TURRET HEADING DRIFT", abs((result.heading - camHeading()).normalize().degrees()))
         }
     }
 
@@ -63,7 +70,11 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
             return null
         }
 
-        val result = normalizerMT2.result(Camera_positionTolerance.cm, Camera_headingTolerance.degrees)
+        val result = normalizerMT2.result(
+            Camera_positionTolerance.cm,
+            Camera_headingTolerance.degrees,
+            robot.currentPosition
+        )
         return result?.takeIf { isGoodResult(it) }
     }
 
