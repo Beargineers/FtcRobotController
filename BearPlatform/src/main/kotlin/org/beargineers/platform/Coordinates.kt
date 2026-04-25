@@ -221,6 +221,8 @@ val Int.degrees: Angle get() = Angle(this.toDouble(), AngleUnit.DEGREES)
 operator fun Double.times(other: Angle): Angle = other * this
 operator fun Double.div(other: Angle): Angle = other / this
 
+private const val eps = 0.0001
+
 data class Position(val x: Distance, val y: Distance, val heading: Angle) {
     fun rotate(angle: Angle): Position {
         return Position(x, y, heading + angle)
@@ -261,6 +263,10 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
     }
 
     fun isNA() = this === NA
+
+    fun isZero(): Boolean {
+        return abs(x.distance) + abs(y.distance) + abs(heading.angle) < eps
+    }
 
     override fun toString(): String {
         return String.format(Locale.getDefault(), "(%s %s) %s", x, y, heading)

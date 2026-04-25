@@ -5,14 +5,13 @@ import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.hardware.lynx.LynxModule.BulkCachingMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
 private val PANELS_ENABLED by config(false)
 
-abstract class RobotOpMode<T : Robot>() : OpMode() {
+abstract class RobotOpMode<T : Robot> : OpMode() {
     abstract val alliance: Alliance
     val allButtons = mutableListOf<Button>()
 
@@ -123,10 +122,6 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
         robot.loop()
         allButtons.forEach { it.update() }
 
-        if (controlsAreTouched()) {
-            cancelAuto()
-        }
-
         bearLoop()
         loop.tick()
     }
@@ -169,20 +164,6 @@ abstract class RobotOpMode<T : Robot>() : OpMode() {
     }
 
     fun isAutoActive() = auto?.isActive ?: false
-
-    fun controlsAreTouched(): Boolean {
-        return gamepad1.controlsAreTouched() || gamepad2.controlsAreTouched()
-    }
-
-    fun Float.touched(): Boolean {
-        return this != 0f
-    }
-
-    fun Gamepad.controlsAreTouched(): Boolean {
-        return left_trigger.touched() || right_trigger.touched() ||
-                left_stick_x.touched() || left_stick_y.touched() ||
-                right_stick_x.touched() || right_stick_y.touched()
-    }
 
     fun isDevMode(): Boolean {
         return PersistentSettings.getValue("devMode", "false") == "true"
