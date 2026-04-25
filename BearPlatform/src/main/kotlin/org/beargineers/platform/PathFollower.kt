@@ -21,7 +21,8 @@ import kotlin.math.sign
 internal class PathFollower(
     private val robot: BaseRobot,
     val path: List<Waypoint>,
-    startPosition: Position
+    startPosition: Position,
+    val stopAtLastWaypoint: Boolean
 ) {
     private var currentWaypointIndex: Int = 0
     private var currentSpeed: Double = 0.0
@@ -64,7 +65,9 @@ internal class PathFollower(
      */
     fun update(): Boolean {
         if (currentWaypointIndex > path.lastIndex) {
-            robot.stopDriving()
+            if (stopAtLastWaypoint) {
+                robot.stopDriving()
+            }
             return false
         }
 
@@ -72,17 +75,17 @@ internal class PathFollower(
         val currentWaypoint = path[currentWaypointIndex]
         val currentTarget = currentWaypoint.target
 
+        val isLastWaypoint = currentWaypointIndex == path.lastIndex
+
         val pt = currentWaypoint.positionTolerance ?:
-            if (currentWaypointIndex == path.lastIndex) PathFollowingConfig.positionTolerance else PathFollowingConfig.intermediateWaypointPositionTolerance
+            if (isLastWaypoint && stopAtLastWaypoint) PathFollowingConfig.positionTolerance else PathFollowingConfig.intermediateWaypointPositionTolerance
 
         val ht = currentWaypoint.headingTolerance ?:
-            if (currentWaypointIndex == path.lastIndex) PathFollowingConfig.headingTolerance else PathFollowingConfig.intermediateWaypointHeadingTolerance
-
-        val isLastWaypoint = currentWaypointIndex == path.lastIndex
+            if (isLastWaypoint && stopAtLastWaypoint) PathFollowingConfig.headingTolerance else PathFollowingConfig.intermediateWaypointHeadingTolerance
 
         val waypointReached = currentPosition.distanceTo(currentTarget) < pt &&
                 abs((currentPosition.heading - currentTarget.heading).normalize()) < ht &&
-                !(isLastWaypoint && robot.isSlow())
+                (!isLastWaypoint || !stopAtLastWaypoint || robot.isSlow())
 
         if (waypointReached) {
             currentWaypointIndex++
