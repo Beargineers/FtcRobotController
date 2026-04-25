@@ -50,6 +50,8 @@ class FPSTracker {
             }
         }
 
-        Frame.addData("FPS", "${if (fpsIsLow) "LOW!!" else ""} %.1f, DEV=%.1f", fps, dev)
+        val msg = String.format("FPS: ${if (fpsIsLow) "LOW!!" else ""} %.1f, DEV=%.1f", fps, dev)
+        Frame.addLine(msg)
+        Frame.log("FPS", msg)
     }
 }
