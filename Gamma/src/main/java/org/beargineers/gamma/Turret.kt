@@ -32,6 +32,8 @@ private const val TURRET_GEAR_TEETH = 121
 private const val MOTOR_TICKS_PER_ONE_TURRET_DEGREE = (MOTOR_TICKS_PER_ROTATION / 360.0) * TURRET_GEAR_TEETH / MOTOR_GEAR_TEETH
 
 private val TURRET_AUTOROTATION_ENABLED by config(true)
+private val NAVX_ENABLED by config(false)
+
 private val TURRET_MOTOR_PIDF by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
 private val TURRET_MOTOR_DIRECTION by config(DcMotorSimple.Direction.REVERSE)
 private val TURRET_MIN_ANGLE by config(-180.degrees)
@@ -83,7 +85,6 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     private var accumulatedYawDeg = 0.0
 
     private fun navxHeading(): Angle {
-        if (isNavxHealthy()) return 0.degrees
         val o = navx.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES)
 
         val yawDeg = o.firstAngle.toDouble() // Z angle, wrapped -180..+180
@@ -122,14 +123,12 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
     val centerOffset get() = TURRET_CENTER_OFFSET
 
     override fun loop() {
-        currentHeading = (initialNavXHeading + navxHeading()).normalize()
-        val headingViaEncoder = bot.currentPosition.heading + currentTurretAngle()
-        val headingError = (headingViaEncoder - currentHeading).normalize()
-        val ticksCorrection = motorTicksForAngle(headingError)
+        if (isNavxHealthy()) {
+            currentHeading = (initialNavXHeading + navxHeading()).normalize()
 
-        if (isNavxHealthy() && abs(ticksCorrection) > 1) { // Avoid jittering if correction could have been just a result of rounding
-            Frame.log("Ticks correction: $ticksCorrection")
-            initialEncoderPosition += max(5, ticksCorrection)
+            if (!bot.isMoving() && control.error() <= 1) {
+                applyTurretCorrection()
+            }
         }
 
         if (TURRET_AUTOROTATION_ENABLED) {
@@ -137,11 +136,25 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             setTurretAngle(bot.headingToGoalFrom(predictedPosition.location()) - predictedPosition.heading)
         }
 
-        Frame.addData("Turret heading", currentHeading)
+        Frame.addData("Turret heading", turretHeading())
         Frame.graph("TURRET ERROR", (targetEncoderPosition - turret.currentPosition).toDouble())
     }
 
+    private fun applyTurretCorrection() {
+        val headingViaEncoder = bot.currentPosition.heading + currentTurretAngle()
+        val headingError = (headingViaEncoder - currentHeading).normalize()
+        val ticksCorrection1 = motorTicksForAngle(headingError)
+        val ticksCorrection = ticksCorrection1
+
+        if (abs(ticksCorrection) > 1) { // Avoid jittering if correction could have been just a result of rounding
+            Frame.log("Ticks correction: $ticksCorrection")
+            initialEncoderPosition += ticksCorrection.coerceIn(-5, +5)
+        }
+    }
+
     private fun isNavxHealthy(): Boolean {
+        if (!NAVX_ENABLED) return false
+
         val status = navx.deviceClient.healthStatus
         return status == HardwareDeviceHealth.HealthStatus.HEALTHY || status == HardwareDeviceHealth.HealthStatus.UNKNOWN
     }
@@ -168,12 +181,9 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
         previousYawDeg = 0.0;
         accumulatedYawDeg = 0.0;
 
-        turret.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        turret.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-
         initialNavXHeading = bot.currentPosition.heading
-        initialEncoderPosition = 0
-        firstTimeInitialPosition = 0
+        firstTimeInitialPosition = turret.currentPosition
+        initialEncoderPosition = firstTimeInitialPosition!!
     }
 
     companion object {
