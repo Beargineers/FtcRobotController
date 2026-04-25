@@ -76,7 +76,6 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     var operatingIn = 'N'
     val collectedSet = mutableSetOf<Char>()
     var hasCollectedLoad = false
-    var hasInitialLoad = true
 
     fun protectedZones()= buildList {
         add(Location(0.cm, 30.cm)) // For the ramp handle
@@ -86,11 +85,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     }
 
     suspend fun goAndShootIfHasLoad() {
-        if (hasInitialLoad) {
-            goToShootingZoneAndShoot(initialShootingZone, stayInAllianceHalf = true)
-            hasInitialLoad = false
-        }
-        else if (hasCollectedLoad) {
+        if (hasCollectedLoad) {
             goToShootingZoneAndShoot(
                 if (operatingIn == 'F') ShootingZones.FRONT else ShootingZones.BACK,
                 protectedZones(),
@@ -124,6 +119,8 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     resetTurret()
 
     flywheelEnabled = true
+
+    goToShootingZoneAndShoot(initialShootingZone, stayInAllianceHalf = true)
 
     for (c in program) {
         when (c) {
