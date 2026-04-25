@@ -182,10 +182,6 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         super.bearLoop()
         Frame.addData("Shooting", robot.clearForShooting() ?: "Ready")
 
-        val slow = gamepad1.left_bumper
-
-        Frame.addData("Mode", if (slow) "SLOW" else "FULL")
-
         if (commandedRotation().degrees() != 0.0) {
             if (System.currentTimeMillis() - lookAtGoalBtnClickedAt > 500) {
                 lookAtGoal = false
@@ -214,10 +210,15 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val heading: Angle = commandedHeading()
         val deltaPosition = Position(delta.x, delta.y, heading - robot.currentPosition.heading)
 
+        if (!deltaPosition.isZero()) {
+            cancelAuto()
+        }
+
         if (!isAutoActive()) {
             val targetPosition = robot.currentPosition.plus(deltaPosition)
 
             submitJob("!Driving") {
+                val slow = false
                 robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
             }
         }
