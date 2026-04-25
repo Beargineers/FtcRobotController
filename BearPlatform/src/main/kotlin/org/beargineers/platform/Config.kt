@@ -79,6 +79,14 @@ fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any?, DcMotorSim
     }
 }
 
+inline fun <reified T : Enum<T>> config(default: T): ReadOnlyProperty<Any?, T> {
+    return ReadOnlyProperty { _, property ->
+        Config.value(property.name, default) { v ->
+            T::class.java.enumConstants?.find { it.name == v } ?: error("Can't find enum entry named $v")
+        }
+    }
+}
+
 fun config(default: Boolean) : ReadOnlyProperty<Any?, Boolean> {
     return ReadOnlyProperty {_, property ->
         Config.value(property.name, default) {
