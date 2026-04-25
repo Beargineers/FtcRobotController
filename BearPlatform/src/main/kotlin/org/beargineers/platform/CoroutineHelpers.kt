@@ -21,7 +21,7 @@ suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
 }
 
 private var driveJob: Job? = null
-suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean) {
+suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean, stopAtLastWaypoint: Boolean = true) {
     val waypoints = if (applyMirroring) {
         waypoints.map { it.copy(target = it.target.mirrorForAlliance(alliance)) }
     } else {
@@ -53,7 +53,8 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean) 
                 val follower = PathFollower(
                     robot = this@drivePath as BaseRobot,
                     path = waypoints,
-                    startPosition = currentPosition
+                    startPosition = currentPosition,
+                    stopAtLastWaypoint = stopAtLastWaypoint
                 )
 
                 while (follower.update()) {
