@@ -1,6 +1,7 @@
 package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.Gamepad
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Frame
@@ -30,10 +31,8 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         // Do nothing automatically
     }
 
-    override fun bearInit() {
-        super.bearInit()
-
-        button(gamepad1::y) {
+    private fun Gamepad.firstDriverControls() {
+        button(::a) {
             robot.intakeMode = when (robot.intakeMode) {
                 IntakeMode.OFF -> IntakeMode.ON
                 IntakeMode.ON -> IntakeMode.OFF
@@ -43,22 +42,18 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             robot.intakeMode = IntakeMode.REVERSE
         }
 
-/*
-        toggleButton("FPV Drive", gamepad1::b) {
-            fpvDrive = it
-        }
-*/
-
-        button(gamepad1::a) {
-            robot.flywheelEnabled = !robot.flywheelEnabled
+        button(::left_stick_button) {
+            if (isDevMode()) {
+                robot.flywheelEnabled = !robot.flywheelEnabled
+            }
         }
 
-        button(gamepad1::right_stick_button) {
+        button(::right_stick_button) {
             lookAtGoal = true
             lookAtGoalBtnClickedAt = System.currentTimeMillis()
         }
 
-        button({gamepad1.dpad_right || gamepad1.right_trigger > 0.1}) {
+        button(::right_bumper) {
             lookAtGoal = true
             auto("Going to shooting zone") {
                 goToShootingZoneAndShoot(if (alliance == Alliance.BLUE){ShootingZones.FRONT} else {
@@ -66,7 +61,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             }
         }
 
-        button({gamepad1.dpad_left || gamepad1.left_trigger > 0.1}){
+        button(::left_bumper) {
             lookAtGoal = true
             auto("Going to shooting zone") {
                 goToShootingZoneAndShoot(if (alliance == Alliance.BLUE){ShootingZones.BACK} else {
@@ -74,57 +69,67 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             }
         }
 
-        button(gamepad1::dpad_up) {
+        button({ right_trigger > 0.1}) {
             lookAtGoal = false
-            auto("Going to open the ramp") {
-                if (gamepad1.left_bumper) {
-                    openRampAndCollect()
-                }
-                else {
-                    openRamp()
-                }
+            auto("Going to closest zone") {
+                goToShootingZoneAndShoot(ShootingZones.CLOSEST)
             }
         }
 
-        button(gamepad1::dpad_down) {
+        button({ left_trigger > 0.1 }) {
+            auto("Collect by vision") {
+                collectArtifactsInView(false)
+            }
+        }
+
+        button(::y) {
+            lookAtGoal = false
+            auto("Collect from ramp") {
+                openRampAndCollect()
+            }
+        }
+
+        button(::b) {
+            lookAtGoal = false
+            auto("Open ramp") {
+                openRamp()
+            }
+        }
+
+        button(::dpad_down) {
             lookAtGoal = false
             auto("Going to the base") {
                 park()
             }
         }
 
-        button(gamepad1::right_bumper) {
-            auto("Shooting") {
-                robot.shoot(true)
-            }
-        }
-
-        button(gamepad1::b) {
-            auto("strafing to artifact") {
-                collectArtifactsInView(false)
-            }
-        }
-
-        button(gamepad2::dpad_up) {
-            robot.adjustShooting(+0.01, 0.0)
-        }
-
-        button(gamepad2::dpad_down) {
-            robot.adjustShooting(-0.01, 0.0)
-        }
-
-        button(gamepad2::dpad_left) {
-            robot.adjustShooting(+0.0, 0.33)
-        }
-
-        button(gamepad2::dpad_right) {
-            robot.adjustShooting(+0.0, -0.33)
-        }
-
-        button( gamepad1::x){
+        button( ::x) {
             robot.assumePosition(Position.ZERO)
             robot.resetTurret()
         }
+    }
+
+    private fun Gamepad.secondDriverControls() {
+        button(::dpad_up) {
+            robot.adjustShooting(+0.01, 0.0)
+        }
+
+        button(::dpad_down) {
+            robot.adjustShooting(-0.01, 0.0)
+        }
+
+        button(::dpad_left) {
+            robot.adjustShooting(+0.0, 0.33)
+        }
+
+        button(::dpad_right) {
+            robot.adjustShooting(+0.0, -0.33)
+        }
+    }
+
+    override fun bearInit() {
+        gamepad1.firstDriverControls()
+        gamepad2.secondDriverControls()
     }
 
     override fun bearStart() {
