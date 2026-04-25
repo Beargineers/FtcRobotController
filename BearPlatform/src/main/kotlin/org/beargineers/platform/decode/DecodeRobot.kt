@@ -69,7 +69,8 @@ fun DecodeRobot.headingIsAtGoal(): Boolean {
     return abs((shootingAngle - headingToGoal).normalize()) <= maxHeadingDeviation
 }
 
-var DecodeRobot.intakeMode by StateHolder("Intake", IntakeMode.OFF)
+val IntakeState = StateHolder("Intake", IntakeMode.OFF)
+var DecodeRobot.intakeMode by IntakeState
 var DecodeRobot.flywheelEnabled by StateHolder("Flywheel", false)
 
 object Locations {
