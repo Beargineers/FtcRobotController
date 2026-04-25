@@ -9,6 +9,7 @@ import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.IntakeState
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.motorPower
 import org.beargineers.platform.submitJob
@@ -57,9 +58,12 @@ class Intake(val bot: GammaRobot): Hardware(bot) {
 
     fun cutoff() {
         robot.opMode.gamepad1.rumble(300)
+        val modCount = IntakeState.modCount
         bot.submitJob("Cutoff intake") {
             delay(INTAKE_CUTOFF_DELAY_MS.milliseconds)
-            bot.intakeMode = IntakeMode.OFF
+            if (modCount == IntakeState.modCount) {
+                bot.intakeMode = IntakeMode.OFF
+            }
         }
     }
 }
