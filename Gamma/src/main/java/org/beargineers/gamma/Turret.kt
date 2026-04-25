@@ -21,11 +21,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.roundToInt
 
+//https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-13-7-1-ratio-24mm-length-8mm-rex-shaft-435-rpm-3-3-5v-encoder/
+private const val MOTOR_TICKS_PER_ROTATION = 384.5
+
 // https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-5-2-1-ratio-24mm-length-8mm-rex-shaft-1150-rpm-3-3-5v-encoder
-private const val MOTOR_TICKS_PER_ROTATION = 145.1
+// private const val MOTOR_TICKS_PER_ROTATION = 145.1
+
 private const val MOTOR_GEAR_TEETH = 16
 private const val TURRET_GEAR_TEETH = 121
 
@@ -131,9 +134,12 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             }
         }
 
-        if (TURRET_AUTOROTATION_ENABLED) {
+        if (TURRET_AUTOROTATION_ENABLED && bot.shooter.latchState != Shooter.LatchState.CLOSED) {
             val predictedPosition = bot.predictedPosition(TURRET_TICKS_LOOKAHEAD)
             setTurretAngle(bot.headingToGoalFrom(predictedPosition.location()) - predictedPosition.heading)
+        }
+        else {
+            setTurretAngle(0.degrees)
         }
 
         Frame.addData("Turret heading", turretHeading())
@@ -161,8 +167,9 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
 
     private fun setTurretAngle(angle: Angle) {
         control.updateCoefficients(TURRET_MOTOR_PIDF)
+        val currentTurretAngle = currentTurretAngle()
         val norm = angle.normalize()
-        val best = listOf(norm, norm + 360.degrees, norm - 360.degrees).filter { it in TURRET_MIN_ANGLE..TURRET_MAX_ANGLE }.minBy { abs(it - currentTurretAngle()) }
+        val best = listOf(norm, norm + 360.degrees, norm - 360.degrees).filter { it in TURRET_MIN_ANGLE..TURRET_MAX_ANGLE }.minBy { abs(it - currentTurretAngle) }
         targetEncoderPosition = initialEncoderPosition + motorTicksForAngle(best)
 
         control.setTarget(targetEncoderPosition.toDouble())
