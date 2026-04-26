@@ -227,9 +227,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             OPEN -> {
                 latchJob?.cancel()
                 latchState = CLOSING
+                bot.intakeMode = IntakeMode.OFF
+                latch.position = LATCH_SERVO_CLOSED_POSITION
                 latchJob = bot.submitJob("Close latch") {
-                    bot.intakeMode = IntakeMode.OFF
-                    latch.position = LATCH_SERVO_CLOSED_POSITION
                     delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
                     latchState = CLOSED
                 }
@@ -258,9 +258,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             CLOSED -> {
                 latchJob?.cancel()
                 latchState = OPENING
+                bot.intakeMode = IntakeMode.OFF
+                latch.position = LATCH_SERVO_OPEN_POSITION
                 latchJob = bot.submitJob("Open latch") {
-                    bot.intakeMode = IntakeMode.OFF
-                    latch.position = LATCH_SERVO_OPEN_POSITION
                     delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
                     latchState = OPEN
                 }
