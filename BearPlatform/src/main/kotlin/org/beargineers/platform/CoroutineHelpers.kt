@@ -8,8 +8,8 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.beargineers.platform.decode.mirrorForAlliance
 import org.beargineers.platform.rr.MovesBuilder
 import kotlin.time.Duration
@@ -96,4 +96,15 @@ suspend fun Robot.cancelWhen(condition: () -> Boolean, block: suspend CoroutineS
 suspend fun Robot.doNoLongerThan(duration: Duration, block: suspend CoroutineScope.() -> Unit) {
     val elapsed = ElapsedTime()
     cancelWhen({ elapsed.milliseconds() > duration.inWholeMilliseconds}, block)
+}
+
+suspend fun withName(name: String, block: suspend CoroutineScope.() -> Unit) {
+    Frame.log("Doing $name")
+    try {
+        withContext(CoroutineName(name), block)
+    } catch (e: CancellationException) {
+        Frame.log("$name is cancelled")
+        throw e
+    }
+    Frame.log("$name is finished")
 }
