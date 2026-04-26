@@ -44,12 +44,13 @@ fun scoopBoxPath(shift: Distance): List<Waypoint> {
     }
 }
 
+val AUTO_TIMEOUT_SECONDS by config(29.5)
 
 abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
     abstract val program: String
 
     override suspend fun DecodeRobot.autoProgram() {
-        cancelWhen({ robot.opMode.elapsedTime.seconds() > 29.5}) {
+        cancelWhen({ robot.opMode.elapsedTime.seconds() > AUTO_TIMEOUT_SECONDS}) {
             interpretProgram(program)
         }
 
