@@ -8,11 +8,18 @@ import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
+import org.beargineers.platform.decode.IntakeMode
+import org.beargineers.platform.decode.IntakeState
+import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.nextTick
+import org.beargineers.platform.submitJob
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 val LOWER_SENSOR_THRESHOLD by config(7.cm)
+val INTAKE_CUTOFF_DELAY_MS by config(100)
+
 
 private class RollingBoolean(val size: Int) {
     private val data = BooleanArray(size)
@@ -28,27 +35,39 @@ private class RollingBoolean(val size: Int) {
     }
 }
 
-private class SensorReader(val reader: () -> Boolean, val bot: GammaRobot) {
+private class SensorReader(val name: String, val reader: () -> Boolean, val bot: GammaRobot) {
     private var attentionFramesRemained = 5
     private var framesToSkipRemained = 0
-    private var previousState = false
-    private val updater = RollingBoolean(20)
-    fun state(): Boolean {
-        if (--framesToSkipRemained > 0) return previousState
+    private var curState = false
+    private val updater = RollingBoolean(15)
 
-        val newState = reader()
-        attentionFramesRemained = if (newState != previousState || bot.isShooting()) 5 else 1
-        if (--attentionFramesRemained <= 0) {
-            framesToSkipRemained = 5
+    fun state(): Boolean = curState
+    fun update() {
+        try {
+            val isShooting = bot.isShooting()
+            if (isShooting) framesToSkipRemained = 0
+
+            if (--framesToSkipRemained > 0) return
+
+            val newState = reader()
+            attentionFramesRemained = if (newState != curState || isShooting) 5 else 1
+            if (--attentionFramesRemained <= 0) {
+                framesToSkipRemained = 5
+            }
+
+            curState = newState
+        } finally {
+            updater.update(curState)
+            log()
         }
-
-        previousState = newState
-        return newState
     }
 
     fun hasArtifact(): Boolean {
-        updater.update(previousState)
-        return updater.count() > 13
+        return updater.count() >= 12
+    }
+
+    fun log() {
+        Frame.graph("Sensor counts $name", updater.count().toDouble())
     }
 }
 
@@ -56,8 +75,16 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
     private val upperSensor by hardware<DigitalChannel>()
     private val lowerSensor by hardware<RevColorSensorV3>()
 
-    private val upperReader = SensorReader({ upperSensor.state }, bot)
-    private val lowerReader = SensorReader({ lowerSensor.getDistance(DistanceUnit.CM).cm < LOWER_SENSOR_THRESHOLD}, bot)
+    private val upperReader = SensorReader("upper", { upperSensor.state }, bot)
+    private val lowerReader = SensorReader("lower", {
+        val distance = lowerSensor.getDistance(DistanceUnit.CM)
+        Frame.graph("LOWER SENSOR cm", distance)
+        val result = distance.cm < LOWER_SENSOR_THRESHOLD
+        if (result) {
+            Frame.log("LOWER SENSOR SEES: $distance")
+        }
+        result
+                                                    }, bot)
 
     private val lastSeenBall = ElapsedTime()
     private var artifactsCount = 0
@@ -66,8 +93,38 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
         upperSensor.mode = DigitalChannel.Mode.INPUT
     }
 
+    fun cutoff() {
+        val modCount = IntakeState.modCount
+        bot.submitJob("Cutoff intake") {
+            delay(INTAKE_CUTOFF_DELAY_MS.milliseconds)
+            if (modCount == IntakeState.modCount && artifactsCount == 3) {
+                robot.opMode.gamepad1.rumble(300)
+                bot.intakeMode = IntakeMode.OFF
+            }
+        }
+    }
+
     override fun loop() {
         val oldArtifactsCount = artifactsCount
+
+        lowerReader.update()
+        upperReader.update()
+
+        if (bot.intakeMode == IntakeMode.REVERSE) {
+            artifactsCount = 0
+            return
+        }
+
+        if (bot.intakeMode == IntakeMode.OFF) {
+            if (lowerReader.hasArtifact()) {
+                artifactsCount = 3
+            }
+            else if (upperReader.hasArtifact()) {
+                artifactsCount = 2
+            }
+
+            return
+        }
 
         val seenLower = lowerReader.state()
         val seenUpper = upperReader.state()
@@ -78,13 +135,17 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
                 artifactsCount = 3
 
                 if (oldArtifactsCount < 3) {
-                    bot.intake.cutoff()
+                    cutoff()
                 }
             }
+        }
+        else if (artifactsCount > 0) {
+            artifactsCount = 1
         }
 
         if (seenUpper || seenLower) {
             if (bot.shooter.pusherActive) {
+                Frame.log("Aborting shooting. seenUpper=$seenUpper, seenLower=$seenLower")
                 bot.abortShooting()
             }
 
@@ -92,7 +153,7 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
                 artifactsCount = 1
             }
 
-            lastSeenBall.reset()
+            if (seenUpper) lastSeenBall.reset() // Let's ignore lower sensor. For the sake of shooting completion we're only interested in upper (and more reliable) one
         }
     }
 
