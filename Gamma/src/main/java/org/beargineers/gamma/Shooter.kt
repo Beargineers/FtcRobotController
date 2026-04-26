@@ -59,7 +59,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val PUSHER_SERVO_CLOSED_POSITION by config(1.0)
     val PUSHER_SERVO_ACTIVATION_DELAY_MS by config(50)
     val PUSHER_SERVO_ACTIVATION_DURATION_MS by config(100)
-    val PUSHER_SERVO_RELEASE_THRESHOLD_MA by config(1800)
 
     val pid = PID()
 
