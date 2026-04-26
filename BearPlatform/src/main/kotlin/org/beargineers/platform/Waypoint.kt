@@ -12,7 +12,6 @@ object PathFollowingConfig {
     val headingToleranceToStop by config(10.degrees)
     val positionTolerance by config(2.cm)
     val headingTolerance by config(1.degrees)
-    val artifactStrafeTolerance by config(2.cm)
 
     val intermediateWaypointPositionTolerance by config(8.cm)
     val intermediateWaypointHeadingTolerance by config(5.degrees)
