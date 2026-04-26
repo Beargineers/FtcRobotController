@@ -23,9 +23,13 @@ object Frame {
     private val messages = ConcurrentHashMap<String, ElapsedTime>()
 
     fun log(tag: String, msg: String) {
+        log(tag) {msg}
+    }
+
+    fun log(tag: String, msg: () -> String) {
         if ((messages[tag]?.seconds() ?: 100.0) > 1.0) {
             messages.getOrPut(tag) { ElapsedTime() }.reset()
-            log(msg)
+            log(msg())
         }
     }
 
