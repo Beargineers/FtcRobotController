@@ -65,8 +65,8 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean, 
     }
 }
 
-suspend fun Robot.driveTo(target: Position, speed: Double = 1.0, applyMirroring: Boolean) {
-    drivePath(pathTo(target, speed), applyMirroring)
+suspend fun Robot.driveTo(target: Position, speed: Double = 1.0, applyMirroring: Boolean, stopAtLastWaypoint: Boolean = true) {
+    drivePath(pathTo(target, speed), applyMirroring, stopAtLastWaypoint)
 }
 
 suspend fun Robot.driveRelative(movement: RobotCentricPosition) {
