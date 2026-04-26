@@ -35,6 +35,11 @@ interface DecodeRobot : Robot {
     suspend fun shoot(holdPosition: Boolean)
     suspend fun prepareForShooting()
 
+    suspend fun prepareForShutdown() {
+        intakeMode = IntakeMode.OFF
+        flywheelEnabled = false
+    }
+
     fun isShooting(): Boolean
 
     fun adjustShooting(distance: Double, angle: Double)

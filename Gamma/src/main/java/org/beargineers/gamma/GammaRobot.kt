@@ -108,6 +108,11 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         shooter.openLatch()
     }
 
+    override suspend fun prepareForShutdown() {
+        super.prepareForShutdown()
+        shooter.closeLatch(false)
+    }
+
     override fun isShooting(): Boolean {
         return shooter.isShooting()
     }
