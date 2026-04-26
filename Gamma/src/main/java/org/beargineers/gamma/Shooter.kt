@@ -74,7 +74,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         OPEN, CLOSED, OPENING, CLOSING
     }
 
-    var latchState = OPEN
+    var latchState = CLOSED
     var pusherActive = false
 
 
@@ -100,6 +100,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         }
 
         pusher.direction = Servo.Direction.FORWARD
+        latch.position = LATCH_SERVO_CLOSED_POSITION
+
         bot.submitJob("Initialize servos. Close latch, open pusher") {
             closeLatch(false)
         }
@@ -201,6 +203,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     override fun stop() {
         bot.flywheelEnabled = false
+        latch.position = LATCH_SERVO_CLOSED_POSITION
     }
 
     fun isShooting(): Boolean {
