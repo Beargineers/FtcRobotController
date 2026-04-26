@@ -38,7 +38,7 @@ import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 
 object TuningOpModes {
     const val GROUP: String = "quickstart"
-    const val DISABLED: Boolean = false
+    const val DISABLED: Boolean = true
 
     private fun metaForClass(cls: Class<out OpMode?>): OpModeMeta? {
         return OpModeMeta.Builder()
