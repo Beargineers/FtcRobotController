@@ -53,8 +53,7 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             interpretProgram(program)
         }
 
-        intakeMode = IntakeMode.OFF
-        flywheelEnabled = false
+        prepareForShutdown()
 
         val operatingIn = program.last {it == 'F' || it == 'B'}
 
