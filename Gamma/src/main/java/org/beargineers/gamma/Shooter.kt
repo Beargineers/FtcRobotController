@@ -11,7 +11,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.beargineers.gamma.Shooter.LatchState.CLOSED
 import org.beargineers.gamma.Shooter.LatchState.CLOSING
@@ -33,6 +32,7 @@ import org.beargineers.platform.motorPower
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.roundMotorPower
 import org.beargineers.platform.submitJob
+import org.beargineers.platform.withName
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
@@ -45,7 +45,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val SHOOTER_FREE_QUOTIENT by config(0.556)
     val SHOOTER_ERROR_MARGIN by config(0.03)
 
-    val SHOOTING_TIME_MAX_SECONDS by config(2.0)
+    val SHOOTING_TIMEOUT by config(2.0)
 
     val SHOOTER_PID by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
     val SHOOTER_ANGLE_CORRECTION by config(0.0)
@@ -126,16 +126,19 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     suspend fun shoot() {
-        doNoLongerThan(SHOOTING_TIME_MAX_SECONDS.seconds) {
-            Frame.log("Shooting")
+        withName("Shooting") {
             isShooting = true
             try {
                 openLatch()
-                waitForFlywheelSpeed()
+                bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
+                    waitForFlywheelSpeed()
+                }
 
                 bot.intakeMode = IntakeMode.ON
 
-                bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
+                bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
+                    bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
+                }
                 activatePusher(true)
                 delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
             } finally {
