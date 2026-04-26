@@ -14,6 +14,7 @@ import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.tilePosition
+import org.beargineers.platform.withName
 import kotlin.time.Duration.Companion.seconds
 
 object AutoPositions {
@@ -98,9 +99,11 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     suspend fun DecodeRobot.collectVisuallyForBack(observationPoints: List<Position>) {
         goAndShootIfHasLoad()
         cancelWhen({ artifactsCount >= 3}) {
-            for (p in observationPoints) {
-                driveTo(p, applyMirroring = true, stopAtLastWaypoint = false)
-                collectArtifactsInView(true)
+            withName("Collecting visually") {
+                for (p in observationPoints) {
+                    driveTo(p, applyMirroring = true, stopAtLastWaypoint = false)
+                    collectArtifactsInView(true)
+                }
             }
         }
         hasCollectedLoad = artifactsCount != 0
@@ -109,7 +112,9 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     suspend fun collect(from: Char, path: List<Waypoint>) {
         goAndShootIfHasLoad()
         cancelWhen({artifactsCount >= 3}) {
-            drivePath(path, true, false)
+            withName("Collecting freom $from") {
+                drivePath(path, true, false)
+            }
         }
         hasCollectedLoad = true
         collectedSet += from
