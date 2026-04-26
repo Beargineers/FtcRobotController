@@ -224,15 +224,15 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             OPEN -> {
                 latchJob?.cancel()
                 latchState = CLOSING
-                coroutineScope {
-                    latchJob = launch {
-                        bot.intakeMode = IntakeMode.OFF
-                        latch.position = LATCH_SERVO_CLOSED_POSITION
-                        delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
-                        latchState = CLOSED
-                    }
+                latchJob = bot.submitJob("Close latch") {
+                    bot.intakeMode = IntakeMode.OFF
+                    latch.position = LATCH_SERVO_CLOSED_POSITION
+                    delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
+                    latchState = CLOSED
+                }
 
-                    if (waitForCompletion) {
+                if (waitForCompletion) {
+                    coroutineScope {
                         latchJob!!.join()
                         if (latchState != CLOSED) cancel()
                     }
@@ -255,14 +255,14 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             CLOSED -> {
                 latchJob?.cancel()
                 latchState = OPENING
-                coroutineScope {
-                    latchJob = launch {
-                        bot.intakeMode = IntakeMode.OFF
-                        latch.position = LATCH_SERVO_OPEN_POSITION
-                        delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
-                        latchState = OPEN
-                    }
+                latchJob = bot.submitJob("Open latch") {
+                    bot.intakeMode = IntakeMode.OFF
+                    latch.position = LATCH_SERVO_OPEN_POSITION
+                    delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)
+                    latchState = OPEN
+                }
 
+                coroutineScope {
                     latchJob!!.join()
                     if (latchState != OPEN) cancel()
                 }
