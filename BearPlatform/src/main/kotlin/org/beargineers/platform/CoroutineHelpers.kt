@@ -1,6 +1,10 @@
 package org.beargineers.platform
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
+import com.qualcomm.robotcore.util.ElapsedTime
+
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -89,12 +93,7 @@ suspend fun Robot.cancelWhen(condition: () -> Boolean, block: suspend CoroutineS
     }
 }
 
-suspend fun doNoLongerThan(duration: Duration, block: suspend CoroutineScope.() -> Unit) {
-    coroutineScope {
-        val childJob = launch(block = block)
-        delay(duration)
-        if (childJob.isActive) {
-            childJob.cancel()
-        }
-    }
+suspend fun Robot.doNoLongerThan(duration: Duration, block: suspend CoroutineScope.() -> Unit) {
+    val elapsed = ElapsedTime()
+    cancelWhen({ elapsed.milliseconds() > duration.inWholeMilliseconds}, block)
 }
