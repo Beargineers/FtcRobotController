@@ -90,11 +90,15 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
     }
 
     private fun positionMT2(latestResult: LLResult): Position? {
-        return latestResult.botpose_MT2?.robotPose()
+        return latestResult.botpose_MT2?.robotPose()?.convertFromCameraPosition()
     }
 
     private fun position(latestResult: LLResult): Position? {
-        return latestResult.botpose?.robotPose()
+        return latestResult.botpose?.robotPose()?.convertFromCameraPosition()
+    }
+
+    private fun Position.convertFromCameraPosition(): Position {
+        return RobotCentricLocation(-CameraPosition_forward.cm, -CameraPosition_right.cm).toFieldCentric(this).withHeading(heading)
     }
 
     private val BLUE_GOAL = Position(-58.3727.inch, -55.6425.inch, -128.degrees)
