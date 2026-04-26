@@ -155,7 +155,7 @@ class CoroutinesLoopTest : RobotTest() {
             try {
                 opMode.nextTick()
                 error("nextTick() should throw CancellationException when the job is cancelled")
-            } catch (exception: CancellationException) {
+            } finally {
                 withContext(NonCancellable) {
                     coroutineScope {
                         launch {
@@ -163,7 +163,6 @@ class CoroutinesLoopTest : RobotTest() {
                         }
                     }
                 }
-                throw exception
             }
         }
 
