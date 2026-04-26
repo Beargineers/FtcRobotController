@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.Gamepad
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
+import org.beargineers.platform.DevMode
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
@@ -43,7 +44,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
 
         button(::left_stick_button) {
-            if (isDevMode()) {
+            if (DevMode.isDevMode()) {
                 robot.flywheelEnabled = !robot.flywheelEnabled
             }
         }
@@ -141,7 +142,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         robot.assumePosition(lastKnownPosition)
 
-        if (!isDevMode()) {
+        if (!DevMode.isDevMode()) {
             robot.flywheelEnabled = true
             robot.intakeMode = IntakeMode.ON
         }

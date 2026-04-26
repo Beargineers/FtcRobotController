@@ -9,8 +9,6 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
-private val PANELS_ENABLED by config(false)
-
 abstract class RobotOpMode<T : Robot> : OpMode() {
     abstract val alliance: Alliance
     val allButtons = mutableListOf<Button>()
@@ -34,16 +32,12 @@ abstract class RobotOpMode<T : Robot> : OpMode() {
     enum class PanelsState { ON, OFF, UNKNOWN}
     private var panelsState = PanelsState.UNKNOWN
     private fun checkPanelsState() {
-        Panels.config.enableLogs = false
-
-        if (PANELS_ENABLED && panelsState != PanelsState.ON) {
-            Panels.config.isDisabled = false
+        if (DevMode.isDevMode() && panelsState != PanelsState.ON) {
             panelsState = PanelsState.ON
             Panels.enable()
             Frame.panelsTelemetry = PanelsTelemetry.telemetry
         }
-        else if (!PANELS_ENABLED && panelsState != PanelsState.OFF && Panels.wasStarted) {
-            Panels.config.isDisabled = true
+        else if (!DevMode.isDevMode() && panelsState != PanelsState.OFF && Panels.wasStarted) {
             panelsState = PanelsState.OFF
             Panels.disable()
             Frame.panelsTelemetry = null
@@ -100,14 +94,14 @@ abstract class RobotOpMode<T : Robot> : OpMode() {
 
     private fun gameModeControls() {
         if (gamepad1.startWasPressed()) {
-            setDevMode(false)
+            DevMode.setDevMode(false)
         }
 
         if (gamepad1.backWasPressed()) {
-            setDevMode(true)
+            DevMode.setDevMode(true)
         }
 
-        Frame.addLine(if (isDevMode()) "DEV MODE" else "GAME MODE")
+        Frame.addLine(if (DevMode.isDevMode()) "DEV MODE" else "GAME MODE")
     }
 
     final override fun loop() {
@@ -164,14 +158,6 @@ abstract class RobotOpMode<T : Robot> : OpMode() {
     }
 
     fun isAutoActive() = auto?.isActive ?: false
-
-    fun isDevMode(): Boolean {
-        return PersistentSettings.getValue("devMode", "false") == "true"
-    }
-
-    fun setDevMode(value: Boolean) {
-        PersistentSettings.setValue("devMode", if (value) "true" else "false")
-    }
 
     companion object {
         // This will be used to transfer last known position between different OpModes (like to start Teleop where Auto has finished)
