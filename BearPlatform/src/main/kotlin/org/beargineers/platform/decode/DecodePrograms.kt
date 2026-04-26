@@ -4,7 +4,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
-import org.beargineers.platform.RobotDimensions
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
@@ -14,10 +13,10 @@ import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
-import org.beargineers.platform.inch
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.withName
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
@@ -51,21 +50,6 @@ suspend fun DecodeRobot.openRamp() {
     withName("openRamp") {
         drivePath(openRampPath(), true)
         delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
-
-        if (hasVision) {
-            driveTo(Locations.COLLECT_FROM_OPEN_RAMP_APPROACH, applyMirroring = true)
-            collectArtifactsInView(true) {
-                it.x > 0.cm && it.x < spikeStart(2).x - (RobotDimensions.ROBOT_WIDTH / 2 + 5.inch)
-            }
-        }
-        else {
-            drivePath(buildPath {
-                with(Locations) {
-                    addWaypoint(COLLECT_FROM_OPEN_RAMP_APPROACH)
-                    addWaypoint(COLLECT_FROM_OPEN_RAMP)
-                }
-            }, applyMirroring = true)
-        }
     }
 }
 
@@ -74,6 +58,15 @@ suspend fun DecodeRobot.openRampAndCollect() {
         val path = openRampCollectPath()
         drivePath(path.take(1), true)
         drivePath(path.drop(1), true)
+
+        delay(100.milliseconds)
+
+        drivePath(buildPath {
+            with(Locations) {
+                addWaypoint(COLLECT_FROM_OPEN_RAMP_APPROACH)
+                addWaypoint(COLLECT_FROM_OPEN_RAMP)
+            }
+        }, applyMirroring = true)
 
         cancelWhen({artifactsCount >= 3}) {
             delay(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
