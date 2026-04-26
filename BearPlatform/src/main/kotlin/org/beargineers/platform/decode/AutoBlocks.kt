@@ -99,7 +99,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
         goAndShootIfHasLoad()
         cancelWhen({ artifactsCount >= 3}) {
             for (p in observationPoints) {
-                driveTo(p, applyMirroring = true)
+                driveTo(p, applyMirroring = true, stopAtLastWaypoint = false)
                 collectArtifactsInView(true)
             }
         }
