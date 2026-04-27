@@ -86,7 +86,7 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
         result
                                                     }, bot)
 
-    private val lastSeenBall = ElapsedTime()
+    val lastSeenBall = ElapsedTime()
     private var artifactsCount = 0
 
     override fun init() {
@@ -153,7 +153,7 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
                 artifactsCount = 1
             }
 
-            if (seenUpper) lastSeenBall.reset() // Let's ignore lower sensor. For the sake of shooting completion we're only interested in upper (and more reliable) one
+            lastSeenBall.reset()
         }
     }
 
