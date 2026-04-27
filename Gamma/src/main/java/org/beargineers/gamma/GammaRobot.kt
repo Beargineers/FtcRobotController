@@ -91,10 +91,9 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
                     predictedShootingPosition = null
                 }
 
-                val initialPosition = currentPosition
                 shootingJob = launch(CoroutineName("Shooting")) {
                     isShooting = true
-                    holdPositionWhileShooting(initialPosition)
+                    holdPositionWhileShooting()
 
                     try {
                         shooter.shoot(shootingScope)
@@ -115,13 +114,13 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         intakeMode = IntakeMode.ON
     }
 
-    private fun CoroutineScope.holdPositionWhileShooting(initialPosition: Position) {
+    private fun CoroutineScope.holdPositionWhileShooting() {
+        val initialPosition = currentPosition
+
         launch(CoroutineName("Hold Shooting Position")) {
-            if (false && true) { // TODO
-                while (isShooting()) {
-                    driveTo(initialPosition, applyMirroring = false)
-                    nextTick()
-                }
+            while (isShooting()) {
+                driveTo(initialPosition, applyMirroring = false)
+                nextTick()
             }
         }
     }
