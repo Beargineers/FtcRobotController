@@ -2,11 +2,9 @@ package org.beargineers.gamma
 
 import com.bylazar.field.FieldManager
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
@@ -83,9 +81,9 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
                 try {
                     shooter.shoot()
+                    intakeMode = IntakeMode.ON
                     hold.cancel()
                 } finally {
-                    intakeMode = IntakeMode.ON
                     ballsDetector.reset()
                     opMode.gamepad1.rumble(300)
                 }
@@ -96,15 +94,14 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     fun abortShooting() {
         shootingJob?.cancel()
         submitJob("Reversing intake on aborted shooting") {
-            withContext(NonCancellable) {
-                intakeMode = IntakeMode.REVERSE
-                delay(1000.milliseconds)
-                intakeMode = IntakeMode.ON
-            }
+            intakeMode = IntakeMode.REVERSE
+            delay(300.milliseconds)
+            intakeMode = IntakeMode.ON
         }
     }
 
     override suspend fun prepareForShooting() {
+        delay(INTAKE_CUTOFF_DELAY_MS.milliseconds * 2)
         shooter.openLatch()
     }
 
