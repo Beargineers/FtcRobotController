@@ -4,7 +4,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
-import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
 import org.beargineers.platform.buildPath
 import org.beargineers.platform.cancelWhen
@@ -106,15 +105,5 @@ suspend fun DecodeRobot.goToShootingZoneAndShoot(
         )
 
         followPathAndShoot(plan, false)
-    }
-}
-
-suspend fun DecodeRobot.park() {
-    withName("Parking") {
-        val parkCoords: Location = Locations.PARK.mirrorForAlliance(alliance)
-        val heading = currentPosition.heading
-        val squareAngles = listOf(-180.degrees, -90.degrees, 0.degrees, 90.degrees, 180.degrees)
-        val parkHeading = squareAngles.minBy { abs((it - heading).normalize()) }
-        driveTo(parkCoords.withHeading(parkHeading), applyMirroring = false)
     }
 }

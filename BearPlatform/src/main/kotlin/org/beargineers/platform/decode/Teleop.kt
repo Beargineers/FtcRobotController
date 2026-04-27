@@ -2,6 +2,7 @@ package org.beargineers.platform.decode
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.Gamepad
+import com.qualcomm.robotcore.util.ElapsedTime
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.Angle
 import org.beargineers.platform.DevMode
@@ -15,6 +16,7 @@ import org.beargineers.platform.config
 import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.inch
 import org.beargineers.platform.sin
 import org.beargineers.platform.tilePosition
 import kotlin.math.abs
@@ -97,16 +99,56 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             }
         }
 
-        button(::dpad_down) {
-            lookAtGoal = false
-            auto("Going to the base") {
-                park()
-            }
-        }
-
         button( ::x) {
             robot.assumePosition(Position.ZERO)
             robot.resetTurret()
+        }
+
+        parkingControls()
+    }
+
+    private var parkingLevel = 0
+
+    private fun Gamepad.parkingControls() {
+        val controlPressed = ElapsedTime()
+
+        fun park(test: () -> Boolean, block: suspend DecodeRobot.() -> Unit) {
+            button(test) {
+                lookAtGoal = false
+                parkingLevel = if (controlPressed.seconds() < 1) 2 else 1
+                controlPressed.reset()
+                auto("Parking", block)
+            }
+        }
+
+        park(::dpad_down) {
+            if (parkingLevel == 1) {
+                fullPark(true)
+            }
+            else {
+                partialPark(ParkingSide.DOWN)
+            }
+        }
+
+        park(::dpad_up) {
+            if (parkingLevel == 1) {
+                fullPark(false)
+            }
+            else {
+                partialPark(ParkingSide.UP)
+            }
+        }
+
+        park(::dpad_left) {
+            if (parkingLevel == 2) {
+                partialPark(ParkingSide.LEFT)
+            }
+        }
+
+        park(::dpad_right) {
+            if (parkingLevel == 2) {
+                partialPark(ParkingSide.RIGHT)
+            }
         }
     }
 
@@ -219,7 +261,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             val targetPosition = robot.currentPosition.plus(deltaPosition)
 
             submitJob("!Driving") {
-                val slow = false
+                val slow = parkingLevel > 0 && robot.currentPosition.distanceTo(robot.parkingSpotCenter()) < 24.inch
                 robot.driveTo(targetPosition, if (slow) slowCoeff else 1.0, applyMirroring = false)
             }
         }
