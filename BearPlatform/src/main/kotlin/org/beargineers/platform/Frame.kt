@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 object Frame {
     internal var telemetry: Telemetry? = null
     internal var panelsTelemetry: TelemetryManager? = null
+    internal var isTestMode = false
 
 
     private val TAG = "BEARS"
@@ -34,7 +35,7 @@ object Frame {
     }
 
     fun log(msg: String) {
-        RobotLog.i(msg)
+        if (isTestMode) println(msg) else RobotLog.i(msg)
     }
 
 

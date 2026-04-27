@@ -3,6 +3,9 @@ package org.beargineers.platform
 import org.beargineers.platform.decode.DecodeRobot
 
 class TestOpMode : RobotOpMode<Robot>() {
+    init {
+        Frame.isTestMode = true
+    }
     override val alliance: Alliance = Alliance.RED
 
     override suspend fun Robot.autoProgram() {
