@@ -32,8 +32,7 @@ import kotlin.math.sign
 import kotlin.math.sqrt
 
 interface DecodeRobot : Robot {
-    suspend fun shoot(holdPosition: Boolean)
-    suspend fun prepareForShooting()
+    suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean)
 
     suspend fun prepareForShutdown() {
         intakeMode = IntakeMode.OFF
@@ -107,9 +106,12 @@ fun Location.mirrorForAlliance(alliance: Alliance): Location {
 }
 
 fun DecodeRobot.goalDistance(): Distance {
+    return goalDistanceFrom(currentPosition)
+}
+
+fun DecodeRobot.goalDistanceFrom(pos: Position): Distance {
     val goal = Locations.GOAL.mirrorForAlliance(alliance)
-    val cp = currentPosition
-    return hypot(cp.x - goal.x, cp.y - goal.y)
+    return hypot(pos.x - goal.x, pos.y - goal.y)
 }
 
 fun DecodeRobot.headingToGoal(): Angle {

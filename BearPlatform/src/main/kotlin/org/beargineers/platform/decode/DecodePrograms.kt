@@ -4,7 +4,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
-import org.beargineers.platform.Waypoint
 import org.beargineers.platform.abs
 import org.beargineers.platform.atan2
 import org.beargineers.platform.buildPath
@@ -18,23 +17,6 @@ import org.beargineers.platform.pathTo
 import org.beargineers.platform.withName
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-
-suspend fun DecodeRobot.followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
-    coroutineScope {
-        launch {
-            prepareForShooting()
-        }
-
-        val waypoints = waypoints.withIndex().map { (i, waypoint) ->
-            if (i == waypoints.lastIndex) waypoint.copy(
-                positionTolerance = 3.cm
-            ) else waypoint
-        }
-        drivePath(waypoints, applyMirroring)
-
-        shoot(true)
-    }
-}
 
 suspend fun DecodeRobot.pushAllianceBot() {
     withName("Push alliance bot") {

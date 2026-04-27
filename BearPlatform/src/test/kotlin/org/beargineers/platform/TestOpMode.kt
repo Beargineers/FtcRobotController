@@ -16,11 +16,7 @@ class TestOpMode : RobotOpMode<Robot>() {
 class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
     val localizer = TestLocalizer()
 
-    override suspend fun shoot(holdPosition: Boolean) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun prepareForShooting() {
+    override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
         TODO("Not yet implemented")
     }
 

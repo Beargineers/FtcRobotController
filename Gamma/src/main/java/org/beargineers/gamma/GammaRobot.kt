@@ -1,10 +1,14 @@
 package org.beargineers.gamma
 
 import com.bylazar.field.FieldManager
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.beargineers.platform.Angle
 import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
@@ -16,13 +20,16 @@ import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.Location
 import org.beargineers.platform.PinpointLocalizer
+import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.Waypoint
 import org.beargineers.platform.cos
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
+import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.sin
@@ -64,32 +71,62 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         ledIndicator.counter(artifactsCount, 'G')
     }
 
-    private var shootingJob: Job? = null
+    private var isShooting = false
+    var predictedShootingPosition: Position? = null
 
-    override suspend fun shoot(holdPosition: Boolean) {
-        val initialPosition = currentPosition
-        coroutineScope {
-            shootingJob = launch {
-                val hold = launch {
-                    if (false && holdPosition) { // TODO
-                        while (true) {
-                            driveTo(initialPosition, applyMirroring = false)
-                            nextTick()
-                        }
-                    }
+    override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
+        try {
+            coroutineScope {
+                val shootingScope: CoroutineScope = this
+
+                launch {
+                    delay(INTAKE_CUTOFF_DELAY_MS.milliseconds * 2)
+                    shooter.openLatch()
                 }
 
+                predictedShootingPosition = waypoints.last().target
                 try {
-                    shooter.shoot()
-                    intakeMode = IntakeMode.ON
-                    hold.cancel()
+                    drivePath(waypoints, applyMirroring)
                 } finally {
-                    ballsDetector.reset()
-                    opMode.gamepad1.rumble(300)
+                    predictedShootingPosition = null
+                }
+
+                val initialPosition = currentPosition
+                shootingJob = launch(CoroutineName("Shooting")) {
+                    isShooting = true
+                    holdPositionWhileShooting(initialPosition)
+
+                    try {
+                        shooter.shoot(shootingScope)
+                    } finally {
+                        isShooting = false
+                        ballsDetector.reset()
+                        opMode.gamepad1.rumble(300)
+                    }
+                }
+            }
+        }
+        finally {
+            withContext(NonCancellable) {
+                shooter.closeLatch(false)
+            }
+        }
+
+        intakeMode = IntakeMode.ON
+    }
+
+    private fun CoroutineScope.holdPositionWhileShooting(initialPosition: Position) {
+        launch(CoroutineName("Hold Shooting Position")) {
+            if (false && true) { // TODO
+                while (isShooting()) {
+                    driveTo(initialPosition, applyMirroring = false)
+                    nextTick()
                 }
             }
         }
     }
+
+    private var shootingJob: Job? = null
 
     fun abortShooting() {
         shootingJob?.cancel()
@@ -100,18 +137,13 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         }
     }
 
-    override suspend fun prepareForShooting() {
-        delay(INTAKE_CUTOFF_DELAY_MS.milliseconds * 2)
-        shooter.openLatch()
-    }
-
     override suspend fun prepareForShutdown() {
         super.prepareForShutdown()
         shooter.closeLatch(false)
     }
 
     override fun isShooting(): Boolean {
-        return shooter.isShooting()
+        return isShooting
     }
 
     override fun resetTurret() {
