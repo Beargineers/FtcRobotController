@@ -14,6 +14,7 @@ import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.Waypoint
 import org.beargineers.platform.blink
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
@@ -22,6 +23,7 @@ import org.beargineers.platform.decode.headingToGoal
 import org.beargineers.platform.decode.headingToGoalFrom
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
+import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.nextTick
 import kotlin.time.Duration.Companion.seconds
@@ -50,7 +52,19 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     var prepareJob: Job? = null
 
-    override suspend fun shoot(holdPosition: Boolean) {
+    override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
+        coroutineScope {
+            launch {
+                prepareForShooting()
+            }
+
+            drivePath(waypoints, applyMirroring)
+
+            shoot(true)
+        }
+    }
+
+    suspend fun shoot(holdPosition: Boolean) {
         prepareJob?.cancel()
 
         val cl = currentPosition.location()
@@ -74,7 +88,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         }
     }
 
-    override suspend fun prepareForShooting() {
+    suspend fun prepareForShooting() {
         coroutineScope {
             prepareJob = launch {
                 delay(0.2.seconds)
