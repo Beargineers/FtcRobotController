@@ -173,4 +173,26 @@ class CoroutinesLoopTest : RobotTest() {
 
         assert(worked)
     }
+
+    @Test
+    fun testLaunchingInCancelledContext2() {
+        var worked = false
+        val job = opMode.submitJob {
+            try {
+                opMode.nextTick()
+                error("nextTick() should throw CancellationException when the job is cancelled")
+            } finally {
+                opMode.submitJob {
+                    worked = true
+                }
+            }
+        }
+
+        opMode.loop.tick()
+        job.cancel()
+
+        repeat(10) {opMode.loop.tick()}
+
+        assert(worked)
+    }
 }
