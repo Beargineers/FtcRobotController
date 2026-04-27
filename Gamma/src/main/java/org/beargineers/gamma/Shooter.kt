@@ -11,6 +11,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.beargineers.gamma.Shooter.LatchState.CLOSED
 import org.beargineers.gamma.Shooter.LatchState.CLOSING
@@ -130,11 +131,20 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             isShooting = true
             try {
                 openLatch()
+
                 bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
                     waitForFlywheelSpeed()
                 }
 
-                bot.intakeMode = IntakeMode.ON
+                launch {
+                    while (isShooting()) {
+                        bot.intakeMode = if (isUpToSpeed()) IntakeMode.ON else {
+                            bot.ballsDetector.lastSeenBall.reset()
+                            IntakeMode.OFF
+                        }
+                        bot.nextTick()
+                    }
+                }
 
                 bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
                     bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
