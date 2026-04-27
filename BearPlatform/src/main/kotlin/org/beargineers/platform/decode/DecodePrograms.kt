@@ -61,6 +61,7 @@ suspend fun DecodeRobot.openRampAndCollect() {
 
         delay(100.milliseconds)
 
+        intakeMode = IntakeMode.ON
         drivePath(buildPath {
             with(Locations) {
                 addWaypoint(COLLECT_FROM_OPEN_RAMP_APPROACH)
