@@ -6,13 +6,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.RobotLog
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.beargineers.gamma.Shooter.LatchState.CLOSED
 import org.beargineers.gamma.Shooter.LatchState.CLOSING
 import org.beargineers.gamma.Shooter.LatchState.OPEN
@@ -22,10 +21,9 @@ import org.beargineers.platform.Hardware
 import org.beargineers.platform.PID
 import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
-import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.flywheelEnabled
-import org.beargineers.platform.decode.goalDistance
+import org.beargineers.platform.decode.goalDistanceFrom
 import org.beargineers.platform.decode.headingIsAtGoal
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.doNoLongerThan
@@ -33,7 +31,6 @@ import org.beargineers.platform.motorPower
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.roundMotorPower
 import org.beargineers.platform.submitJob
-import org.beargineers.platform.withName
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
@@ -80,8 +77,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     var maxTicks = 0
 
-    private var isShooting = false
-
     override fun init() {
         super.init()
 
@@ -126,51 +121,33 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         return v
     }
 
-    suspend fun shoot() {
-        withName("Shooting") {
-            isShooting = true
-            try {
-                openLatch()
+    suspend fun shoot(scope: CoroutineScope) {
+        openLatch()
 
-                bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
-                    waitForFlywheelSpeed()
+        scope.launch {
+            bot.flywheelEnabled = true
+            while (bot.isShooting()) {
+                bot.intakeMode = if (isUpToSpeed() && bot.headingIsAtGoal()) IntakeMode.ON else {
+                    bot.ballsDetector.lastSeenBall.reset()
+                    IntakeMode.OFF
                 }
-
-                launch {
-                    while (isShooting()) {
-                        bot.intakeMode = if (isUpToSpeed()) IntakeMode.ON else {
-                            bot.ballsDetector.lastSeenBall.reset()
-                            IntakeMode.OFF
-                        }
-                        bot.nextTick()
-                    }
-                }
-
-                bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
-                    bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
-                }
-                activatePusher(true)
-                delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
-            } finally {
-                withContext(NonCancellable) {
-                    isShooting = false
-                    closeLatch(false)
-                }
+                bot.nextTick()
             }
-        }
-    }
-
-    private suspend fun waitForFlywheelSpeed() {
-        Frame.log("Waiting for flywheel speed")
-        bot.flywheelEnabled = true
-        while (!isUpToSpeed() || !bot.headingIsAtGoal()) {
-            bot.nextTick()
+            bot.intakeMode = IntakeMode.ON
         }
 
-        Frame.log("waitForFlywheelSpeed() completed")
+        bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
+            bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
+        }
+        activatePusher(true)
+        delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
+        activatePusher(false)
     }
 
-    private fun targetFlywheelPower(): Double = flywheelPowerAdjustedToDistance((this@Shooter.robot as DecodeRobot).goalDistance().cm())
+    private fun targetFlywheelPower(): Double {
+        val distance = bot.goalDistanceFrom(bot.predictedShootingPosition ?: bot.currentPosition)
+        return flywheelPowerAdjustedToDistance(distance.cm())
+    }
 
     override fun loop() {
         val nominalPower = when {
@@ -218,10 +195,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         latch.position = LATCH_SERVO_CLOSED_POSITION
     }
 
-    fun isShooting(): Boolean {
-        return isShooting
-    }
-
     private var latchJob: Job? = null
 
     suspend fun closeLatch(waitForCompletion: Boolean) {
@@ -237,7 +210,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             OPEN -> {
                 latchJob?.cancel()
                 latchState = CLOSING
-                bot.intakeMode = IntakeMode.OFF
                 latch.position = LATCH_SERVO_CLOSED_POSITION
                 latchJob = bot.submitJob("Close latch") {
                     delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)

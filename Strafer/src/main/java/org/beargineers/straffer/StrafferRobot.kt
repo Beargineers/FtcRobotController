@@ -8,6 +8,7 @@ import org.beargineers.platform.Localizer
 import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
+import org.beargineers.platform.Waypoint
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.degrees
 
@@ -31,12 +32,8 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         get() = 0
 
 
-    override suspend fun shoot(holdPosition: Boolean) {
-        // TODO("Not yet implemented")
-    }
-
-    override suspend fun prepareForShooting() {
-        // TODO("Not yet implemented")
+    override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
+        TODO("Not yet implemented")
     }
 
     override fun isShooting(): Boolean {
