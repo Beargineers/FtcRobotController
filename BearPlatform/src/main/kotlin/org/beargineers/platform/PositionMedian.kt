@@ -111,7 +111,7 @@ class PositionMedian(private val minSamples: Int) {
             inliers.size < minSamples ||
             inliers.size.toDouble() < snapshot.size * MIN_SERIES_INLIER_RATIO
         ) {
-            Frame.addData("Vision errors", "rejected %d/%d", inliers.size, snapshot.size)
+            Frame.addDevData("Vision errors", "rejected %d/%d", inliers.size, snapshot.size)
             return null
         }
 
@@ -123,7 +123,7 @@ class PositionMedian(private val minSamples: Int) {
             positionSpread > positionToleranceCm * MAX_MEDIAN_SPREAD_RATIO ||
             headingSpread > headingToleranceDeg * MAX_MEDIAN_SPREAD_RATIO
         ) {
-            Frame.addData(
+            Frame.addDevData(
                 "Vision errors",
                 "noisy %.2fcm %.2fdeg %d/%d",
                 positionSpread,
@@ -134,7 +134,7 @@ class PositionMedian(private val minSamples: Int) {
             return null
         }
 
-        Frame.addData(
+        Frame.addDevData(
             "Vision errors",
             "%.2fcm %.2fdeg %d/%d",
             positionSpread,
