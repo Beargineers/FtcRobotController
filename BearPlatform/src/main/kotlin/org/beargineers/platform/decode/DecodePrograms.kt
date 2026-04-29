@@ -5,7 +5,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
 import org.beargineers.platform.atan2
-import org.beargineers.platform.buildPath
 import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
 import org.beargineers.platform.degrees
@@ -14,7 +13,6 @@ import org.beargineers.platform.driveTo
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.withName
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 suspend fun DecodeRobot.pushAllianceBot() {
@@ -39,16 +37,18 @@ suspend fun DecodeRobot.openRampAndCollect() {
         val path = openRampCollectPath()
         drivePath(path.take(1), true)
         drivePath(path.drop(1), true)
+        intakeMode = IntakeMode.ON
 
+/*
         delay(100.milliseconds)
 
-        intakeMode = IntakeMode.ON
         drivePath(buildPath {
             with(Locations) {
                 addWaypoint(COLLECT_FROM_OPEN_RAMP_APPROACH)
                 addWaypoint(COLLECT_FROM_OPEN_RAMP)
             }
         }, applyMirroring = true)
+*/
 
         cancelWhen({artifactsCount >= 3}) {
             delay(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
