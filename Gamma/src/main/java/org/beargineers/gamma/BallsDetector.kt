@@ -19,6 +19,8 @@ import kotlin.time.Duration.Companion.milliseconds
 
 val LOWER_SENSOR_THRESHOLD by config(7.cm)
 val INTAKE_CUTOFF_DELAY_MS by config(100)
+val OPEN_LATCH_DELAY_MS by config(300)
+
 
 
 private class RollingBoolean(val size: Int) {
