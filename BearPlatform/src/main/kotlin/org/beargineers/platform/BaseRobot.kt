@@ -81,7 +81,7 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         localizer.update()
 
         Frame.addData("Position", currentPosition)
-        Frame.addData("Velocity", "%s/s, %s/s",
+        Frame.addDevData("Velocity", "%s/s, %s/s",
             hypot(currentVelocity.x, currentVelocity.y),
             abs(currentVelocity.heading))
 

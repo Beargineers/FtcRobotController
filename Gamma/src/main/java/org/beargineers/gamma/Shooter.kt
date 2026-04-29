@@ -112,7 +112,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         pid.updateCoefficients(SHOOTER_PID)
         pid.setTarget(p)
         pid.updateCurrent(fly1.velocity / (maxTicks))
-        Frame.addData("Shooter error", pid.error())
         Frame.graph("Shooter error", pid.error())
         Frame.graph("FW Target", p * 6000)
         Frame.graph("FW Actual", 6000 * fly1.velocity / (maxTicks))

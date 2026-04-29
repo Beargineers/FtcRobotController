@@ -117,8 +117,8 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
             lowFPSMode = false
         }
 
-        Frame.addData("Distance to goal", goalDistance())
-        Frame.addData("Heading to goal error", headingToGoal() - currentPosition.heading)
+        Frame.addDevData("Distance to goal", goalDistance())
+        Frame.addDevData("Heading to goal error", headingToGoal() - currentPosition.heading)
     }
 
     override val artifactsCount: Int

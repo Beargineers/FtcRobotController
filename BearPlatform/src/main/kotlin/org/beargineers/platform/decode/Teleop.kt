@@ -231,8 +231,6 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             }
         }
 
-        Frame.addData("Goal locked", if (lookAtGoal) "YES" else "NO")
-
         val delta = if (!fpvDrive) {
             val sign = if (alliance == Alliance.BLUE) -1 else 1
 
