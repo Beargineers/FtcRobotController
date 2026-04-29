@@ -56,7 +56,7 @@ object Frame {
 
     fun addDevData(name: String, format: String, vararg args: Any) {
         if (DevMode.isDevMode()) {
-            addData(name, format, args)
+            addData(name, format, *args)
         }
     }
 
