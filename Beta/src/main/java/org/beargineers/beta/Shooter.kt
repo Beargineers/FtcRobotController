@@ -71,7 +71,7 @@ class Shooter(val bot: BetaRobot): Hardware(bot) {
         pid.updateCoefficients(SHOOTER_PID)
         pid.setTarget(p)
         pid.updateCurrent((fly1 as DcMotorEx).velocity / (maxTicks))
-        Frame.addData("Shooter error", pid.error())
+        Frame.addDevData("Shooter error", pid.error())
 
         val v = roundMotorPower(pid.result() + p)
         fly1.motorPower = v

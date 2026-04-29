@@ -101,7 +101,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             TurretMode.OFF -> {}
         }
 
-        Frame.addData("Turret heading", turretHeading())
+        Frame.addDevData("Turret heading", turretHeading())
         Frame.graph("TURRET ERROR", (targetEncoderPosition - turret.currentPosition).toDouble())
     }
 

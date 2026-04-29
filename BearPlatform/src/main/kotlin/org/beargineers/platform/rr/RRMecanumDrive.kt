@@ -361,7 +361,7 @@ class RRMecanumDrive(val hardwareMap: HardwareMap, val loc: SimpleLocalizer) {
         val cv = localizer.currentVelocity
         val robotCV = loc.currentVelocity
 
-        Frame.addData("VEL", "$cv # $robotCV")
+        Frame.addDevData("VEL", "$cv # $robotCV")
 
         poseHistory.add(getPose())
 

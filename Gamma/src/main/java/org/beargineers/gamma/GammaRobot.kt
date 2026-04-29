@@ -66,7 +66,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override fun loop() {
         super.loop()
-        Frame.addData("Distance to goal", goalDistance())
+        Frame.addDevData("Distance to goal", goalDistance())
         Frame.addData("Artifacts", artifactsCount)
         ledIndicator.counter(artifactsCount, 'G')
     }

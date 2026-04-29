@@ -43,9 +43,21 @@ object Frame {
         panelsTelemetry?.addData(name, value)
     }
 
+    fun addDevData(name: String, value: Any) {
+        if (DevMode.isDevMode()) {
+            addData(name, value)
+        }
+    }
+
     fun addData(name: String, value: Any) {
         telemetry?.addData(name, value)
         panelsTelemetry?.addData(name, value)
+    }
+
+    fun addDevData(name: String, format: String, vararg args: Any) {
+        if (DevMode.isDevMode()) {
+            addData(name, format, args)
+        }
     }
 
     fun addData(name: String, format: String, vararg args: Any) {
