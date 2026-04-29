@@ -1,8 +1,6 @@
 package org.beargineers.platform
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.util.ElapsedTime
-
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -11,18 +9,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.beargineers.platform.decode.mirrorForAlliance
-import org.beargineers.platform.rr.MovesBuilder
 import kotlin.time.Duration
-
-suspend fun Robot.move(moves: MovesBuilder.() -> Unit) {
-    require (WheelsConfig.RoadRunnerEnabled) {"This API is only available in RoadRunner mode"}
-    val movesBuilder = (this as BaseRobot).rrMecanumDrive.movesBuilder(currentPosition)
-    movesBuilder.apply(moves)
-    val action = movesBuilder.build()
-    while (action.run(TelemetryPacket())) {
-        nextTick()
-    }
-}
 
 private var driveJob: Job? = null
 suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean, stopAtLastWaypoint: Boolean = true) {
@@ -34,36 +21,18 @@ suspend fun Robot.drivePath(waypoints: List<Waypoint>, applyMirroring: Boolean, 
 
     Frame.log("DRV") { "drivePath: $waypoints" }
 
-    if (WheelsConfig.RoadRunnerEnabled) {
-        move {
-            var prev = currentPosition
-            for (wp in waypoints) {
-                val next = wp.target
-                if (next.distanceTo(prev) > 0.cm) {
-                    val tangent = atan2(next.y - prev.y, next.x - prev.x)
-                    setTangent(tangent)
-                    splineToSplineHeading(next, tangent)
-                }
-                else if (next.heading != prev.heading) {
-                    turnTo(next.heading)
-                }
-                prev = next
-            }
-        }
-    } else {
-        driveJob?.cancel()
-        coroutineScope {
-            driveJob = launch {
-                val follower = PathFollower(
-                    robot = this@drivePath as BaseRobot,
-                    path = waypoints,
-                    startPosition = currentPosition,
-                    stopAtLastWaypoint = stopAtLastWaypoint
-                )
+    driveJob?.cancel()
+    coroutineScope {
+        driveJob = launch {
+            val follower = PathFollower(
+                robot = this@drivePath as BaseRobot,
+                path = waypoints,
+                startPosition = currentPosition,
+                stopAtLastWaypoint = stopAtLastWaypoint
+            )
 
-                while (follower.update()) {
-                    nextTick()
-                }
+            while (follower.update()) {
+                nextTick()
             }
         }
     }

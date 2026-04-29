@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.delay
 import org.beargineers.platform.Alliance
 import org.beargineers.platform.BaseRobot
-import org.beargineers.platform.Location
 import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotCentricLocation
@@ -18,7 +17,6 @@ import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveRelative
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.inch
-import org.beargineers.platform.move
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.toFieldCentric
@@ -40,24 +38,6 @@ class Tune_TwoTileLoop : TestOp() {
             driveRelative(RobotCentricPosition.turnCCW(90.degrees))
             driveRelative(RobotCentricPosition.forward(48.inch))
             driveRelative(RobotCentricPosition.turnCCW(90.degrees))
-        }
-    }
-}
-
-@Autonomous(group = "Tune")
-class Tune_TwoTileLoopSpline : TestOp() {
-    override suspend fun DecodeRobot.autoProgram() {
-        repeat(5) {
-            move {
-                splineTo(Location(48.inch, 0.inch), 0.degrees)
-                turnTo(90.degrees)
-                splineTo(Location(48.inch, 48.inch), 90.degrees)
-                turnTo(180.degrees)
-                splineTo(Location(0.inch, 48.inch), 180.degrees)
-                turnTo(270.degrees)
-                splineTo(Location(0.inch, 0.inch), 270.degrees)
-                turnTo(0.degrees)
-            }
         }
     }
 }

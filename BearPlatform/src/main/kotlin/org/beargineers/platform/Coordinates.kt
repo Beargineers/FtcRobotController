@@ -1,6 +1,5 @@
 package org.beargineers.platform
 
-import com.acmerobotics.roadrunner.Pose2d
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import java.util.Locale
@@ -411,8 +410,6 @@ fun Position.coerceInFieldBounds(): Position {
         heading
     )
 }
-
-fun Position.toPose2d() = Pose2d(x.inch(), y.inch(), heading.radians())
 
 fun headingFromTo(from: Location, to: Location): Angle {
     return atan2(to.y - from.y, to.x - from.x)

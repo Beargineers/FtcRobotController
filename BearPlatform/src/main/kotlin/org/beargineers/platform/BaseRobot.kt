@@ -7,7 +7,6 @@ import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.beargineers.platform.rr.RRMecanumDrive
 
 fun cursorLocation(): Location{
     return Location(PanelsField.field.cursorX.inch,PanelsField.field.cursorY.inch)
@@ -20,7 +19,6 @@ private val PANELS_SHOW_PATH by config(false)
 abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     val allHardware = mutableListOf<Hardware>()
     val drive = MecanumDrive(this)
-    val rrMecanumDrive by lazy { RRMecanumDrive(this) }
 
     abstract val localizer: Localizer
 
@@ -142,7 +140,6 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
     open fun FieldManager.drawExtraFeatures() {}
 
     fun FieldManager.doDrawRobot() {
-        val cp = currentPosition
         fun lineTo(location: Location) {
             line(location.x.inch(), location.y.inch())
             moveCursor(location.x.inch(), location.y.inch())
