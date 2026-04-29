@@ -11,6 +11,7 @@ import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.degrees
+import org.beargineers.platform.drivePath
 
 object NoVision : AbsoluteLocalizer {
     override fun getRobotPose(): Position? {
@@ -33,7 +34,7 @@ class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
 
     override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
-        TODO("Not yet implemented")
+        drivePath(waypoints, applyMirroring)
     }
 
     override fun isShooting(): Boolean {
