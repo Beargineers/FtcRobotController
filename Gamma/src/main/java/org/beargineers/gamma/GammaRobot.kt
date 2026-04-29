@@ -74,13 +74,14 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     private var isShooting = false
     var predictedShootingPosition: Position? = null
 
+
     override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
         try {
             coroutineScope {
                 val shootingScope: CoroutineScope = this
 
                 launch {
-                    delay(INTAKE_CUTOFF_DELAY_MS.milliseconds * 2)
+                    delay(OPEN_LATCH_DELAY_MS.milliseconds)
                     shooter.openLatch()
                 }
 
