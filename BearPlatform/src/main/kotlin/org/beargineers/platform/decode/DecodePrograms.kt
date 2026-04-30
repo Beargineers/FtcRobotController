@@ -4,6 +4,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
+import org.beargineers.platform.Position
 import org.beargineers.platform.atan2
 import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
@@ -59,13 +60,16 @@ suspend fun DecodeRobot.openRampAndCollect() {
 suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Location) -> Boolean = {true}) {
     intakeMode = IntakeMode.ON
 
-    var targetLocation = intakeTarget(filter) ?: return
+    val circularity = if (strafe) 0.35 else 0.6
+
+    var targetLocation = intakeTarget(filter, circularity) ?: return
     withName("collectArtifactsInView") {
         coroutineScope {
             outer@while (true) {
                 val job = launch {
                     val targetPosition = if (strafe) {
-                        targetLocation.withHeading(currentPosition.heading)
+                        val x = targetLocation.x
+                        Position(x, Locations.SPIKE_FINAL_Y.cm * alliance.sign, currentPosition.heading)
                     } else {
                         val dx = targetLocation.x - currentPosition.x
                         val dy = targetLocation.y - currentPosition.y
@@ -77,7 +81,7 @@ suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Locatio
 
                 while (true) {
                     nextTick()
-                    val nextTarget = intakeTarget(filter)
+                    val nextTarget = intakeTarget(filter, circularity)
                     if (nextTarget != null) {
                         targetLocation = nextTarget
                         job.cancel()

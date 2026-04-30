@@ -51,7 +51,7 @@ interface DecodeRobot : Robot {
 
     val hasVision: Boolean get() = false
 
-    fun intakeTarget(filter: (Location) -> Boolean): Location? = null
+    fun intakeTarget(filter: (Location) -> Boolean, circularity: Double = 0.6): Location? = null
 
     /**
      *  Angle at which an artifact would be fired if it happens now. Naturally, it is a heading of a turret
