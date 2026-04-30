@@ -6,6 +6,7 @@ import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
+import org.beargineers.platform.between
 import org.beargineers.platform.buildPath
 import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
@@ -103,6 +104,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
                 for (p in observationPoints) {
                     driveTo(p, applyMirroring = true, stopAtLastWaypoint = false)
                     collectArtifactsInView(true)
+                    if (artifactsCount > 0) break
                 }
             }
         }
@@ -146,7 +148,8 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
                         AutoPositions.BOX_SCOOP_OBSERVATION_P1,
                         AutoPositions.BOX_SCOOP_OBSERVATION_P2
                     )
-                else listOf(AutoPositions.BOX_SCOOP_OBSERVATION_P1)
+                else listOf(AutoPositions.BOX_SCOOP_OBSERVATION_P1,
+                    AutoPositions.BOX_SCOOP_OBSERVATION_P1.between(AutoPositions.BOX_SCOOP_OBSERVATION_P2))
             )
 
             '4' -> {

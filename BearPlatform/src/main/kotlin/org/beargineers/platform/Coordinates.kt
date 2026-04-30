@@ -390,6 +390,10 @@ fun Location.between(other: Location): Location {
     return Location((other.x + x)/2, (other.y + y)/2)
 }
 
+fun Position.between(other: Position): Position {
+    return Position((other.x + x)/2, (other.y + y)/2, ((other.heading + heading) / 2.0).normalize())
+}
+
 private val highestCoord = (24 * 3).inch
 
 fun Location.isWithinFieldBounds(): Boolean {
