@@ -82,8 +82,11 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
 
     fun Artifact.location() = loc().location()
 
-    fun calculateTargetLocation(acceptableLocationFilter: (Location) -> Boolean): Location? {
-        val raw = artifacts().filter {
+    fun calculateTargetLocation(
+        acceptableLocationFilter: (Location) -> Boolean,
+        circularity: Double
+    ): Location? {
+        val raw = artifacts(circularity).filter {
             val l = it.location()
             l.isWithinFieldBounds() && acceptableLocationFilter(l)
         }
@@ -129,13 +132,16 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
     }
 
 
-    fun artifacts(): List<Artifact> {
+    fun artifacts(circularity: Double): List<Artifact> {
         fun mapX(x: Float): Float = if (upsideDown) cameraResolution.width - 1f - x else x
         fun mapY(y: Float): Float = if (upsideDown) cameraResolution.height - 1f - y else y
+        fun List<ColorBlobLocatorProcessor.Blob>.filterByCircularity(): List<ColorBlobLocatorProcessor.Blob> {
+            return filter { it.circularity > circularity }
+        }
 
-        return purpleLocator.blobs.map {
+        return purpleLocator.blobs.filterByCircularity().map {
             Artifact(ArtifactColor.PURPLE, mapX(it.circle.x), mapY(it.circle.y), it.circle.radius)
-        } + greenLocator.blobs.map {
+        } + greenLocator.blobs.filterByCircularity().map {
             Artifact(ArtifactColor.GREEN, mapX(it.circle.x), mapY(it.circle.y), it.circle.radius)
         }.sortedByDescending { it.radius }
     }
@@ -154,7 +160,6 @@ class ArtifactsVision(robot: BaseRobot, val upsideDown: Boolean) : Hardware(robo
         .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
         .setTargetColorRange(colorRange)
         .build().apply {
-            addFilter(ColorBlobLocatorProcessor.BlobFilter(ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY, 0.6, 1.0))
             addFilter(ColorBlobLocatorProcessor.BlobFilter(ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA, 50.0, 20000.0))
         }
 }

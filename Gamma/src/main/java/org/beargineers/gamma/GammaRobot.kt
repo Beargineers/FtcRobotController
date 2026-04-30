@@ -45,8 +45,8 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val vision = ArtifactsVision(this, true)
     val ballsDetector = BallsDetector(this)
 
-    override fun intakeTarget(filter: (Location) -> Boolean): Location? {
-        return vision.calculateTargetLocation(filter)
+    override fun intakeTarget(filter: (Location) -> Boolean, circularity: Double): Location? {
+        return vision.calculateTargetLocation(filter, circularity)
     }
 
     override val localizer: Localizer =
@@ -173,7 +173,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     private fun FieldManager.drawVisualTarget() {
-        val target = intakeTarget { true }
+        val target = intakeTarget({ true })
 
         if (target != null) {
             setStyle("green", "green", 1.0)
