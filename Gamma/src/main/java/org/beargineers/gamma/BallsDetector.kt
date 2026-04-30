@@ -1,6 +1,5 @@
 package org.beargineers.gamma
 
-import com.qualcomm.hardware.rev.RevColorSensorV3
 import com.qualcomm.robotcore.hardware.DigitalChannel
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.delay
@@ -13,7 +12,6 @@ import org.beargineers.platform.decode.IntakeState
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.submitJob
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -75,18 +73,10 @@ private class SensorReader(val name: String, val reader: () -> Boolean, val bot:
 
 class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
     private val upperSensor by hardware<DigitalChannel>()
-    private val lowerSensor by hardware<RevColorSensorV3>()
+    private val lowerSensor by hardware<DigitalChannel>()
 
     private val upperReader = SensorReader("upper", { upperSensor.state }, bot)
-    private val lowerReader = SensorReader("lower", {
-        val distance = lowerSensor.getDistance(DistanceUnit.CM)
-        Frame.graph("LOWER SENSOR cm", distance)
-        val result = distance.cm < LOWER_SENSOR_THRESHOLD
-        if (result) {
-            Frame.log("LOWER SENSOR SEES: $distance")
-        }
-        result
-                                                    }, bot)
+    private val lowerReader = SensorReader("lower", { lowerSensor.state}, bot)
 
     val lastSeenBall = ElapsedTime()
     private var artifactsCount = 0
