@@ -115,7 +115,8 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
         control.updateCoefficients(TURRET_MOTOR_PIDF)
         val currentTurretAngle = currentTurretAngle()
         val norm = angle.normalize()
-        val best = listOf(norm, norm + 360.degrees, norm - 360.degrees).filter { it in TURRET_MIN_ANGLE..TURRET_MAX_ANGLE }.minBy { abs(it - currentTurretAngle) }
+        val possibleAngles = listOf(norm, norm + 360.degrees, norm - 360.degrees).filter { it in TURRET_MIN_ANGLE..TURRET_MAX_ANGLE }
+        val best = possibleAngles.minByOrNull { abs(it - currentTurretAngle) } ?: 0.degrees
         targetEncoderPosition = initialEncoderPosition + motorTicksForAngle(best)
 
         control.setTarget(targetEncoderPosition.toDouble())
