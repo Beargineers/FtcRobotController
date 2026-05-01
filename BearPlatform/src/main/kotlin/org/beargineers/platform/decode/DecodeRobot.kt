@@ -94,7 +94,7 @@ object Locations {
     val SPIKE_FINAL_Y by config(143.0) // 20cm less for Spike#3
 
     val SPIKE_SCOOPING_SPEED by config(1.0)
-    val INITIAL_SHOT_SPEED by config(1.0)
+    val ANTI_WHEELIE_SPEED by config(1.0)
 }
 
 fun Position.mirrorForAlliance(alliance: Alliance): Position {
@@ -245,9 +245,15 @@ fun DecodeRobot.planShootingApproach(
         moveAwayFromGoal(it)
     }
 
+    val antiWheelie = backedOffStart.between(target, 0.9)
+
     val path = buildPath {
         if (backedOffStart != startPosition) {
             addRelaxedWaypoint(backedOffStart)
+        }
+
+        if (target.distanceTo(antiWheelie) > 8.cm) {
+            addRelaxedWaypoint(antiWheelie, speed = Locations.ANTI_WHEELIE_SPEED)
         }
 
         if (hasTurret) {
