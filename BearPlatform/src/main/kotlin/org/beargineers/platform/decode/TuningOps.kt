@@ -24,6 +24,10 @@ import kotlin.time.Duration.Companion.seconds
 
 abstract class TestOp : RobotOpMode<DecodeRobot>() {
     override val alliance = Alliance.BLUE
+
+    override fun isAuto(): Boolean {
+        return true
+    }
 }
 
 @Autonomous(group = "Tune")
