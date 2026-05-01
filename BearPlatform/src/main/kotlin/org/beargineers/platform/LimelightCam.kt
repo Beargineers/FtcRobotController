@@ -73,7 +73,6 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
         val result = normalizerMT2.result(
             Camera_positionTolerance.cm,
             Camera_headingTolerance.degrees,
-            robot.currentPosition
         )
         return result?.takeIf { isGoodResult(it) }
     }
