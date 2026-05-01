@@ -38,6 +38,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
+    val rgb = RGBIndicator(this)
     val shooter = Shooter(this)
     val turret = Turret(this)
     val ledIndicator = LedIndicator(2, this)
