@@ -8,7 +8,7 @@ class IndicatingRelativeLocalizer(val localizer: RelativeLocalizer, val led: Led
     }
 
     override fun updatePositionEstimate(position: Position) {
-        led.setTempPattern(blink("0G0"), 2.seconds)
+        led.setTempPattern(blink("RGR"), 2.seconds)
         localizer.updatePositionEstimate(position)
     }
 
