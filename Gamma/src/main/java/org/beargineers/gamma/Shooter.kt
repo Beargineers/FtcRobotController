@@ -120,16 +120,25 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         return v
     }
 
+    fun enableIntake(enable: Boolean) {
+        val isCurrentlyEnabled = bot.intakeMode == IntakeMode.ON
+        if (enable != isCurrentlyEnabled) {
+            Frame.log(if (enable) "Intake enabled" else "Intake paused")
+            bot.intakeMode = if (enable) IntakeMode.ON else IntakeMode.OFF
+        }
+
+        if (!enable) {
+            bot.ballsDetector.lastSeenBall.reset()
+        }
+    }
+
     suspend fun shoot(scope: CoroutineScope) {
         openLatch()
 
         scope.launch {
             bot.flywheelEnabled = true
             while (bot.isShooting()) {
-                bot.intakeMode = if (isUpToSpeed() && bot.headingIsAtGoal()) IntakeMode.ON else {
-                    bot.ballsDetector.lastSeenBall.reset()
-                    IntakeMode.OFF
-                }
+                enableIntake(isUpToSpeed() && bot.headingIsAtGoal())
                 bot.nextTick()
             }
             bot.intakeMode = IntakeMode.ON
