@@ -112,7 +112,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         val p = targetFlywheelPower()
         pid.updateCoefficients(SHOOTER_PID)
         pid.setTarget(p)
-        pid.updateCurrent(fly1.velocity / (maxTicks))
+        val current = fly1.velocity / (maxTicks)
+        pid.updateCurrent(current)
         Frame.graph("Shooter error", pid.error())
         Frame.graph("FW Target", p * 6000)
         Frame.graph("FW Actual", 6000 * fly1.velocity / (maxTicks))
@@ -124,7 +125,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     fun enableIntake(enable: Boolean) {
         val isCurrentlyEnabled = bot.intakeMode == IntakeMode.ON
         if (enable != isCurrentlyEnabled) {
-            Frame.log(if (enable) "Intake enabled" else "Intake paused. Flywheel error: ${pid.result()}, heading is correct: ${bot.headingIsAtGoal()}.")
+            Frame.log(if (enable) "Intake enabled" else "Intake paused. Flywheel error: ${pid.error()}, heading is correct: ${bot.headingIsAtGoal()}.")
             bot.intakeMode = if (enable) IntakeMode.ON else IntakeMode.OFF
         }
 
