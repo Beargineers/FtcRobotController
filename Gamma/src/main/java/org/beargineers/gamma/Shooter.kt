@@ -42,6 +42,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val SHOOTER_DISTANCE_QUOTIENT by config(0.00101)
     val SHOOTER_FREE_QUOTIENT by config(0.556)
     val SHOOTER_ERROR_MARGIN by config(0.03)
+    val INITIAL_SHOOTER_ERROR_MARGIN by config(0.03)
 
     val SHOOTING_TIMEOUT by config(2.0)
 
@@ -123,7 +124,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     fun enableIntake(enable: Boolean) {
         val isCurrentlyEnabled = bot.intakeMode == IntakeMode.ON
         if (enable != isCurrentlyEnabled) {
-            Frame.log(if (enable) "Intake enabled" else "Intake paused")
+            Frame.log(if (enable) "Intake enabled" else "Intake paused. Flywheel error: ${pid.result()}, heading is correct: ${bot.headingIsAtGoal()}.")
             bot.intakeMode = if (enable) IntakeMode.ON else IntakeMode.OFF
         }
 
@@ -135,10 +136,20 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     suspend fun shoot(scope: CoroutineScope) {
         openLatch()
 
+        bot.flywheelEnabled = true
+        while (bot.isShooting()) {
+            if (isFlyWheelUpToSpeed() && bot.headingIsAtGoal()) {
+                break
+            }
+            bot.nextTick()
+        }
+
+        Frame.log("Goal locked, flywheel sped up. Enabling intake")
+        bot.intakeMode = IntakeMode.ON
+
         scope.launch {
-            bot.flywheelEnabled = true
             while (bot.isShooting()) {
-                enableIntake(isUpToSpeed() && bot.headingIsAtGoal())
+                enableIntake(isFlywheelBackToSpeed() && bot.headingIsAtGoal())
                 bot.nextTick()
             }
             bot.intakeMode = IntakeMode.ON
@@ -271,7 +282,11 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         pusher.position = if (active) PUSHER_SERVO_CLOSED_POSITION else PUSHER_SERVO_OPEN_POSITION
     }
 
-    fun isUpToSpeed(): Boolean {
+    fun isFlywheelBackToSpeed(): Boolean {
         return abs(pid.error()) < SHOOTER_ERROR_MARGIN
+    }
+
+    fun isFlyWheelUpToSpeed(): Boolean {
+        return abs(pid.error()) < INITIAL_SHOOTER_ERROR_MARGIN
     }
 }
