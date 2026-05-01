@@ -5,7 +5,6 @@ import com.qualcomm.hardware.limelightvision.Limelight3A
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 
 private val executor = Executors.newSingleThreadScheduledExecutor()
 
@@ -50,15 +49,16 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
 
     override fun loop() {
         yaw = camHeading().degrees()
-
+/*
         val result = normalizer.result(
             Camera_positionTolerance.cm,
-            Camera_headingTolerance.degrees,
-            robot.currentPosition
+            Camera_headingTolerance.degrees
         )
         if (result != null) {
             Frame.graph("TURRET HEADING DRIFT", abs((result.heading - camHeading()).normalize().degrees()))
         }
+        */
+
     }
 
     override fun getRobotPose(): Position? {
