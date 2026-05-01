@@ -143,7 +143,7 @@ private suspend fun DecodeRobot.doTuning(
 
         delay(0.5.seconds)
 
-        val back = pathTo(shiftBack(currentPosition), speed = Locations.INITIAL_SHOT_SPEED)
+        val back = pathTo(shiftBack(currentPosition), speed = Locations.ANTI_WHEELIE_SPEED)
         drivePath(back, false)
 
         delay(0.5.seconds)
