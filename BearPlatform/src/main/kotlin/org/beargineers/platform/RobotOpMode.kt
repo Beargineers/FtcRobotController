@@ -49,8 +49,6 @@ abstract class RobotOpMode<T : Robot> : OpMode() {
 
     fun normalTickDurationMs(): Double = fpsTracker.normalTickDurationMs()
 
-    abstract fun isAuto(): Boolean
-
     open fun bearInit() {}
 
     final override fun init() {

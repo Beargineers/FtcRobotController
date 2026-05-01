@@ -34,10 +34,6 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         // Do nothing automatically
     }
 
-    override fun isAuto(): Boolean {
-        return false
-    }
-
     private fun Gamepad.firstDriverControls() {
         button(::a) {
             robot.intakeMode = when (robot.intakeMode) {
