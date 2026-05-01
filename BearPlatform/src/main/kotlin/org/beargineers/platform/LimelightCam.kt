@@ -79,7 +79,7 @@ class LimelightCam(robot: BaseRobot, val camHeading: () -> Angle): Camera(robot)
     }
 
     private fun isGoodResult(result: Position): Boolean {
-        return !robot.opMode.isAuto() || isGoodResultFor(BLUE_GOAL, result) || isGoodResultFor(RED_GOAL, result)
+        return isGoodResultFor(BLUE_GOAL, result) || isGoodResultFor(RED_GOAL, result)
     }
 
     private fun isGoodResultFor(goal: Position, result: Position): Boolean {

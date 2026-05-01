@@ -11,10 +11,6 @@ class TestOpMode : RobotOpMode<Robot>() {
     override suspend fun Robot.autoProgram() {
         // Do nothing by default
     }
-
-    override fun isAuto(): Boolean {
-        return false
-    }
 }
 
 class TestRobot(override val opMode: TestOpMode) : DecodeRobot {
