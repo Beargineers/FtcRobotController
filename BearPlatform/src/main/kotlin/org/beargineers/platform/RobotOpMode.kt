@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import org.beargineers.platform.DevMode.isDevMode
 
 abstract class RobotOpMode<T : Robot> : OpMode() {
     abstract val alliance: Alliance
@@ -74,6 +75,7 @@ abstract class RobotOpMode<T : Robot> : OpMode() {
     open fun bearStart() {}
     final override fun start() {
         super.start()
+        Frame.log("Starting opmode. DevMode=${isDevMode()}")
         fpsTracker.start()
 
         robot.start()

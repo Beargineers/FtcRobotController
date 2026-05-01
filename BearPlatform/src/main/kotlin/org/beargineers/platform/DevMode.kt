@@ -24,5 +24,6 @@ object DevMode {
     fun setDevMode(value: Boolean) {
         devMode = value
         PersistentSettings.setValue("devMode", if (value) "true" else "false")
+        Frame.log("DevMode changed to $devMode")
     }
 }
