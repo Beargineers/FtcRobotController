@@ -66,10 +66,6 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
             else -> error("Unknown operating in: $operatingIn")
         }, applyMirroring = true)
     }
-
-    override fun isAuto(): Boolean {
-        return true
-    }
 }
 
 suspend fun DecodeRobot.interpretProgram(program: String) {
