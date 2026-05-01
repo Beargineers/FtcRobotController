@@ -183,6 +183,6 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     override fun shooterIsReady(): Boolean {
-        return super.shooterIsReady() && shooter.isUpToSpeed()
+        return super.shooterIsReady() && shooter.isFlyWheelUpToSpeed()
     }
 }
