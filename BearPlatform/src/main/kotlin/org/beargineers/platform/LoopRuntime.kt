@@ -10,7 +10,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.util.ArrayDeque
+import java.util.concurrent.ConcurrentLinkedDeque
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
@@ -21,9 +21,9 @@ import kotlin.coroutines.resume
  * All coroutine execution/resumption happens only during [tick].
  */
 class LoopRuntime {
-    private val ready = ArrayDeque<Runnable>()
-    private val nextTickWaiters = ArrayDeque<CancellableContinuation<Unit>>()
-    private val uncaughtFailures = ArrayDeque<Throwable>()
+    private val ready = ConcurrentLinkedDeque<Runnable>()
+    private val nextTickWaiters = ConcurrentLinkedDeque<CancellableContinuation<Unit>>()
+    private val uncaughtFailures = ConcurrentLinkedDeque<Throwable>()
 
     private val rootJob: Job = SupervisorJob()
 

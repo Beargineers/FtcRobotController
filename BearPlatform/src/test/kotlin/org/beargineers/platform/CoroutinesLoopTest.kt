@@ -7,7 +7,13 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -194,5 +200,35 @@ class CoroutinesLoopTest : RobotTest() {
         repeat(10) {opMode.loop.tick()}
 
         assert(worked)
+    }
+
+    @Test
+    fun testConcurrentDispatchFromBackgroundThread() {
+        val runtime = LoopRuntime()
+        val tasks = 10_000
+        val executed = AtomicInteger()
+        val producerDone = CountDownLatch(1)
+
+        val producer = Thread {
+            try {
+                repeat(tasks) {
+                    runtime.dispatcher.dispatch(EmptyCoroutineContext, Runnable {
+                        executed.incrementAndGet()
+                    })
+                }
+            } finally {
+                producerDone.countDown()
+            }
+        }
+
+        producer.start()
+
+        while (producerDone.count > 0 || executed.get() < tasks) {
+            runtime.tick()
+        }
+
+        assertTrue(producerDone.await(1, TimeUnit.SECONDS))
+        producer.join(1_000)
+        assertEquals(tasks, executed.get())
     }
 }
