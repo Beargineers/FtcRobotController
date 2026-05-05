@@ -104,9 +104,25 @@ class LoopRuntime {
 
     fun stop() {
         rootJob.cancel()
-        uncaughtFailures.clear()
-        nextTickWaiters.clear()
-        ready.clear()
+        try {
+            drainReadyDuringStop()
+            rethrowPendingFailure()
+        } finally {
+            uncaughtFailures.clear()
+            nextTickWaiters.clear()
+            ready.clear()
+        }
+    }
+
+    private fun drainReadyDuringStop() {
+        while (true) {
+            val task = ready.poll() ?: break
+            try {
+                task.run()
+            } catch (throwable: Throwable) {
+                uncaughtFailures.addLast(throwable)
+            }
+        }
     }
 
     private fun rethrowPendingFailure() {

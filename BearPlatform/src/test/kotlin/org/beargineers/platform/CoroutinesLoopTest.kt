@@ -203,6 +203,54 @@ class CoroutinesLoopTest : RobotTest() {
     }
 
     @Test
+    fun testStopRunsCancellationCleanup() {
+        var cleanupStarted = false
+        var cleanupChildRan = false
+
+        opMode.submitJob {
+            try {
+                opMode.nextTick()
+                error("nextTick() should throw CancellationException when the runtime stops")
+            } finally {
+                cleanupStarted = true
+                withContext(NonCancellable) {
+                    coroutineScope {
+                        launch {
+                            cleanupChildRan = true
+                        }
+                    }
+                }
+            }
+        }
+
+        opMode.loop.tick()
+        opMode.loop.stop()
+
+        assertTrue(cleanupStarted)
+        assertTrue(cleanupChildRan)
+    }
+
+    @Test
+    fun testStopRethrowsCancellationCleanupFailure() {
+        opMode.submitJob {
+            try {
+                opMode.nextTick()
+                error("nextTick() should throw CancellationException when the runtime stops")
+            } finally {
+                error("cleanup failed")
+            }
+        }
+
+        opMode.loop.tick()
+
+        val thrown = expectThrows<IllegalStateException> {
+            opMode.loop.stop()
+        }
+
+        assertEquals("cleanup failed", thrown.message)
+    }
+
+    @Test
     fun testConcurrentDispatchFromBackgroundThread() {
         val runtime = LoopRuntime()
         val tasks = 10_000
@@ -212,9 +260,9 @@ class CoroutinesLoopTest : RobotTest() {
         val producer = Thread {
             try {
                 repeat(tasks) {
-                    runtime.dispatcher.dispatch(EmptyCoroutineContext, Runnable {
+                    runtime.dispatcher.dispatch(EmptyCoroutineContext) {
                         executed.incrementAndGet()
-                    })
+                    }
                 }
             } finally {
                 producerDone.countDown()
