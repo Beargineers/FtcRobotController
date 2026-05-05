@@ -10,7 +10,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.beargineers.platform.Angle
-import org.beargineers.platform.ArtifactsVision
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Frame
 import org.beargineers.platform.FusionLocalizer
@@ -24,6 +23,7 @@ import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.cos
+import org.beargineers.platform.decode.ArtifactsVision
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance

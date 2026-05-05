@@ -1,8 +1,21 @@
-package org.beargineers.platform
+package org.beargineers.platform.decode
 
 import android.graphics.Color
 import android.util.Size
 import com.bylazar.camerastream.PanelsCameraStream
+import org.beargineers.platform.BaseRobot
+import org.beargineers.platform.Distance
+import org.beargineers.platform.Hardware
+import org.beargineers.platform.Location
+import org.beargineers.platform.RotatedCameraStreamSource
+import org.beargineers.platform.abs
+import org.beargineers.platform.cm
+import org.beargineers.platform.config
+import org.beargineers.platform.cos
+import org.beargineers.platform.inch
+import org.beargineers.platform.isWithinFieldBounds
+import org.beargineers.platform.radians
+import org.beargineers.platform.sin
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor
