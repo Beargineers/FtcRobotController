@@ -35,6 +35,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     }
 
     private fun Gamepad.firstDriverControls() {
+        shootingControls()
+        collectionControls()
+        parkingControls()
+
         button(::a) {
             robot.intakeMode = when (robot.intakeMode) {
                 IntakeMode.OFF -> IntakeMode.ON
@@ -56,29 +60,18 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             lookAtGoalBtnClickedAt = System.currentTimeMillis()
         }
 
-        button(::right_bumper) {
-            lookAtGoal = true
-            auto("Going to shooting zone") {
-                goToShootingZoneAndShoot(if (alliance == Alliance.BLUE){ShootingZones.FRONT} else {
-                    ShootingZones.BACK})
-            }
+
+        button( ::x) {
+            robot.assumePosition(Position.ZERO)
+            robot.resetTurret()
         }
 
-        button(::left_bumper) {
-            lookAtGoal = true
-            auto("Going to shooting zone") {
-                goToShootingZoneAndShoot(if (alliance == Alliance.BLUE){ShootingZones.BACK} else {
-                    ShootingZones.FRONT})
-            }
-        }
+        shootingControls()
+        collectionControls()
+        parkingControls()
+    }
 
-        button({ right_trigger > 0.1}) {
-            lookAtGoal = false
-            auto("Going to closest zone") {
-                goToShootingZoneAndShoot(ShootingZones.CLOSEST)
-            }
-        }
-
+    private fun Gamepad.collectionControls() {
         button({ left_trigger > 0.1 }) {
             auto("Collect by vision") {
                 collectArtifactsInView(false)
@@ -98,13 +91,41 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
                 openRamp()
             }
         }
+    }
 
-        button( ::x) {
-            robot.assumePosition(Position.ZERO)
-            robot.resetTurret()
+    private fun Gamepad.shootingControls() {
+        button(::right_bumper) {
+            lookAtGoal = true
+            auto("Going to shooting zone") {
+                goToShootingZoneAndShoot(
+                    if (alliance == Alliance.BLUE) {
+                        ShootingZones.FRONT
+                    } else {
+                        ShootingZones.BACK
+                    }
+                )
+            }
         }
 
-        parkingControls()
+        button(::left_bumper) {
+            lookAtGoal = true
+            auto("Going to shooting zone") {
+                goToShootingZoneAndShoot(
+                    if (alliance == Alliance.BLUE) {
+                        ShootingZones.BACK
+                    } else {
+                        ShootingZones.FRONT
+                    }
+                )
+            }
+        }
+
+        button({ right_trigger > 0.1 }) {
+            lookAtGoal = false
+            auto("Going to closest zone") {
+                goToShootingZoneAndShoot(ShootingZones.CLOSEST)
+            }
+        }
     }
 
     private var parkingLevel = 0
@@ -153,6 +174,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     }
 
     private fun Gamepad.secondDriverControls() {
+        shootingControls()
+        collectionControls()
+        parkingControls()
+
         button(::dpad_up) {
             robot.adjustShooting(+0.01, 0.0)
         }
