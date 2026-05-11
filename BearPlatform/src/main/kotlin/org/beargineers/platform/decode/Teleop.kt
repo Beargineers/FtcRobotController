@@ -234,14 +234,14 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val delta = if (!fpvDrive) {
             val sign = if (alliance == Alliance.BLUE) -1 else 1
 
-            val dx = gamepad1.left_stick_x.toDouble() * POSITIONAL_GAIN * sign
-            val dy = gamepad1.left_stick_y.toDouble() * POSITIONAL_GAIN * -sign
+            val dx = leftStickX() * POSITIONAL_GAIN * sign
+            val dy = leftStickY() * POSITIONAL_GAIN * -sign
 
             Location(dx.cm, dy.cm)
         } else {
             val h = robot.currentPosition.heading
-            val forward = -gamepad1.left_stick_y.normalize().cm
-            val strafe = gamepad1.left_stick_x.normalize().cm
+            val forward = -leftStickY().cm
+            val strafe = leftStickX().cm
             val dx = (forward * cos(h) + strafe * sin(h)) * POSITIONAL_GAIN.toDouble()
             val dy = (forward * sin(h) - strafe * cos(h)) * POSITIONAL_GAIN.toDouble()
 
@@ -265,6 +265,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
     }
 
+    private fun leftStickY(): Double = (gamepad1.left_stick_y + gamepad2.left_stick_y).normalize().coerceIn(-1.0, 1.0)
+    private fun leftStickX(): Double = (gamepad1.left_stick_x + gamepad2.left_stick_x).normalize().coerceIn(-1.0, 1.0)
+    private fun rightStickX(): Double = (gamepad1.right_stick_x + gamepad2.right_stick_x).normalize().coerceIn(-1.0, 1.0)
+
     private fun commandedHeading(): Angle {
         val heading: Angle = when {
             lookAtGoal && !robot.hasTurret -> robot.headingToGoal()
@@ -274,8 +278,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     }
 
     private fun commandedRotation(): Angle {
-        return (ROTATIONAL_GAIN * (gamepad1.right_stick_x +
-                (0/*gamepad1.right_trigger - gamepad1.left_trigger*/) * 0.5).normalize()).degrees
+        return (ROTATIONAL_GAIN * rightStickX()).degrees
     }
 
 
