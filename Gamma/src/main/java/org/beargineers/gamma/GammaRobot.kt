@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -81,7 +82,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
             coroutineScope {
                 val shootingScope: CoroutineScope = this
 
-                launch {
+                val delayedLatchOpen = launch {
                     delay(OPEN_LATCH_DELAY_MS.milliseconds)
                     shooter.openLatch()
                 }
@@ -91,6 +92,10 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
                     drivePath(waypoints, applyMirroring)
                 } finally {
                     predictedShootingPosition = null
+                }
+
+                if (delayedLatchOpen.isActive) {
+                    delayedLatchOpen.cancelAndJoin()
                 }
 
                 shootingJob = launch(CoroutineName("Shooting")) {
