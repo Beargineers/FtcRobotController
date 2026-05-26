@@ -76,13 +76,14 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
     private val lowerSensor by hardware<DigitalChannel>()
 
     private val upperReader = SensorReader("upper", { upperSensor.state }, bot)
-    private val lowerReader = SensorReader("lower", { lowerSensor.state}, bot)
+    private val lowerReader = SensorReader("lower", { lowerSensor.state }, bot)
 
     val lastSeenBall = ElapsedTime()
     private var artifactsCount = 0
 
     override fun init() {
         upperSensor.mode = DigitalChannel.Mode.INPUT
+        lowerSensor.mode = DigitalChannel.Mode.INPUT
     }
 
     fun cutoff() {
