@@ -54,6 +54,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val LATCH_SERVO_RUN_TIME_MS by config(500)
     val LATCH_SERVO_DIRECTION by config(DcMotorSimple.Direction.FORWARD)
 
+    val FLY1_DIRECTION by config(DcMotorSimple.Direction.REVERSE)
+    val FLY2_DIRECTION by config(DcMotorSimple.Direction.FORWARD)
+
     val PUSHER_SERVO_OPEN_POSITION by config(0.0)
     val PUSHER_SERVO_CLOSED_POSITION by config(1.0)
     val PUSHER_SERVO_ACTIVATION_DELAY_MS by config(50)
@@ -82,8 +85,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         super.init()
 
         val launchMotors = listOf(fly1, fly2)
-        fly1.direction = DcMotorSimple.Direction.REVERSE
-        fly2.direction = DcMotorSimple.Direction.FORWARD
+        fly1.direction = FLY1_DIRECTION
+        fly2.direction = FLY2_DIRECTION
         launchMotors.forEach {
             it.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
