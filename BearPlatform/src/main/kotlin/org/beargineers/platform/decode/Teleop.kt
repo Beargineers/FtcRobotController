@@ -246,6 +246,10 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         }
     }
 
+    private fun controlsAreTouched(): Boolean {
+        return listOf(leftStickX(), leftStickY(), rightStickX()).any {abs(it) > 0.5}
+    }
+
     override fun bearLoop() {
         super.bearLoop()
         Frame.addData("Shooting", robot.clearForShooting() ?: "Ready")
@@ -276,7 +280,8 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         val heading: Angle = commandedHeading()
         val deltaPosition = Position(delta.x, delta.y, heading - robot.currentPosition.heading)
 
-        if (!deltaPosition.isZero()) {
+
+        if (controlsAreTouched()) {
             cancelAuto()
         }
 
