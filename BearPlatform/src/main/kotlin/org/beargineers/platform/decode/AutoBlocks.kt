@@ -115,7 +115,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
         goAndShootIfHasLoad()
         cancelWhen({artifactsCount >= 3}) {
             withName("Collecting from $from") {
-                intakeMode = IntakeMode.ON
+                requestIntakeMode(IntakeMode.ON)
                 drivePath(path, true, false)
             }
         }

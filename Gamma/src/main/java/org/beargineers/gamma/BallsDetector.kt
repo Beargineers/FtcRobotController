@@ -8,7 +8,6 @@ import org.beargineers.platform.Hardware
 import org.beargineers.platform.cm
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
-import org.beargineers.platform.decode.IntakeState
 import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.submitJob
@@ -87,12 +86,12 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
     }
 
     fun cutoff() {
-        val modCount = IntakeState.modCount
+        val revision = bot.intakeController.revision()
         bot.submitJob("Cutoff intake") {
             delay(INTAKE_CUTOFF_DELAY_MS.milliseconds)
-            if (modCount == IntakeState.modCount && artifactsCount == 3) {
+            if (revision == bot.intakeController.revision() && artifactsCount == 3) {
                 robot.opMode.gamepad1.rumble(300)
-                bot.intakeMode = IntakeMode.OFF
+                bot.intakeController.setCapacityLimited(true)
             }
         }
     }
@@ -105,6 +104,7 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
 
         if (bot.intakeMode == IntakeMode.REVERSE) {
             artifactsCount = 0
+            bot.intakeController.setCapacityLimited(false)
             return
         }
 
@@ -136,8 +136,12 @@ class BallsDetector(val bot: GammaRobot) : Hardware(bot) {
             artifactsCount = 1
         }
 
+        if (artifactsCount < 3) {
+            bot.intakeController.setCapacityLimited(false)
+        }
+
         if (seenUpper || seenLower) {
-            if (bot.shooter.pusherActive) {
+            if (seenLower && bot.shooter.pusherActive) {
                 Frame.log("Aborting shooting. seenUpper=$seenUpper, seenLower=$seenLower")
                 bot.abortShooting()
             }

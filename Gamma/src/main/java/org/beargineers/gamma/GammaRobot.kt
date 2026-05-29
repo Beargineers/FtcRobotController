@@ -28,17 +28,16 @@ import org.beargineers.platform.decode.ArtifactsVision
 import org.beargineers.platform.decode.DecodeRobot
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.goalDistance
-import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.sin
-import org.beargineers.platform.submitJob
 import kotlin.time.Duration.Companion.milliseconds
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
+    val intakeController = IntakeController(this)
     val rgb = RGBIndicator(this)
     val shooter = Shooter(this)
     val turret = Turret(this)
@@ -66,6 +65,10 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val hasTurret = true
     override val hasVision = true
 
+    override fun requestIntakeMode(mode: IntakeMode) {
+        intakeController.setBaseMode(mode)
+    }
+
     override fun loop() {
         super.loop()
         Frame.addDevData("Distance to goal", goalDistance())
@@ -84,6 +87,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
                 val delayedLatchOpen = launch {
                     delay(OPEN_LATCH_DELAY_MS.milliseconds)
+                    intakeController.setShooterMode(IntakeMode.OFF)
                     shooter.openLatch()
                 }
 
@@ -114,11 +118,12 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         }
         finally {
             withContext(NonCancellable) {
+                intakeController.setShooterMode(null)
                 shooter.closeLatch(false)
             }
         }
 
-        intakeMode = IntakeMode.ON
+        intakeController.setBaseMode(IntakeMode.ON)
     }
 
     private fun CoroutineScope.holdPositionWhileShooting() {
@@ -136,15 +141,16 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     fun abortShooting() {
         shootingJob?.cancel()
-        submitJob("Reversing intake on aborted shooting") {
-            intakeMode = IntakeMode.REVERSE
-            delay(300.milliseconds)
-            intakeMode = IntakeMode.ON
-        }
+        intakeController.setShooterMode(null)
+        intakeController.setCapacityLimited(false)
+        intakeController.reverseFor(300.milliseconds)
     }
 
     override suspend fun prepareForShutdown() {
         super.prepareForShutdown()
+        intakeController.setBaseMode(IntakeMode.OFF)
+        intakeController.setShooterMode(null)
+        intakeController.setCapacityLimited(false)
         shooter.closeLatch(false)
     }
 

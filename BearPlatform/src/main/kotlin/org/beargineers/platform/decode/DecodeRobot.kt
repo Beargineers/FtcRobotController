@@ -35,8 +35,12 @@ interface DecodeRobot : Robot {
     suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean)
 
     suspend fun prepareForShutdown() {
-        intakeMode = IntakeMode.OFF
+        requestIntakeMode(IntakeMode.OFF)
         flywheelEnabled = false
+    }
+
+    fun requestIntakeMode(mode: IntakeMode) {
+        intakeMode = mode
     }
 
     fun isShooting(): Boolean

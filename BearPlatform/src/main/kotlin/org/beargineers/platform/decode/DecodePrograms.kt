@@ -38,7 +38,7 @@ suspend fun DecodeRobot.openRampAndCollect() {
         val path = openRampCollectPath()
         drivePath(path.take(1), true)
         drivePath(path.drop(1), true)
-        intakeMode = IntakeMode.ON
+        requestIntakeMode(IntakeMode.ON)
 
 /*
         delay(100.milliseconds)
@@ -58,7 +58,7 @@ suspend fun DecodeRobot.openRampAndCollect() {
 }
 
 suspend fun DecodeRobot.collectArtifactsInView(strafe: Boolean, filter: (Location) -> Boolean = {true}) {
-    intakeMode = IntakeMode.ON
+    requestIntakeMode(IntakeMode.ON)
 
     val circularity = if (strafe) 0.35 else 0.6
 

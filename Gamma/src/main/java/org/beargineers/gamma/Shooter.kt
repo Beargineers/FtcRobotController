@@ -25,7 +25,6 @@ import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.flywheelEnabled
 import org.beargineers.platform.decode.goalDistanceFrom
 import org.beargineers.platform.decode.headingIsAtGoal
-import org.beargineers.platform.decode.intakeMode
 import org.beargineers.platform.doNoLongerThan
 import org.beargineers.platform.motorPower
 import org.beargineers.platform.nextTick
@@ -77,6 +76,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     var latchState = CLOSED
     var pusherActive = false
+    private var shootingIntakeEnabled = false
 
 
     var maxTicks = 0
@@ -126,11 +126,13 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     fun enableIntake(enable: Boolean) {
-        val isCurrentlyEnabled = bot.intakeMode == IntakeMode.ON
-        if (enable != isCurrentlyEnabled) {
+        val requestedMode = if (enable) IntakeMode.ON else IntakeMode.OFF
+        if (enable != shootingIntakeEnabled) {
             Frame.log(if (enable) "Intake enabled" else "Intake paused. Flywheel error: ${pid.error()}, heading is correct: ${bot.headingIsAtGoal()}.")
-            bot.intakeMode = if (enable) IntakeMode.ON else IntakeMode.OFF
         }
+
+        shootingIntakeEnabled = enable
+        bot.intakeController.setShooterMode(requestedMode)
 
         if (!enable) {
             bot.ballsDetector.lastSeenBall.reset()
@@ -138,33 +140,44 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     suspend fun shoot(scope: CoroutineScope) {
-        openLatch()
-
+        shootingIntakeEnabled = false
         bot.flywheelEnabled = true
+
         while (bot.isShooting()) {
             if (isFlyWheelUpToSpeed() && bot.headingIsAtGoal()) {
                 break
             }
+            bot.intakeController.setShooterMode(IntakeMode.OFF)
             bot.nextTick()
         }
 
+        openLatch()
+
         Frame.log("Goal locked, flywheel sped up. Enabling intake")
-        bot.intakeMode = IntakeMode.ON
+        bot.intakeController.setShooterMode(IntakeMode.ON)
 
         scope.launch {
-            while (bot.isShooting()) {
-                enableIntake(isFlywheelBackToSpeed() && bot.headingIsAtGoal())
-                bot.nextTick()
+            try {
+                while (bot.isShooting()) {
+                    enableIntake(isFlywheelBackToSpeed() && bot.headingIsAtGoal())
+                    bot.nextTick()
+                }
+            } finally {
+                bot.intakeController.setShooterMode(null)
             }
-            bot.intakeMode = IntakeMode.ON
         }
 
-        bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
-            bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
+        try {
+            bot.doNoLongerThan(SHOOTING_TIMEOUT.seconds) {
+                bot.ballsDetector.waitTillNoBalls(PUSHER_SERVO_ACTIVATION_DELAY_MS.milliseconds)
+            }
+            activatePusher(true)
+            delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
+            activatePusher(false)
+        } finally {
+            shootingIntakeEnabled = false
+            bot.intakeController.setShooterMode(null)
         }
-        activatePusher(true)
-        delay(PUSHER_SERVO_ACTIVATION_DURATION_MS.milliseconds)
-        activatePusher(false)
     }
 
     private fun targetFlywheelPower(): Double {
@@ -263,7 +276,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             CLOSED -> {
                 latchJob?.cancel()
                 latchState = OPENING
-                bot.intakeMode = IntakeMode.OFF
                 latch.position = LATCH_SERVO_OPEN_POSITION
                 latchJob = bot.submitJob("Open latch") {
                     delay(LATCH_SERVO_RUN_TIME_MS.milliseconds)

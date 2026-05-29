@@ -40,13 +40,13 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         parkingControls()
 
         button(::a) {
-            robot.intakeMode = when (robot.intakeMode) {
+            robot.requestIntakeMode(when (robot.intakeMode) {
                 IntakeMode.OFF -> IntakeMode.ON
                 IntakeMode.ON -> IntakeMode.OFF
                 IntakeMode.REVERSE -> IntakeMode.ON
-            }
+            })
         }.onHold {
-            robot.intakeMode = IntakeMode.REVERSE
+            robot.requestIntakeMode(IntakeMode.REVERSE)
         }
 
         button(::left_stick_button) {
@@ -211,7 +211,7 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
 
         if (!DevMode.isDevMode()) {
             robot.flywheelEnabled = true
-            robot.intakeMode = IntakeMode.ON
+            robot.requestIntakeMode(IntakeMode.ON)
         }
     }
 
