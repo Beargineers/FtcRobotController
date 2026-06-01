@@ -143,15 +143,15 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         shootingIntakeEnabled = false
         bot.flywheelEnabled = true
 
+        bot.intakeController.setShooterMode(IntakeMode.OFF)
+        openLatch()
+
         while (bot.isShooting()) {
             if (isFlyWheelUpToSpeed() && bot.headingIsAtGoal()) {
                 break
             }
-            bot.intakeController.setShooterMode(IntakeMode.OFF)
             bot.nextTick()
         }
-
-        openLatch()
 
         Frame.log("Goal locked, flywheel sped up. Enabling intake")
         bot.intakeController.setShooterMode(IntakeMode.ON)
