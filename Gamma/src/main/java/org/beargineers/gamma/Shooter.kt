@@ -18,8 +18,6 @@ import org.beargineers.gamma.Shooter.LatchState.OPEN
 import org.beargineers.gamma.Shooter.LatchState.OPENING
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
-import org.beargineers.platform.PID
-import org.beargineers.platform.PIDFTCoeffs
 import org.beargineers.platform.config
 import org.beargineers.platform.decode.IntakeMode
 import org.beargineers.platform.decode.flywheelEnabled
@@ -32,6 +30,8 @@ import org.beargineers.platform.roundMotorPower
 import org.beargineers.platform.submitJob
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.math.abs
+import kotlin.math.roundToInt
+import kotlin.math.sign
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -45,7 +45,12 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
     val SHOOTING_TIMEOUT by config(2.0)
 
-    val SHOOTER_PID by config(PIDFTCoeffs(0.0, 0.0, 0.0, 0.0))
+    val SHOOTER_P by config(0.00015)
+    val SHOOTER_kS by config(0.0410)
+    val SHOOTER_kV by config(0.00036)
+    val SHOOTER_ENTER_FP by config(250)
+    val SHOOTER_EXIT_FP by config(120)
+
     val SHOOTER_ANGLE_CORRECTION by config(0.0)
 
     val LATCH_SERVO_OPEN_POSITION by config(0.30)
@@ -60,8 +65,6 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val PUSHER_SERVO_CLOSED_POSITION by config(1.0)
     val PUSHER_SERVO_ACTIVATION_DELAY_MS by config(50)
     val PUSHER_SERVO_ACTIVATION_DURATION_MS by config(100)
-
-    val pid = PID()
 
     val fly1 by hardware<DcMotorEx>()
     val fly2 by hardware<DcMotorEx>()
@@ -79,7 +82,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     private var shootingIntakeEnabled = false
 
 
-    var maxTicks = 0
+    var maxTicks = 0.0
 
     override fun init() {
         super.init()
@@ -92,7 +95,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             it.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
         }
 
-        maxTicks = fly1.motorType.achieveableMaxTicksPerSecondRounded
+        maxTicks = fly1.motorType.achieveableMaxTicksPerSecondRounded.toDouble()
         latch.direction = when (LATCH_SERVO_DIRECTION) {
             DcMotorSimple.Direction.FORWARD -> Servo.Direction.FORWARD
             DcMotorSimple.Direction.REVERSE -> Servo.Direction.REVERSE
@@ -111,24 +114,40 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
         fly2.motorPower = p
     }
 
+    fun shooterError(): Double {
+        val p = targetFlywheelPower()
+        val targetTicks = p * maxTicks
+        val currentTicks = fly1.velocity
+        return abs(targetTicks - currentTicks) / maxTicks
+    }
+
+    private var fullPowerMode = false
     private fun recommendedPower(): Double {
         val p = targetFlywheelPower()
-        pid.updateCoefficients(SHOOTER_PID)
-        pid.setTarget(p)
-        val current = fly1.velocity / (maxTicks)
-        pid.updateCurrent(current)
-        Frame.graph("Shooter error", pid.error())
-        Frame.graph("FW Target", p * 6000)
-        Frame.graph("FW Actual", 6000 * fly1.velocity / (maxTicks))
+        val targetTicks = p * maxTicks
+        val currentTicks = fly1.velocity
+        val error = targetTicks - currentTicks
 
-        val v = roundMotorPower(pid.result() + p)
-        return v
+        if (abs(error) > SHOOTER_ENTER_FP) {
+            fullPowerMode = true
+        } else if (abs(error) < SHOOTER_EXIT_FP) {
+            fullPowerMode = false
+        }
+
+        val ff = SHOOTER_kS + targetTicks * SHOOTER_kV
+        val correction = error * SHOOTER_P
+        val pidPower = (ff + correction).coerceIn(-1.0, 1.0)
+
+        Frame.graph("FW Target", targetTicks.roundToInt().toDouble())
+        Frame.graph("FW Actual", currentTicks.roundToInt().toDouble())
+
+        return roundMotorPower(if (fullPowerMode) 1.0 * sign(error) else pidPower)
     }
 
     fun enableIntake(enable: Boolean) {
         val requestedMode = if (enable) IntakeMode.ON else IntakeMode.OFF
         if (enable != shootingIntakeEnabled) {
-            Frame.log(if (enable) "Intake enabled" else "Intake paused. Flywheel error: ${pid.error()}, heading is correct: ${bot.headingIsAtGoal()}.")
+            Frame.log(if (enable) "Intake enabled" else "Intake paused. Flywheel error: ${shooterError()}, heading is correct: ${bot.headingIsAtGoal()}.")
         }
 
         shootingIntakeEnabled = enable
@@ -299,10 +318,10 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     }
 
     fun isFlywheelBackToSpeed(): Boolean {
-        return abs(pid.error()) < SHOOTER_ERROR_MARGIN
+        return shooterError() < SHOOTER_ERROR_MARGIN
     }
 
     fun isFlyWheelUpToSpeed(): Boolean {
-        return abs(pid.error()) < INITIAL_SHOOTER_ERROR_MARGIN
+        return shooterError() < INITIAL_SHOOTER_ERROR_MARGIN
     }
 }
