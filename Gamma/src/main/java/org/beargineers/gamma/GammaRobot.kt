@@ -77,10 +77,12 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     private var isShooting = false
+    var isInShootingSequence = false
     var predictedShootingPosition: Position? = null
 
 
     override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
+        isInShootingSequence = true
         try {
             coroutineScope {
                 val shootingScope: CoroutineScope = this
@@ -121,6 +123,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
                 intakeController.setShooterMode(null)
                 shooter.closeLatch(false)
             }
+            isInShootingSequence = false
         }
 
         intakeController.setBaseMode(IntakeMode.ON)

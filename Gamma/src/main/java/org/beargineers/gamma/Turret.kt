@@ -90,7 +90,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             }
 
             TurretMode.SHOOTING -> {
-                if (bot.shooter.latchState != Shooter.LatchState.CLOSED) {
+                if (bot.isInShootingSequence) {
                     aimAtGoal()
                 }
                 else {
