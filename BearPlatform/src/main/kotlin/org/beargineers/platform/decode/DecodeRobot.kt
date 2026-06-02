@@ -192,7 +192,7 @@ private fun DecodeRobot.travelHeadingTo(from: Position, to: Location): Angle {
     val distance = from.distanceTo(to)
 
     // Heuristics. If we have to turn more than 1 degree for each 2 cm of travel then let's just keep original heading and strafe
-    return if (2 * distance.cm() > diff.degrees()) tangential else from.heading
+    return if (distance.cm() > 2 * diff.degrees()) tangential else from.heading
 }
 
 private fun DecodeRobot.isPositionCloseToLever(pos: Position): Boolean {
