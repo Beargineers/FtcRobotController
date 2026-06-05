@@ -1,6 +1,15 @@
 package org.beargineers.platform
 
 import fi.iki.elonen.NanoHTTPD
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 object SettingsWebServer : NanoHTTPD(9000) {
     override fun serve(session: IHTTPSession): Response {
@@ -18,6 +27,9 @@ object SettingsWebServer : NanoHTTPD(9000) {
             }
             uri == "/config" && session.method == Method.POST -> {
                 handleConfigPost(session)
+            }
+            uri == "/matchLogs" && session.method == Method.GET -> {
+                handleMatchLogsGet()
             }
             else -> {
                 newFixedLengthResponse(
@@ -213,6 +225,94 @@ object SettingsWebServer : NanoHTTPD(9000) {
                 "application/json",
                 """{"status":"error","message":"Error updating config: ${e.message}"}"""
             )
+        }
+    }
+
+    private fun handleMatchLogsGet(): Response {
+        val matchLogFolder = AppUtil.MATCH_LOG_FOLDER
+
+        if (!matchLogFolder.exists()) {
+            matchLogFolder.mkdirs()
+        }
+
+        val logs = matchLogFolder
+            .walkTopDown()
+            .filter { it.isFile }
+            .toList()
+
+        return try {
+            val zipBytes = zipFiles(matchLogFolder, logs)
+            val response = newFixedLengthResponse(
+                Response.Status.OK,
+                "application/zip",
+                DeleteOnCompleteInputStream(zipBytes, logs),
+                zipBytes.size.toLong()
+            )
+
+            response.addHeader("Content-Disposition", "attachment; filename=\"${matchLogsFileName()}\"")
+            response.addHeader("Cache-Control", "no-store")
+            response
+        } catch (e: Exception) {
+            newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "text/plain",
+                "Error creating match log zip: ${e.message}"
+            )
+        }
+    }
+
+    private fun zipFiles(rootFolder: File, files: List<File>): ByteArray {
+        val byteStream = ByteArrayOutputStream()
+
+        ZipOutputStream(byteStream).use { zipStream ->
+            files.forEach { file ->
+                val entryName = file
+                    .relativeTo(rootFolder)
+                    .invariantSeparatorsPath
+
+                zipStream.putNextEntry(ZipEntry(entryName))
+                file.inputStream().use { input ->
+                    input.copyTo(zipStream)
+                }
+                zipStream.closeEntry()
+            }
+        }
+
+        return byteStream.toByteArray()
+    }
+
+    private fun matchLogsFileName(): String {
+        val timestamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+        return "match-logs-$timestamp.zip"
+    }
+
+    private class DeleteOnCompleteInputStream(
+        bytes: ByteArray,
+        private val filesToDelete: List<File>,
+    ) : ByteArrayInputStream(bytes) {
+        private var deleted = false
+
+        override fun read(): Int {
+            val value = super.read()
+            deleteIfComplete()
+            return value
+        }
+
+        override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+            val count = super.read(buffer, offset, length)
+            deleteIfComplete()
+            return count
+        }
+
+        private fun deleteIfComplete() {
+            if (available() == 0 && !deleted) {
+                deleted = true
+                filesToDelete.forEach { file ->
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
+            }
         }
     }
 }
