@@ -179,8 +179,8 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
 fun openRampPath(): List<Waypoint> {
     return buildPath {
         with(Locations) {
-            addWaypoint(OPEN_RAMP_APPROACH, positionTolerance = 2.cm, headingTolerance = 2.degrees)
-            addWaypoint(OPEN_RAMP, OPEN_RAMP_SPEED, positionTolerance = 1.cm, headingTolerance = 1.degrees)
+            addRelaxedWaypoint(OPEN_RAMP_APPROACH)
+            addWaypoint(OPEN_RAMP, OPEN_RAMP_SPEED)
         }
     }
 }
