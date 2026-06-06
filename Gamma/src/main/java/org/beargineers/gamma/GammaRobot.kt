@@ -14,13 +14,16 @@ import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Frame
 import org.beargineers.platform.FusionLocalizer
-import org.beargineers.platform.IndicatingRelativeLocalizer
+import org.beargineers.platform.LEDColor
 import org.beargineers.platform.LedIndicator
 import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.Location
 import org.beargineers.platform.PinpointLocalizer
 import org.beargineers.platform.Position
+import org.beargineers.platform.RGBIndicatingRelativeLocalizer
+import org.beargineers.platform.RGBIndicator
+import org.beargineers.platform.RGBSignal
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.cos
@@ -46,6 +49,13 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val vision = ArtifactsVision(this, true)
     val ballsDetector = BallsDetector(this)
 
+    private enum class GammaRGBSignal(override val priority: Int) : RGBSignal {
+        INTAKE_TARGET(10),
+        AUTO(20),
+        ARTIFACTS(30),
+        APRIL_TAG(40)
+    }
+
     override fun intakeTarget(filter: (Location) -> Boolean, circularity: Double): Location? {
         return vision.calculateTargetLocation(filter, circularity)
     }
@@ -53,7 +63,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     override val localizer: Localizer =
         FusionLocalizer(
             RotatingCameraAdjuster(LimelightCam(this) {turret.turretHeading()}, turret),
-            IndicatingRelativeLocalizer(PinpointLocalizer(this), ledIndicator)
+            RGBIndicatingRelativeLocalizer(PinpointLocalizer(this), rgb)
         )
 
     private var manualAngleCorrection = 0.0
@@ -70,10 +80,42 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     override fun loop() {
+        updateRGBIndicator()
         super.loop()
         Frame.addDevData("Distance to goal", goalDistance())
         Frame.addData("Artifacts", artifactsCount)
         ledIndicator.counter(artifactsCount, 'G')
+    }
+
+    private var oldArtifactCount = 0
+    private fun updateRGBIndicator() {
+        updateArtifactIndicator()
+
+        val autoActive = opMode.isAutoActive() || isInShootingSequence || isShooting()
+        if (autoActive) {
+            rgb.glow(GammaRGBSignal.AUTO, LEDColor.WHITE)
+        } else {
+            rgb.clear(GammaRGBSignal.AUTO)
+        }
+
+        val intakeTargetInView = artifactsCount < 3 && intakeTarget({ true }) != null
+        if (intakeTargetInView) {
+            rgb.glow(GammaRGBSignal.INTAKE_TARGET, LEDColor.BLUE)
+        } else {
+            rgb.clear(GammaRGBSignal.INTAKE_TARGET)
+        }
+    }
+
+    private fun updateArtifactIndicator() {
+        if (oldArtifactCount == artifactsCount) {
+            return
+        }
+
+        oldArtifactCount = artifactsCount
+        when (artifactsCount) {
+            3 -> rgb.glow(GammaRGBSignal.ARTIFACTS, LEDColor.GREEN)
+            else -> rgb.clear(GammaRGBSignal.ARTIFACTS)
+        }
     }
 
     private var isShooting = false
