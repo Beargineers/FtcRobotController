@@ -15,7 +15,6 @@ import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Frame
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.LEDColor
-import org.beargineers.platform.LedIndicator
 import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.Location
@@ -44,7 +43,6 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val rgb = RGBIndicator(this)
     val shooter = Shooter(this)
     val turret = Turret(this)
-    val ledIndicator = LedIndicator(2, this)
 
     val vision = ArtifactsVision(this, true)
     val ballsDetector = BallsDetector(this)
@@ -84,7 +82,6 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         super.loop()
         Frame.addDevData("Distance to goal", goalDistance())
         Frame.addData("Artifacts", artifactsCount)
-        ledIndicator.counter(artifactsCount, 'G')
     }
 
     private var oldArtifactCount = 0
