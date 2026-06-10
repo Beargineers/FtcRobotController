@@ -3,6 +3,7 @@ package org.beargineers.platform
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import java.util.Properties
 import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.KClass
 
 object Config {
     internal var currentConfigText = ""
@@ -10,8 +11,10 @@ object Config {
 
     private var configs = Properties()
     private val cache = mutableMapOf<String, Any>()
+    private val registry = mutableMapOf<KClass<*>, (String) -> Any>()
 
     init {
+        registerTypes()
         SettingsWebServer.start()
     }
 
@@ -27,7 +30,7 @@ object Config {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T:Any> value(name: String, default: T, fn: (String) -> T): T {
+    private fun <T:Any> value(name: String, default: T, fn: (String) -> T): T {
         synchronized(cache) {
             return cache.getOrPut(name) {
                 val c = configValue(name)
@@ -45,30 +48,20 @@ object Config {
             updateConfigText(text)
         }
     }
-}
-    
 
-fun config(default: Double) : ReadOnlyProperty<Any?, Double> {
-    return ReadOnlyProperty {_, property ->
-        Config.value(property.name, default) {it.toDouble()}
-    }
-}
+    fun registerTypes() {
+        registerType<Int> { it.toInt() }
+        registerType<Double> { it.toDouble() }
+        registerType<String> { it }
+        registerType<Boolean> {
+            when(it.lowercase()) {
+                "f", "false", "n", "no" -> false
+                "y", "yes", "t", "true" -> true
+                else -> error("Unknown value $it for boolean config")
+            }
+        }
 
-fun config(default: Int) : ReadOnlyProperty<Any?, Int> {
-    return ReadOnlyProperty {_, property ->
-        Config.value(property.name, default) {it.toInt()}
-    }
-}
-
-fun config(default: String) : ReadOnlyProperty<Any?, String> {
-    return ReadOnlyProperty {_, property ->
-        Config.value(property.name, default) {it}
-    }
-}
-
-fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any?, DcMotorSimple.Direction> {
-    return ReadOnlyProperty {_, property ->
-        Config.value(property.name, default) {
+        registerType<DcMotorSimple.Direction> {
             when(it) {
                 "forward", "FORWARD", "F" -> DcMotorSimple.Direction.FORWARD
                 "reverse", "REVERSE",
@@ -76,36 +69,8 @@ fun config(default: DcMotorSimple.Direction) : ReadOnlyProperty<Any?, DcMotorSim
                 else -> error("Unknown value $it for motor direction")
             }
         }
-    }
-}
 
-inline fun <reified T : Enum<T>> config(default: T): ReadOnlyProperty<Any?, T> {
-    return ReadOnlyProperty { _, property ->
-        Config.value(property.name, default) { v ->
-            T::class.java.enumConstants?.find { it.name == v } ?: error("Can't find enum entry named $v")
-        }
-    }
-}
-
-fun config(default: Boolean) : ReadOnlyProperty<Any?, Boolean> {
-    return ReadOnlyProperty {_, property ->
-        Config.value(property.name, default) {
-            when(it.lowercase()) {
-                "f", "false", "n", "no" -> false
-                "y", "yes", "t", "true" -> true
-                else -> error("Unknown value $it for boolean config")
-            }
-        }
-    }
-}
-
-fun config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any?, Position> {
-    return config(Position(dx, dy, dh))
-}
-
-fun config(default: Position): ReadOnlyProperty<Any?, Position> {
-    return ReadOnlyProperty { _, property ->
-        Config.value(property.name, default) {
+        registerType<Position> {
             val first = it.first()
             if (first.isDigit() || first=='-') {
                 val (x, y, heading) = it.split(",").map { it.trim().toDouble() }
@@ -115,28 +80,11 @@ fun config(default: Position): ReadOnlyProperty<Any?, Position> {
                 tilePosition(it)
             }
         }
-    }
-}
 
-fun config(default: Distance): ReadOnlyProperty<Any?, Distance> {
-    return ReadOnlyProperty { _, property ->
-        Config.value(property.name, default) {it.toDouble().cm}
-    }
-}
+        registerType<Distance> { it.toDouble().cm }
+        registerType<Angle> {it.toDouble().degrees}
 
-fun config(default: Angle): ReadOnlyProperty<Any?, Angle> {
-    return ReadOnlyProperty { _, property ->
-        Config.value(property.name, default) {it.toDouble().degrees}
-    }
-}
-
-fun config(dx: Distance, dy: Distance): ReadOnlyProperty<Any?, Location> {
-    return config(Location(dx, dy))
-}
-
-fun config(default: Location): ReadOnlyProperty<Any?, Location> {
-    return ReadOnlyProperty { _, property ->
-        Config.value(property.name, default) {
+        registerType<Location> {
             val first = it.first()
             if (first.isDigit() || first=='-') {
                 val (x, y) = it.split(",").map { it.trim().toDouble() }
@@ -146,12 +94,8 @@ fun config(default: Location): ReadOnlyProperty<Any?, Location> {
                 tileLocation(it)
             }
         }
-    }
-}
 
-fun config(default: PIDFTCoeffs): ReadOnlyProperty<Any?, PIDFTCoeffs> {
-    return ReadOnlyProperty { _, property ->
-        Config.value(property.name, default) {
+        registerType<PIDFTCoeffs> {
             val components = mutableListOf<Double>()
             components.addAll(it.split(',').map { it.toDouble() })
             repeat(5) { components.add(0.0)}
@@ -164,4 +108,38 @@ fun config(default: PIDFTCoeffs): ReadOnlyProperty<Any?, PIDFTCoeffs> {
             )
         }
     }
+
+    inline fun <reified T : Any> registerType(noinline fn: (String) -> T) {
+        registerType(T::class, fn)
+    }
+
+    inline fun <reified T : Enum<T>> registerType() {
+        registerType(T::class) { name ->
+            T::class.java.enumConstants?.find { it.name == name } ?: error("Can't find enum entry named $name")
+        }
+    }
+
+    fun <T:Any> registerType(typ: KClass<T>, fn: (String) -> T) {
+        registry[typ] = fn
+    }
+
+    fun <T : Any> configProperty(default: T, typ: KClass<T>): ReadOnlyProperty<Any?, T> {
+        @Suppress("UNCHECKED_CAST")
+        val serial = registry[typ] as? (String) -> T ?: error("No config serializer is registered for type $typ")
+        return ReadOnlyProperty { _, property ->
+            value(property.name, default, serial)
+        }
+    }
+}
+
+inline fun <reified T : Any> config(default: T): ReadOnlyProperty<Any?, T> {
+    return Config.configProperty(default, T::class)
+}
+
+fun config(dx: Distance, dy: Distance, dh: Angle): ReadOnlyProperty<Any?, Position> {
+    return config(Position(dx, dy, dh))
+}
+
+fun config(dx: Distance, dy: Distance): ReadOnlyProperty<Any?, Location> {
+    return config(Location(dx, dy))
 }

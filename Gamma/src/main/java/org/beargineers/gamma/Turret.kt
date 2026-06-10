@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import org.beargineers.platform.Angle
+import org.beargineers.platform.Config
 import org.beargineers.platform.Frame
 import org.beargineers.platform.Hardware
 import org.beargineers.platform.PID
@@ -40,7 +41,13 @@ fun motorTicksForAngle(angle: Angle): Int {
 }
 
 enum class TurretMode {
-    OFF, FIXED, FOLLOW, SHOOTING
+    OFF, FIXED, FOLLOW, SHOOTING;
+
+    companion object  {
+        init {
+            Config.registerType<TurretMode>()
+        }
+    }
 }
 private val TURRET_MODE by config(TurretMode.FOLLOW)
 
