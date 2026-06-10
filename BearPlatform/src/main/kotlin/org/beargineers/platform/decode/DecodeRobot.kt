@@ -18,15 +18,18 @@ import org.beargineers.platform.buildPath
 import org.beargineers.platform.cm
 import org.beargineers.platform.coerceInFieldBounds
 import org.beargineers.platform.config
+import org.beargineers.platform.cos
 import org.beargineers.platform.degrees
 import org.beargineers.platform.headingFromTo
 import org.beargineers.platform.hypot
 import org.beargineers.platform.inch
 import org.beargineers.platform.isWithinFieldBounds
 import org.beargineers.platform.max
+import org.beargineers.platform.sin
 import org.beargineers.platform.tileLocation
 import org.beargineers.platform.times
 import org.beargineers.platform.toFieldCentric
+import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.math.sqrt
 
@@ -135,6 +138,22 @@ private object ShootingZoneOptimizationConfig {
     val minGoalDistance by config(80.cm)
 }
 
+private val forwardSpeedCmPerSecond: Double by config(100.0)
+private val strafeSpeedCmPerSecond: Double by config(60.0)
+private val turnSpeedDegreesPerSecond: Double by config(180.0)
+
+fun estimatedWheelBudgetSeconds(from: Position, to: Location, heading: Angle): Double {
+    val distanceCm = from.distanceTo(to).cm()
+    val movementHeading = headingFromTo(from.location(), to)
+    val robotRelativeTravelHeading = (movementHeading - heading).normalize()
+
+    val forwardSeconds = distanceCm * abs(cos(robotRelativeTravelHeading)) / forwardSpeedCmPerSecond
+    val strafeSeconds = distanceCm * abs(sin(robotRelativeTravelHeading)) / strafeSpeedCmPerSecond
+    val turnSeconds = abs((heading - from.heading).normalize()).degrees() / turnSpeedDegreesPerSecond
+
+    return forwardSeconds + strafeSeconds + turnSeconds
+}
+
 private fun robotSamplePoints(position: Position): List<Location> {
     val halfWidth = RobotDimensions.ROBOT_WIDTH / 2
     return listOf(
@@ -179,19 +198,28 @@ private fun DecodeRobot.retreatIntoAllianceHalf(position: Position): Position {
     return position.shift(sign(position.x.distance) * abs(shiftY), shiftY).coerceInFieldBounds()
 }
 
+internal fun optimalShootingApproachHeading(from: Position, to: Location): Angle {
+    val movementHeading = headingFromTo(from.location(), to)
+    val candidates = buildList {
+        add(from.heading)
+        for (i in 0..71) {
+            add((movementHeading + 5.degrees * i.toDouble()).normalize())
+        }
+    }
+
+    // With the mecanum drive power budget, forward, strafe, and turn costs add.
+    // Between these cusp headings the cost is concave, so the minimum is at a candidate.
+    return candidates.minBy {
+        estimatedWheelBudgetSeconds(from, to, it)
+    }.normalize()
+}
+
 private fun DecodeRobot.travelHeadingTo(from: Position, to: Location): Angle {
     if (!hasTurret) {
         return headingToGoalFrom(to)
     }
 
-    val headingTo = headingFromTo(from.location(), to)
-    val tangential = listOf(headingTo, (headingTo + 180.degrees).normalize()).minBy { abs((from.heading - it).normalize()) }
-
-    val diff = abs((from.heading - tangential).normalize())
-    val distance = from.distanceTo(to)
-
-    // Heuristics. If we have to turn more than 1 degree for each 2 cm of travel then let's just keep original heading and strafe
-    return if (distance.cm() > 2 * diff.degrees()) tangential else from.heading
+    return optimalShootingApproachHeading(from, to)
 }
 
 private fun DecodeRobot.isPositionCloseToLever(pos: Position): Boolean {

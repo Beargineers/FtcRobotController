@@ -7,6 +7,7 @@ import com.bylazar.field.PanelsField
 import com.bylazar.panels.Panels
 import com.bylazar.telemetry.PanelsTelemetry
 import com.qualcomm.robotcore.util.ElapsedTime
+import kotlin.math.max
 
 fun cursorLocation(): Location{
     return Location(PanelsField.field.cursorX.inch,PanelsField.field.cursorY.inch)
@@ -71,6 +72,9 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         } as T
     }
 
+    var maxVelocity = 0.cm
+    var maxAngularVelocity = 0.0
+
     override fun loop() {
         allHardware.forEach {
             it.loop()
@@ -79,23 +83,27 @@ abstract class BaseRobot(override val opMode: RobotOpMode<*>) : Robot {
         localizer.update()
 
         Frame.addData("Position", currentPosition)
-        Frame.addDevData("Velocity", "%s/s, %s/s",
-            hypot(currentVelocity.x, currentVelocity.y),
-            abs(currentVelocity.heading))
+        val velocity = hypot(currentVelocity.x, currentVelocity.y)
+        val angularVelocity = abs(currentVelocity.heading)
+
+        maxVelocity = max(maxVelocity, velocity)
+        maxAngularVelocity = max(maxAngularVelocity, angularVelocity.degrees())
+
+        Frame.addDevData("Velocity", "%s/s, %s/s", velocity, angularVelocity)
+        Frame.addDevData("Max Velocity", "%s/s, %s/s", maxVelocity, maxAngularVelocity.degrees)
 
         Frame.log("POS") {
             buildString {
                 append("Position: $currentPosition. ")
-                append("Velocity: ${String.format("%s/s, %s/s", hypot(currentVelocity.x, currentVelocity.y), abs(currentVelocity.heading))}")
+                append("Velocity: ${String.format("%s/s, %s/s", velocity, angularVelocity)}")
                 for ((key, value) in states) {
                     append(". ${key.name}=$value")
                 }
-
             }
         }
 
-        Frame.graph("Linear V", hypot(currentVelocity.x, currentVelocity.y).cm())
-        Frame.graph("Angular V", abs(currentVelocity.heading).degrees())
+        Frame.graph("Linear V", velocity.cm())
+        Frame.graph("Angular V", angularVelocity.degrees())
 
         for ((key, value) in states) {
             Frame.addData(key.name, value)
