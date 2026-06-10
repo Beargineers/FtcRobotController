@@ -24,7 +24,6 @@ import org.beargineers.platform.hypot
 import org.beargineers.platform.inch
 import org.beargineers.platform.isWithinFieldBounds
 import org.beargineers.platform.max
-import org.beargineers.platform.min
 import org.beargineers.platform.tileLocation
 import org.beargineers.platform.times
 import org.beargineers.platform.toFieldCentric
@@ -203,7 +202,7 @@ private fun DecodeRobot.isPositionCloseToLever(pos: Position): Boolean {
     return clearance < RobotDimensions.ROBOT_LENGTH
 }
 
-private fun DecodeRobot.requiredProtectionBackoff(
+private fun DecodeRobot.requiredProtectionXBackoff(
     targetLocation: Location,
     startPosition: Position,
     protectedZones: List<Location>
@@ -213,15 +212,37 @@ private fun DecodeRobot.requiredProtectionBackoff(
         maxBackoff = 40.cm
     }
 
-    val minX = min(startPosition.x, targetLocation.x)
-    val maxX = max(startPosition.x, targetLocation.x)
-    for (zone in protectedZones) {
-        if (zone.x in minX..maxX) {
-            maxBackoff = max(maxBackoff, abs(zone.y))
+    for (zone in protectedZones + Location(0.cm, 126.cm).mirrorForAlliance(alliance)) {
+        if (straightPathIntersectsProtection(startPosition.location(), targetLocation, zone)) {
+            maxBackoff = max(maxBackoff, abs(zone.y - startPosition.y))
         }
     }
 
     return maxBackoff
+}
+
+private fun straightPathIntersectsProtection(
+    startLocation: Location,
+    targetLocation: Location,
+    protectedLocation: Location
+): Boolean {
+    val pathX = targetLocation.x - startLocation.x
+    val pathY = targetLocation.y - startLocation.y
+    val zoneX = protectedLocation.x - startLocation.x
+    val zoneY = protectedLocation.y - startLocation.y
+    val pathLengthSquared = pathX.cm() * pathX.cm() + pathY.cm() * pathY.cm()
+    if (pathLengthSquared == 0.0) {
+        return startLocation.distanceTo(protectedLocation) <= RobotDimensions.ROBOT_LENGTH / 2
+    }
+
+    val projection = (zoneX.cm() * pathX.cm() + zoneY.cm() * pathY.cm()) / pathLengthSquared
+    if (projection !in 0.0..1.0) return false
+
+    val closestPoint = Location(
+        startLocation.x + pathX * projection,
+        startLocation.y + pathY * projection
+    )
+    return closestPoint.distanceTo(protectedLocation) <= RobotDimensions.ROBOT_LENGTH / 2
 }
 
 
@@ -232,7 +253,7 @@ fun DecodeRobot.planShootingApproach(
     stayInAllianceHalf: Boolean
 ): List<Waypoint> {
     val firstCandidate = closestPointInShootingZone(shootingZone, startPosition.location())
-    val backoff = requiredProtectionBackoff(firstCandidate, startPosition, protectedZones)
+    val backoff = requiredProtectionXBackoff(firstCandidate, startPosition, protectedZones)
     val backedOffStart = startPosition.shift(0.cm, -backoff * alliance.sign)
 
     val secondCandidate = closestPointInShootingZone(shootingZone, backedOffStart.location())
