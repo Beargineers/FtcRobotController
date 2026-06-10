@@ -30,11 +30,11 @@ object Config {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T:Any> value(name: String, default: T, fn: (String) -> T): T {
+    private fun <T:Any> value(name: String, default: T?, fn: (String) -> T): T {
         synchronized(cache) {
             return cache.getOrPut(name) {
                 val c = configValue(name)
-                if (c != null) fn(c) else default
+                if (c != null) fn(c) else (default ?: error("$name is not defined in config.properties and default value is not specified"))
             } as T
         }
     }
@@ -123,7 +123,7 @@ object Config {
         registry[typ] = fn
     }
 
-    fun <T : Any> configProperty(default: T, typ: KClass<T>): ReadOnlyProperty<Any?, T> {
+    fun <T : Any> configProperty(default: T?, typ: KClass<T>): ReadOnlyProperty<Any?, T> {
         @Suppress("UNCHECKED_CAST")
         val serial = registry[typ] as? (String) -> T ?: error("No config serializer is registered for type $typ")
         return ReadOnlyProperty { _, property ->
@@ -132,7 +132,7 @@ object Config {
     }
 }
 
-inline fun <reified T : Any> config(default: T): ReadOnlyProperty<Any?, T> {
+inline fun <reified T : Any> config(default: T? = null): ReadOnlyProperty<Any?, T> {
     return Config.configProperty(default, T::class)
 }
 
