@@ -77,6 +77,10 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
         intakeController.setBaseMode(mode)
     }
 
+    override fun requestIntakeModeOverride(mode: IntakeMode) {
+        intakeController.setModeOverrideCapacity(mode)
+    }
+
     override fun loop() {
         updateRGBIndicator()
         super.loop()

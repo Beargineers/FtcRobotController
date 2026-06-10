@@ -35,6 +35,11 @@ class IntakeController(private val bot: GammaRobot) {
         setRequest(Request.CAPACITY_LIMIT, if (limited) IntakeMode.OFF else null)
     }
 
+    fun setModeOverrideCapacity(mode: IntakeMode) {
+        setCapacityLimited(false)
+        setBaseMode(mode)
+    }
+
     fun reverseFor(duration: Duration) {
         reverseJob?.cancel()
         setRequest(Request.ABORT_CLEAR, IntakeMode.REVERSE)

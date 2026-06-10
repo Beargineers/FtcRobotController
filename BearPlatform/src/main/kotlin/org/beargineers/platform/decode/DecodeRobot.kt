@@ -45,6 +45,11 @@ interface DecodeRobot : Robot {
         intakeMode = mode
     }
 
+    fun requestIntakeModeOverride(mode: IntakeMode) {
+        intakeMode = mode
+    }
+
+
     fun isShooting(): Boolean
 
     fun adjustShooting(distance: Double, angle: Double)

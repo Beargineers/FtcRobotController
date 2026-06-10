@@ -40,13 +40,13 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
         parkingControls()
 
         button(::a) {
-            robot.requestIntakeMode(when (robot.intakeMode) {
+            robot.requestIntakeModeOverride(when (robot.intakeMode) {
                 IntakeMode.OFF -> IntakeMode.ON
                 IntakeMode.ON -> IntakeMode.OFF
                 IntakeMode.REVERSE -> IntakeMode.ON
             })
         }.onHold {
-            robot.requestIntakeMode(IntakeMode.REVERSE)
+            robot.requestIntakeModeOverride(IntakeMode.REVERSE)
         }
 
         button(::left_stick_button) {
