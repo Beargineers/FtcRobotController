@@ -65,10 +65,6 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
             robot.assumePosition(Position.ZERO)
             robot.resetTurret()
         }
-
-        shootingControls()
-        collectionControls()
-        parkingControls()
     }
 
     private fun Gamepad.collectionControls() {
