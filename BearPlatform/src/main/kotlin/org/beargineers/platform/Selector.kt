@@ -81,31 +81,21 @@ class Selector(firstChoice: Choice, val onCompleted: (List<Pair<Choice, Option>>
 
         return true
     }
-
-    private fun Int.th(): String {
-        return when ("$this".last().digitToInt()) {
-            1 -> "${this}st"
-            2 -> "${this}nd"
-            3 -> "${this}rd"
-            else -> "${this}th"
-        }
-    }
-
+    
     private fun RobotOpMode<*>.printSelectedAnswers() {
-        var previousChoice: Choice? = null
-        var answerCounter = 0
+        val (preliminary, final) = answers.partition { (choice, option) -> option.nextChoice != choice}
 
-        for ((choice, option) in answers) {
-            if (option.nextChoice != choice) {
-                telemetry.addLine(choice.name + ": " + option.name)
-            } else {
-                if (previousChoice != choice) {
-                    previousChoice = choice
-                    telemetry.addLine(choice.name)
+        for ((choice, option) in preliminary) {
+            telemetry.addLine(choice.name + ": " + option.name)
+        }
+
+        if (final.isNotEmpty()) {
+            telemetry.addLine(buildString {
+                append(final.first().first.name + ": ")
+                for ((_, option) in final) {
+                    append(option.name.first())
                 }
-                answerCounter++
-                telemetry.addLine((answerCounter).th() + ": " + option.name)
-            }
+            })
         }
 
         telemetry.addLine("")

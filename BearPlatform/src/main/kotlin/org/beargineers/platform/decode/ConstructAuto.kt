@@ -22,16 +22,17 @@ class ConstructAuto() : ProgrammedAuto() {
             })
         }
 
-        action("Collect 1", '1')
-        action("Collect 2", '2')
-        action("Collect 3", '3')
-        action("Collect from the Box", '0')
-        action("Collect from the Ramp", '4')
-        action("Open Ramp", 'R')
-        action("Push Alliance Bot", 'P')
-        action("Shoot the Load", '/')
-        action("All next shootings from the Front", 'F')
-        action("All next shootings from the Back", 'B')
+        action("1 Collect 1", '1')
+        action("2 Collect 2", '2')
+        action("3 Collect 3", '3')
+        action("0 Collect from the Box", '0')
+        action("V Collect from the Box Visually", 'V')
+        action("4 Collect from the Ramp", '4')
+        action("R Open Ramp", 'R')
+        action("P Push Alliance Bot", 'P')
+        action("/ Shoot the Load", '/')
+        action("F All next shootings from the Front", 'F')
+        action("B All next shootings from the Back", 'B')
 
         val startingPointChoice = Choice("Starting Point", listOf(
             Option("Front", actionChoice) {
