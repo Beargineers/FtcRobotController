@@ -97,7 +97,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             }
 
             TurretMode.SHOOTING -> {
-                if (bot.isInShootingSequence) {
+                if (bot.shootingSequenceEndedAt + 1000 > System.currentTimeMillis()) {
                     aimAtGoal()
                 }
                 else {

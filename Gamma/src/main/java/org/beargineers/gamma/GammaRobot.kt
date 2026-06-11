@@ -92,7 +92,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     private fun updateRGBIndicator() {
         updateArtifactIndicator()
 
-        val autoActive = opMode.isAutoActive() || isInShootingSequence || isShooting()
+        val autoActive = opMode.isAutoActive()
         if (autoActive) {
             rgb.glow(GammaRGBSignal.AUTO, LEDColor.WHITE)
         } else {
@@ -120,12 +120,12 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     }
 
     private var isShooting = false
-    var isInShootingSequence = false
+    var shootingSequenceEndedAt = 0L
     var predictedShootingPosition: Position? = null
 
 
     override suspend fun followPathAndShoot(waypoints: List<Waypoint>, applyMirroring: Boolean) {
-        isInShootingSequence = true
+        shootingSequenceEndedAt = System.currentTimeMillis() + 1_000_000
         try {
             coroutineScope {
                 val shootingScope: CoroutineScope = this
@@ -166,7 +166,7 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
                 intakeController.setShooterMode(null)
                 shooter.closeLatch(false)
             }
-            isInShootingSequence = false
+            shootingSequenceEndedAt = System.currentTimeMillis()
         }
 
         intakeController.setBaseMode(IntakeMode.ON)
