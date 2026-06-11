@@ -303,22 +303,24 @@ fun DecodeRobot.planShootingApproach(
         moveAwayFromGoal(it)
     }
 
-    val antiWheelie = backedOffStart.between(target, 0.9)
+    val antiWheelie = backedOffStart.between(target, 0.9).location().withHeading(target.heading)
 
     val path = buildPath {
         if (backedOffStart != startPosition) {
             addRelaxedWaypoint(backedOffStart)
         }
 
+        var speed = 1.0
         if (target.distanceTo(antiWheelie) > 8.cm) {
-            addRelaxedWaypoint(antiWheelie, speed = Locations.ANTI_WHEELIE_SPEED)
+            addRelaxedWaypoint(antiWheelie)
+            speed = Locations.ANTI_WHEELIE_SPEED
         }
 
         if (hasTurret) {
-            addRelaxedWaypoint(target)
+            addRelaxedWaypoint(target, speed)
         }
         else {
-            addStrictHeadingWaypoint(target)
+            addStrictHeadingWaypoint(target, speed)
         }
     }
 

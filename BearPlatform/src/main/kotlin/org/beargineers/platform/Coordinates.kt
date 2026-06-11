@@ -392,9 +392,9 @@ fun Location.between(other: Location): Location {
 
 fun Position.between(other: Position, d: Double = 0.5): Position {
     return Position(
-        x * d + other.x * (1 - d),
-        y * d + other.y * (1 - d),
-        (heading * d + other.heading * (1 - d)).normalize()
+        x * (1 - d) + other.x * d,
+        y * (1 - d) + other.y * d,
+        (heading * (1 - d) + other.heading * d).normalize()
     )
 }
 
