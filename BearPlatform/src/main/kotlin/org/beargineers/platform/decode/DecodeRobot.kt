@@ -89,17 +89,7 @@ var DecodeRobot.intakeMode by IntakeState
 var DecodeRobot.flywheelEnabled by StateHolder("Flywheel", false)
 
 object Locations {
-    val OPEN_RAMP_SPEED by config(0.6)
-
     val GOAL by config(tileLocation("F6TR"))
-    val PARK by config(tileLocation("B2BR").shift(-9.inch, -9.inch))
-    val OPEN_RAMP_COLLECT by config(-6.cm, 129.cm, 90.degrees)
-    val OPEN_RAMP_COLLECT_APPROACH by config(-6.cm, 80.cm, 90.degrees)
-    val COLLECT_FROM_OPEN_RAMP by config(50.cm, 152.cm, 152.degrees)
-    val COLLECT_FROM_OPEN_RAMP_APPROACH by config(50.cm, 132.cm, 90.degrees)
-
-    val OPEN_RAMP by config(-6.cm, 129.cm, 90.degrees)
-    val OPEN_RAMP_APPROACH by config(-6.cm, 80.cm, 90.degrees)
 
     val SPIKE_APPROACH_Y by config(61.0)
     val SPIKE_FINAL_Y by config(143.0) // 20cm less for Spike#3

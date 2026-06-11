@@ -38,6 +38,19 @@ data class Location(val x: Distance, val y: Distance) {
     fun distanceTo(other: Location) : Distance {
         return hypot(x - other.x, y - other.y)
     }
+
+    companion object {
+        fun parse(str: String): Location {
+            val first = str.first()
+            return if (first.isDigit() || first=='-') {
+                val (x, y) = str.split(",").map { it.trim().toDouble() }
+                Location(x.cm, y.cm)
+            }
+            else {
+                tileLocation(str)
+            }
+        }
+    }
 }
 
 class Distance( val distance: Double, val distanceUnit: DistanceUnit) : Comparable<Distance> {
@@ -274,6 +287,17 @@ data class Position(val x: Distance, val y: Distance, val heading: Angle) {
     companion object {
         val ZERO = Position(0.cm, 0.cm, 0.degrees)
         val NA = Position(500.cm, 500.cm, 500.degrees)
+
+        fun parse(str: String): Position {
+            val first = str.first()
+            return if (first.isDigit() || first=='-') {
+                val (x, y, heading) = str.split(",").map { it.trim().toDouble() }
+                Position(x.cm, y.cm, heading.degrees)
+            }
+            else {
+                tilePosition(str)
+            }
+        }
     }
 
     fun distanceTo(other: Position) : Distance {

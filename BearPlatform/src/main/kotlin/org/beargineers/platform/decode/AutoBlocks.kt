@@ -1,6 +1,5 @@
 package org.beargineers.platform.decode
 
-import kotlinx.coroutines.delay
 import org.beargineers.platform.Distance
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
@@ -16,11 +15,13 @@ import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
 import org.beargineers.platform.tilePosition
 import org.beargineers.platform.withName
-import kotlin.time.Duration.Companion.seconds
 
 object AutoPositions {
     val NORTH_START by config(tilePosition("F6BL:+135"))
+    val NORTH_END by config(tilePosition("E4BC:90"))
     val SOUTH_START by config(Position(160.cm,44.cm,180.degrees))
+    val SOUTH_END by config(tilePosition("E1:90"))
+
     val BOX_APPROACH by config(tilePosition("D4:+135"))
     val BOX_SCOOP by config(tilePosition("D4:+135"))
     val BOX_SCOOP_SPEED by config(1.0)
@@ -28,7 +29,6 @@ object AutoPositions {
     val BOX_SCOOP_OBSERVATION_P1 by config(tilePosition("E1:+90"))
     val BOX_SCOOP_OBSERVATION_P2 by config(tilePosition("E2:+90"))
 
-    val OPEN_RAMP_WAIT_TIME by config(0.01)
     val COLLECT_FROM_RAMP_WAIT_TIME by config(1.5)
 }
 
@@ -61,8 +61,8 @@ abstract class ProgrammedAuto : RobotOpMode<DecodeRobot>() {
         val operatingIn = program.last {it == 'F' || it == 'B'}
 
         driveTo(when (operatingIn) {
-            'F' -> Locations.OPEN_RAMP_APPROACH
-            'B' -> AutoPositions.BOX_APPROACH
+            'F' -> AutoPositions.NORTH_END
+            'B' -> AutoPositions.SOUTH_END
             else -> error("Unknown operating in: $operatingIn")
         }, applyMirroring = true)
     }
@@ -154,8 +154,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
 
             '4' -> {
                 goAndShootIfHasLoad()
-                val farApproach =
-                    Locations.OPEN_RAMP_COLLECT_APPROACH.copy(y = spikeStart(1).y)
+                val farApproach = Position(0.cm, spikeStart(1).y, 90.degrees)
                 driveTo(farApproach, applyMirroring = true)
                 openRampAndCollect()
                 collectedSet += '4'
@@ -164,8 +163,7 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
             }
 
             'R' -> {
-                drivePath(openRampPath(), true)
-                delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
+                openRamp()
             }
 
             ' ' -> { /* Do nothing */ }
@@ -174,22 +172,4 @@ suspend fun DecodeRobot.interpretProgram(program: String) {
     }
 
     goAndShootIfHasLoad()
-}
-
-fun openRampPath(): List<Waypoint> {
-    return buildPath {
-        with(Locations) {
-            addRelaxedWaypoint(OPEN_RAMP_APPROACH)
-            addWaypoint(OPEN_RAMP, OPEN_RAMP_SPEED)
-        }
-    }
-}
-
-fun openRampCollectPath(): List<Waypoint> {
-    return buildPath {
-        with(Locations) {
-            addWaypoint(OPEN_RAMP_COLLECT_APPROACH)
-            addWaypoint(OPEN_RAMP_COLLECT, OPEN_RAMP_SPEED)
-        }
-    }
 }

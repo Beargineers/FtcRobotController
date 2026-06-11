@@ -71,28 +71,14 @@ object Config {
         }
 
         registerType<Position> {
-            val first = it.first()
-            if (first.isDigit() || first=='-') {
-                val (x, y, heading) = it.split(",").map { it.trim().toDouble() }
-                Position(x.cm, y.cm, heading.degrees)
-            }
-            else {
-                tilePosition(it)
-            }
+            Position.parse(it)
         }
 
         registerType<Distance> { it.toDouble().cm }
         registerType<Angle> {it.toDouble().degrees}
 
         registerType<Location> {
-            val first = it.first()
-            if (first.isDigit() || first=='-') {
-                val (x, y) = it.split(",").map { it.trim().toDouble() }
-                Location(x.cm, y.cm)
-            }
-            else {
-                tileLocation(it)
-            }
+            Location.parse(it)
         }
 
         registerType<PIDFTCoeffs> {

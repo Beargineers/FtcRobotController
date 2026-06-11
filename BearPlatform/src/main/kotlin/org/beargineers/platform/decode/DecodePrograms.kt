@@ -6,12 +6,13 @@ import kotlinx.coroutines.launch
 import org.beargineers.platform.Location
 import org.beargineers.platform.Position
 import org.beargineers.platform.atan2
-import org.beargineers.platform.buildPath
 import org.beargineers.platform.cancelWhen
 import org.beargineers.platform.cm
+import org.beargineers.platform.config
 import org.beargineers.platform.degrees
 import org.beargineers.platform.drivePath
 import org.beargineers.platform.driveTo
+import org.beargineers.platform.executeCommands
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.pathTo
 import org.beargineers.platform.withName
@@ -27,26 +28,19 @@ suspend fun DecodeRobot.pushAllianceBot() {
     }
 }
 
+private val CMD_RAMP_OPEN by config("")
 suspend fun DecodeRobot.openRamp() {
     withName("openRamp") {
-        drivePath(openRampPath(), true)
-        delay(AutoPositions.OPEN_RAMP_WAIT_TIME.seconds)
+        executeCommands(CMD_RAMP_OPEN)
     }
 }
 
+private val CMD_RAMP_COLLECT by config("")
 suspend fun DecodeRobot.openRampAndCollect() {
     withName("openRampAndCollect") {
-        drivePath(buildPath {
-            with(Locations) {
-                addRelaxedWaypoint(OPEN_RAMP_APPROACH.shift(-15.cm, 0.cm))
-                addWaypoint(OPEN_RAMP.shift(-15.cm, 0.cm))
-                addWaypoint(OPEN_RAMP.shift(30.cm, 0.cm))
-                addWaypoint(COLLECT_FROM_OPEN_RAMP)
-                addWaypoint(COLLECT_FROM_OPEN_RAMP.shift(-15.cm, 0.cm))
-            }
-        }, applyMirroring = true)
-
         requestIntakeMode(IntakeMode.ON)
+
+        executeCommands(CMD_RAMP_COLLECT)
 
         cancelWhen({artifactsCount >= 3}) {
             delay(AutoPositions.COLLECT_FROM_RAMP_WAIT_TIME.seconds)
