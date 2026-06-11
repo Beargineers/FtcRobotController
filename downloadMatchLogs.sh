@@ -3,6 +3,7 @@
 robot_url="http://192.168.43.1:9000/matchLogs"
 output_dir="matchLogs"
 output_file="$output_dir/match-logs-$(date +%Y%m%d-%H%M%S).zip"
+extract_dir="${output_file%.zip}"
 
 mkdir -p "$output_dir"
 
@@ -18,5 +19,21 @@ if [ $rc -ne 0 ]; then
   echo "$out"
   exit $rc
 fi
+
+mkdir -p "$extract_dir"
+
+echo "Extracting match logs to $extract_dir"
+out=$(unzip -q "$output_file" -d "$extract_dir" 2>&1)
+rc=$?
+
+if [ $rc -ne 0 ]; then
+  rm -rf "$extract_dir"
+  echo "Extracting match logs failed with error $rc."
+  echo "Output was:"
+  echo "$out"
+  exit $rc
+fi
+
+rm -f "$output_file"
 
 echo "OK"
