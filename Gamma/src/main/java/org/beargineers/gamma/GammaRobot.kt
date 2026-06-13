@@ -25,6 +25,7 @@ import org.beargineers.platform.RGBIndicator
 import org.beargineers.platform.RGBSignal
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
+import org.beargineers.platform.config
 import org.beargineers.platform.cos
 import org.beargineers.platform.decode.ArtifactsVision
 import org.beargineers.platform.decode.DecodeRobot
@@ -36,6 +37,8 @@ import org.beargineers.platform.driveTo
 import org.beargineers.platform.nextTick
 import org.beargineers.platform.sin
 import kotlin.time.Duration.Companion.milliseconds
+
+private val INTAKE_TARGET_IN_VIEW_STABLE_MS by config(50)
 
 class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
     val intake = Intake(this)
@@ -99,12 +102,37 @@ class GammaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
             rgb.clear(GammaRGBSignal.AUTO)
         }
 
-        val intakeTargetInView = artifactsCount < 3 && intakeTarget({ true }) != null
+        val intakeTargetInView = stableIntakeTargetInView(artifactsCount < 3 && intakeTarget({ true }) != null)
         if (intakeTargetInView) {
             rgb.glow(GammaRGBSignal.INTAKE_TARGET, LEDColor.BLUE)
         } else {
             rgb.clear(GammaRGBSignal.INTAKE_TARGET)
         }
+    }
+
+    private var intakeTargetIndicatorState = false
+    private var intakeTargetCandidateState = false
+    private var intakeTargetCandidateChangedAtMs = 0L
+    private fun stableIntakeTargetInView(rawState: Boolean): Boolean {
+        val nowMs = System.currentTimeMillis()
+
+        if (rawState == intakeTargetIndicatorState) {
+            intakeTargetCandidateState = rawState
+            intakeTargetCandidateChangedAtMs = nowMs
+            return intakeTargetIndicatorState
+        }
+
+        if (rawState != intakeTargetCandidateState) {
+            intakeTargetCandidateState = rawState
+            intakeTargetCandidateChangedAtMs = nowMs
+            return intakeTargetIndicatorState
+        }
+
+        if (nowMs - intakeTargetCandidateChangedAtMs >= INTAKE_TARGET_IN_VIEW_STABLE_MS.toLong()) {
+            intakeTargetIndicatorState = rawState
+        }
+
+        return intakeTargetIndicatorState
     }
 
     private fun updateArtifactIndicator() {
