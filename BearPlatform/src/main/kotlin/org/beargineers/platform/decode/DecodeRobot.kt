@@ -301,7 +301,7 @@ fun DecodeRobot.planShootingApproach(
         }
 
         var speed = 1.0
-        if (target.distanceTo(antiWheelie) > 8.cm) {
+        if (target.distanceTo(antiWheelie) > 8.cm && Locations.ANTI_WHEELIE_SPEED < 0.999) {
             addRelaxedWaypoint(antiWheelie)
             speed = Locations.ANTI_WHEELIE_SPEED
         }
