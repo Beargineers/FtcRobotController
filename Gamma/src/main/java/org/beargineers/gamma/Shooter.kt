@@ -48,6 +48,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     val SHOOTER_P by config(0.00015)
     val SHOOTER_kS by config(0.0410)
     val SHOOTER_kV by config(0.00036)
+    val SHOOTER_kV_BOOST by config(0.0001)
+    val SHOOTER_BOOST_TIME_MS by config(50)
     val SHOOTER_ENTER_FP by config(250)
     val SHOOTER_EXIT_FP by config(120)
 
@@ -83,6 +85,7 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
 
 
     var maxTicks = 0.0
+    private var boostStopAt: Long = 0L
 
     override fun init() {
         super.init()
@@ -134,7 +137,8 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
             fullPowerMode = false
         }
 
-        val ff = SHOOTER_kS + targetTicks * SHOOTER_kV
+        val boostK = if (bot.isShooting() && System.currentTimeMillis() < boostStopAt) SHOOTER_kV_BOOST else 0.0
+        val ff = SHOOTER_kS + targetTicks * (SHOOTER_kV + boostK)
         val correction = error * SHOOTER_P
         val pidPower = (ff + correction).coerceIn(-1.0, 1.0)
 
@@ -147,6 +151,9 @@ class Shooter(val bot: GammaRobot): Hardware(bot) {
     fun enableIntake(enable: Boolean) {
         val requestedMode = if (enable) IntakeMode.ON else IntakeMode.OFF
         if (enable != shootingIntakeEnabled) {
+            if (enable) {
+                boostStopAt = System.currentTimeMillis() + SHOOTER_BOOST_TIME_MS
+            }
             Frame.log(if (enable) "Intake enabled" else "Intake paused. Flywheel error: ${shooterError()}, heading is correct: ${bot.headingIsAtGoal()}.")
         }
 
