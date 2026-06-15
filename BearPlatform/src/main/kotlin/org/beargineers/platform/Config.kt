@@ -1,6 +1,9 @@
 package org.beargineers.platform
 
+import com.qualcomm.ftcrobotcontroller.BuildConfig
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil
+import java.io.File
 import java.util.Properties
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
@@ -15,7 +18,33 @@ object Config {
 
     init {
         registerTypes()
+        loadConfigCache()?.let {
+            updateConfigText(it)
+        }
         SettingsWebServer.start()
+    }
+
+    fun configCacheFile(): File {
+        val configName = "config-${BuildConfig.APP_BUILD_TIME.replace(':', '_')}.properties"
+        return File(AppUtil.ROBOT_SETTINGS, configName)
+    }
+
+    fun loadConfigCache(): String? {
+        return try {
+            configCacheFile().readText()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun saveConfigCache(text: String) {
+        AppUtil.ROBOT_SETTINGS.mkdirs()
+        configCacheFile().writeText(text)
+    }
+
+    fun updateConfigAndSaveCache(text: String) {
+        updateConfigText(text)
+        saveConfigCache(text)
     }
 
     fun updateConfigText(text: String) {

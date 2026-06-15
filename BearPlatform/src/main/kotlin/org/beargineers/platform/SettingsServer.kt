@@ -171,7 +171,7 @@ object SettingsWebServer : NanoHTTPD(9000) {
         }
 
         // Get the settings value from the form
-        Config.updateConfigText(session.parameters["settings"]?.firstOrNull() ?: "")
+        Config.updateConfigAndSaveCache(session.parameters["settings"]?.firstOrNull() ?: "")
 
         // Respond with the settings form again, but with success message
         return serveSettingsForm(showSuccessMessage = true)
@@ -212,7 +212,7 @@ object SettingsWebServer : NanoHTTPD(9000) {
             val newConfigText = String(body, Charsets.UTF_8)
 
             // Update the config
-            Config.updateConfigText(newConfigText)
+            Config.updateConfigAndSaveCache(newConfigText)
 
             return newFixedLengthResponse(
                 Response.Status.OK,
