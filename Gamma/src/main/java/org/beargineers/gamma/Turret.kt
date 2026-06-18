@@ -3,6 +3,7 @@ package org.beargineers.gamma
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import org.beargineers.gamma.Shooter.LatchState
 import org.beargineers.platform.Angle
 import org.beargineers.platform.Config
 import org.beargineers.platform.Frame
@@ -97,7 +98,7 @@ class Turret(val bot: GammaRobot) : Hardware(bot) {
             }
 
             TurretMode.SHOOTING -> {
-                if (bot.shootingSequenceEndedAt + 1000 > System.currentTimeMillis()) {
+                if (bot.shootingSequenceEndedAt + 1000 > System.currentTimeMillis() || bot.shooter.latchState != LatchState.CLOSED) {
                     aimAtGoal()
                 }
                 else {
