@@ -20,7 +20,7 @@ object NoVision : AbsoluteLocalizer {
 }
 
 class StrafferRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
-    override val localizer: Localizer = FusionLocalizer(NoVision, PinpointLocalizer(this))
+    override val localizer: Localizer = FusionLocalizer(opMode, NoVision, PinpointLocalizer(this))
     override val hasTurret = true
 
     override fun adjustShooting(distance: Double, angle: Double) {

@@ -47,6 +47,7 @@ interface Localizer {
 }
 
 class FusionLocalizer(
+    val opMode: RobotOpMode<*>,
     val absoluteLocalizer: AbsoluteLocalizer,
     val relativeLocalizer: RelativeLocalizer
 ) : Localizer {
@@ -62,7 +63,7 @@ class FusionLocalizer(
     override fun update() {
         val rel = relativeLocalizer.getPosition(RobotOpMode.lastKnownPosition)
         val abs = absoluteLocalizer.getRobotPose()
-        if (abs != null) {
+        if (abs != null && !opMode.isAuto) {
             Frame.addData("Vision", "✓ acquired")
             val res = abs.location().withHeading(rel.heading)
             relativeLocalizer.updatePositionEstimate(res)

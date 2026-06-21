@@ -30,6 +30,8 @@ open class Driving(override val alliance: Alliance) : RobotOpMode<DecodeRobot>()
     private var lookAtGoal = false
     private var lookAtGoalBtnClickedAt = 0L
 
+    override val isAuto = false
+
     override suspend fun DecodeRobot.autoProgram() {
         // Do nothing automatically
     }

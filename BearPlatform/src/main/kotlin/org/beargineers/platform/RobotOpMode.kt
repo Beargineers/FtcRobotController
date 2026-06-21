@@ -19,6 +19,8 @@ abstract class RobotOpMode<T : Robot> : OpMode() {
         RobotFactory.newRobot(this)
     }
 
+    open val isAuto: Boolean = true
+
     private val allHubs by lazy {
         hardwareMap.getAll(LynxModule::class.java)
     }

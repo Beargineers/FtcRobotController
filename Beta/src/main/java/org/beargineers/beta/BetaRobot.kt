@@ -42,6 +42,7 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     override val localizer: Localizer =
         FusionLocalizer(
+            opMode,
             LimelightCam(this) {currentPosition.heading},
             IndicatingRelativeLocalizer(PinpointLocalizer(this), ledIndicator)
         )
