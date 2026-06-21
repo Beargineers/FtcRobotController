@@ -2,8 +2,10 @@ package org.beargineers.platform
 
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
+import org.beargineers.platform.decode.ShootingZones
 import org.beargineers.platform.decode.inShootingZone
 import org.junit.Test
+import kotlin.math.sqrt
 
 class CoordinatesTest : RobotTest() {
     private fun assertDistanceEquals(
@@ -45,6 +47,31 @@ class CoordinatesTest : RobotTest() {
         test(Position.ZERO, true)
         test(Position.ZERO.shift(0.cm, 50.cm), false)
         test(Position(180.cm, 0.cm, 0.degrees), true)
+    }
+
+    @Test
+    fun testFarShootingZoneUsesPerpendicularSafetyMargin() {
+        val previousConfigText = Config.currentConfigText
+        val safetyMargin = 15.cm
+        Config.updateConfigText("zoneSafetyMargin=${safetyMargin.cm()}")
+
+        try {
+            val oldFormulaPosition = Position(
+                48.inch + safetyMargin - RobotDimensions.ROBOT_FRONT_OFFSET,
+                0.cm,
+                0.degrees
+            )
+            val exactlySafePosition = Position(
+                48.inch + safetyMargin * sqrt(2.0) - RobotDimensions.ROBOT_FRONT_OFFSET,
+                0.cm,
+                0.degrees
+            )
+
+            assertEquals(false, inShootingZone(oldFormulaPosition, ShootingZones.BACK))
+            assertEquals(true, inShootingZone(exactlySafePosition, ShootingZones.BACK))
+        } finally {
+            Config.updateConfigText(previousConfigText)
+        }
     }
 
 

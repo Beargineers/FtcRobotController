@@ -169,7 +169,7 @@ private fun pointInCloseShootingZone(point: Location, margin: Distance = 0.cm): 
 }
 
 private fun pointInFarShootingZone(point: Location, margin: Distance = 0.cm): Boolean {
-    return point.x - 48.inch - abs(point.y) >= margin
+    return point.x - 48.inch - abs(point.y) >= margin * sqrt(2.0)
 }
 
 private fun pointInShootingZone(point: Location, shootingZone: ShootingZones, margin: Distance = 0.cm): Boolean {
@@ -275,11 +275,11 @@ fun DecodeRobot.planShootingApproach(
     protectedZones: List<Location>,
     stayInAllianceHalf: Boolean
 ): List<Waypoint> {
-    val firstCandidate = closestPointInShootingZone(shootingZone, startPosition.location())
+    val firstCandidate = closestPointInShootingZone(shootingZone, startPosition)
     val backoff = requiredProtectionXBackoff(firstCandidate, startPosition, protectedZones)
     val backedOffStart = startPosition.shift(0.cm, -backoff * alliance.sign)
 
-    val secondCandidate = closestPointInShootingZone(shootingZone, backedOffStart.location())
+    val secondCandidate = closestPointInShootingZone(shootingZone, backedOffStart)
     val targetHeading = travelHeadingTo(backedOffStart, secondCandidate)
 
     val target = findClosestPointOnLine(
@@ -385,10 +385,11 @@ fun DecodeRobot.moveAwayFromGoal(pos: Position): Position {
     return pos
 }
 
-fun DecodeRobot.closestPointInFrontZone(from: Location): Location {
-    if (inShootingZone(ShootingZones.FRONT)) return from
 
-    val (x, y) = from
+private fun closestPointInFrontZone(from: Position): Location {
+    if (inShootingZone(from, ShootingZones.FRONT)) return from.location()
+
+    val (x, y) = from.location()
     val close = if (y <= 0.cm) { // blue side
         if (y < -x) {
             Location((x + y) * 0.5, (x + y) * 0.5)
@@ -422,12 +423,12 @@ fun findClosestPointOnLine(from: Location, to: Location, f: (Location) -> Boolea
     return right
 }
 
-fun DecodeRobot.closestPointInBackZone(from: Location): Location {
-    if (inShootingZone(ShootingZones.BACK)) return from
+private fun closestPointInBackZone(from: Position): Location {
+    if (inShootingZone(from, ShootingZones.BACK)) return from.location()
     return tileLocation("D1CL")
 }
 
-fun DecodeRobot.closestPointInShootingZone(shootingZone: ShootingZones, from: Location = currentPosition.location()): Location {
+fun closestPointInShootingZone(shootingZone: ShootingZones, from: Position): Location {
     val close = closestPointInFrontZone(from)
     val far = closestPointInBackZone(from)
 
