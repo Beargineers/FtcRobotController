@@ -4,15 +4,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.beargineers.platform.AbsoluteLocalizer
 import org.beargineers.platform.Angle
 import org.beargineers.platform.BaseRobot
 import org.beargineers.platform.Frame
 import org.beargineers.platform.FusionLocalizer
 import org.beargineers.platform.IndicatingRelativeLocalizer
 import org.beargineers.platform.LedIndicator
-import org.beargineers.platform.LimelightCam
 import org.beargineers.platform.Localizer
 import org.beargineers.platform.PinpointLocalizer
+import org.beargineers.platform.Position
 import org.beargineers.platform.RobotOpMode
 import org.beargineers.platform.Waypoint
 import org.beargineers.platform.blink
@@ -40,10 +41,17 @@ class BetaRobot(op: RobotOpMode<DecodeRobot>) : BaseRobot(op), DecodeRobot {
 
     val ledIndicator = LedIndicator(3,this)
 
+    object NoVision : AbsoluteLocalizer {
+        override fun getRobotPose(): Position? {
+            return null
+        }
+    }
+
     override val localizer: Localizer =
         FusionLocalizer(
             opMode,
-            LimelightCam(this) {currentPosition.heading},
+            NoVision,
+            //LimelightCam(this) {currentPosition.heading},
             IndicatingRelativeLocalizer(PinpointLocalizer(this), ledIndicator)
         )
 
